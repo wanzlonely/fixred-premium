@@ -157,10 +157,19 @@ module.exports = async (req, res) => {
   }
 
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-    z-index: 90; display: none; place-items: center; padding: 16px;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+    z-index: 900; display: none; place-items: center; padding: 16px;
   }
   .modal-overlay.active { display: grid; }
+
+  .proof-preview-container {
+    position: relative; border-radius: 14px; overflow: hidden; margin-top: 8px; border: 1px solid var(--border-card);
+  }
+  .proof-preview-img { width: 100%; max-height: 180px; object-fit: cover; cursor: pointer; display: block; }
+  .zoom-btn-overlay {
+    position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    color: #fff; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -184,11 +193,10 @@ module.exports = async (req, res) => {
   <div class="toast-progress" id="toastProgress"></div>
 </div>
 
-<div class="modal-overlay" id="invoiceModal">
-  <div class="glass-card" style="width:100%;max-width:400px;margin:0">
-    <div style="font-weight:800;font-size:16px;margin-bottom:8px">Detail Invoice Pembayaran</div>
-    <div id="modalInvoiceContent" style="font-size:12px;line-height:1.6;color:var(--text-secondary)"></div>
-    <button class="btn-custom" style="margin-top:14px" onclick="closeInvoiceModal()">Tutup Modal</button>
+<div class="modal-overlay" id="imageZoomModal" onclick="closeZoomModal()">
+  <div style="position:relative;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;align-items:center;gap:12px" onclick="event.stopPropagation()">
+    <img id="zoomedImageSrc" src="" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.8);border:1px solid var(--border-card)">
+    <button class="btn-custom" style="width:auto;padding:10px 24px;background:rgba(255,255,255,0.15)" onclick="closeZoomModal()">Tutup Gambar</button>
   </div>
 </div>
 
@@ -246,7 +254,7 @@ module.exports = async (req, res) => {
             Spin Wheel Hadiah
           </div>
         </div>
-        <button class="btn-custom" id="spinBtn" onclick="triggerSpin()">
+        <button class="btn-custom" id="spinBtn" onclick="triggerSpin(this)">
           Putar Spin Harian
         </button>
       </div>
@@ -257,7 +265,7 @@ module.exports = async (req, res) => {
           Redeem Kode Voucher
         </div>
         <input class="input-custom" id="vCodeInput" placeholder="Masukkan Kode Voucher Promo">
-        <button class="btn-custom" style="margin-top:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="claimVoucher()">
+        <button class="btn-custom" style="margin-top:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="claimVoucher(this)">
           Tukarkan Kode
         </button>
       </div>
@@ -267,7 +275,7 @@ module.exports = async (req, res) => {
           <svg class="icon-svg" style="color:var(--accent-purple)" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Program Referral Undangan
         </div>
-        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px">Dapatkan +50 Poin setiap kali ada user baru yang mendaftar menggunakan link Anda.</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px">Dapatkan +50 Poin setiap kali ada user baru mendaftar menggunakan link Anda.</div>
         <input class="input-custom" id="refUrlInput" readonly value="Memuat link...">
         <button class="btn-custom" style="margin-top:10px" onclick="copyRefLink()">
           Salin Link Referral
@@ -289,7 +297,7 @@ module.exports = async (req, res) => {
           </div>
           <div style="font-weight:800;font-size:16px;color:var(--accent-blue)">Rp 7.000</div>
         </div>
-        <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(3, 7000)">Beli VIP 3 Hari</button>
+        <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(3, 7000, this)">Beli VIP 3 Hari</button>
       </div>
 
       <div class="glass-card">
@@ -300,7 +308,7 @@ module.exports = async (req, res) => {
           </div>
           <div style="font-weight:800;font-size:16px;color:var(--accent-blue)">Rp 10.000</div>
         </div>
-        <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(5, 10000)">Beli VIP 5 Hari</button>
+        <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(5, 10000, this)">Beli VIP 5 Hari</button>
       </div>
 
       <div class="glass-card">
@@ -311,7 +319,7 @@ module.exports = async (req, res) => {
           </div>
           <div style="font-weight:800;font-size:16px;color:var(--accent-emerald)">Rp 15.000</div>
         </div>
-        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="createOrder(7, 15000)">Beli VIP 7 Hari</button>
+        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="createOrder(7, 15000, this)">Beli VIP 7 Hari</button>
       </div>
 
       <div class="glass-card">
@@ -322,7 +330,7 @@ module.exports = async (req, res) => {
           </div>
           <div style="font-weight:800;font-size:16px;color:var(--accent-purple)">Rp 25.000</div>
         </div>
-        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="createOrder(14, 25000)">Beli VIP 14 Hari</button>
+        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="createOrder(14, 25000, this)">Beli VIP 14 Hari</button>
       </div>
 
       <div class="glass-card" style="border-color:rgba(245, 158, 11, 0.4)">
@@ -333,7 +341,7 @@ module.exports = async (req, res) => {
           </div>
           <div style="font-weight:800;font-size:16px;color:var(--accent-amber)">Rp 45.000</div>
         </div>
-        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="createOrder(30, 45000)">Beli VIP 30 Hari</button>
+        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="createOrder(30, 45000, this)">Beli VIP 30 Hari</button>
       </div>
     </div>
 
@@ -347,7 +355,7 @@ module.exports = async (req, res) => {
             <div style="font-size:11px;color:var(--text-secondary)">Poin Anda saat ini</div>
             <div style="font-size:24px;font-weight:800;color:var(--accent-amber)" id="checkinPointsVal">0 PTS</div>
           </div>
-          <button class="btn-custom" id="checkinBtn" style="width:auto;padding:10px 18px" onclick="triggerCheckin()">
+          <button class="btn-custom" id="checkinBtn" style="width:auto;padding:10px 18px" onclick="triggerCheckin(this)">
             Check-in Hari Ini
           </button>
         </div>
@@ -371,7 +379,7 @@ module.exports = async (req, res) => {
             <div style="font-weight:700;font-size:14px">1 Hari VIP</div>
             <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">100 PTS</div>
           </div>
-          <button class="btn-custom" style="padding:8px;font-size:12px" onclick="redeemPoints(1)">Tukarkan</button>
+          <button class="btn-custom" style="padding:8px;font-size:12px" onclick="redeemPoints(1, this)">Tukarkan</button>
         </div>
 
         <div class="shop-item">
@@ -379,7 +387,7 @@ module.exports = async (req, res) => {
             <div style="font-weight:700;font-size:14px">3 Hari VIP</div>
             <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">250 PTS</div>
           </div>
-          <button class="btn-custom" style="padding:8px;font-size:12px" onclick="redeemPoints(2)">Tukarkan</button>
+          <button class="btn-custom" style="padding:8px;font-size:12px" onclick="redeemPoints(2, this)">Tukarkan</button>
         </div>
 
         <div class="shop-item">
@@ -387,7 +395,7 @@ module.exports = async (req, res) => {
             <div style="font-weight:700;font-size:14px">7 Hari VIP</div>
             <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">500 PTS</div>
           </div>
-          <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="redeemPoints(3)">Tukarkan</button>
+          <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="redeemPoints(3, this)">Tukarkan</button>
         </div>
 
         <div class="shop-item">
@@ -395,7 +403,7 @@ module.exports = async (req, res) => {
             <div style="font-weight:700;font-size:14px">14 Hari VIP</div>
             <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">900 PTS</div>
           </div>
-          <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="redeemPoints(4)">Tukarkan</button>
+          <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="redeemPoints(4, this)">Tukarkan</button>
         </div>
 
         <div class="shop-item" style="grid-column: span 2">
@@ -404,7 +412,7 @@ module.exports = async (req, res) => {
               <div style="font-weight:700;font-size:14px">30 Hari VIP Sultan</div>
               <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">1.600 PTS</div>
             </div>
-            <button class="btn-custom" style="width:auto;padding:8px 20px;font-size:12px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="redeemPoints(5)">Tukarkan</button>
+            <button class="btn-custom" style="width:auto;padding:8px 20px;font-size:12px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="redeemPoints(5, this)">Tukarkan</button>
           </div>
         </div>
       </div>
@@ -412,68 +420,60 @@ module.exports = async (req, res) => {
   </div>
 
   <div id="viewOwnerArea" style="display:none">
-    <div id="ownerLoginBox" class="glass-card">
-      <div style="font-weight:800;font-size:16px;margin-bottom:12px;text-align:center">OWNER STUDIO AUTHENTICATION</div>
-      <input type="password" class="input-custom" id="ownerPassInput" placeholder="Masukkan Password Owner">
-      <button class="btn-custom" style="margin-top:12px" onclick="verifyOwner()">Verifikasi Akses Owner</button>
+    <div id="oTabOrders" class="view active">
+      <div style="font-weight:800;font-size:18px;margin-bottom:4px">Katalog Order Pembayaran</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Daftar transaksi pending & foto bukti pembayaran terkirim.</div>
+      <div id="oPendingList"></div>
     </div>
 
-    <div id="ownerContent" style="display:none">
-      <div id="oTabOrders" class="view active">
-        <div style="font-weight:800;font-size:18px;margin-bottom:4px">Katalog Order Pembayaran</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Daftar transaksi pending & verifikasi foto bukti pembayaran.</div>
-        <div id="oPendingList"></div>
-      </div>
+    <div id="oTabUsers" class="view">
+      <div style="font-weight:800;font-size:18px;margin-bottom:4px">Kelola User Valid</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Daftar pengguna terverifikasi.</div>
+      <div id="oUserList"></div>
+    </div>
 
-      <div id="oTabUsers" class="view">
-        <div style="font-weight:800;font-size:18px;margin-bottom:4px">Kelola User Valid</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Daftar pengguna aktif platform.</div>
-        <div id="oUserList"></div>
-      </div>
-
-      <div id="oTabVouchers" class="view">
-        <div class="glass-card">
-          <div style="font-weight:700;font-size:14px;margin-bottom:10px">Generator Voucher Promo</div>
-          <input class="input-custom" id="vGenCode" placeholder="Kode Voucher (cth: SULTAN100)" style="margin-bottom:8px">
-          <div class="grid2" style="margin-bottom:8px">
-            <input class="input-custom" id="vGenDays" type="number" placeholder="Durasi (Hari)">
-            <input class="input-custom" id="vGenQuota" type="number" placeholder="Kuota (0 = ∞)">
-          </div>
-          <button class="btn-custom" onclick="createVoucher()">Buat Voucher</button>
+    <div id="oTabVouchers" class="view">
+      <div class="glass-card">
+        <div style="font-weight:700;font-size:14px;margin-bottom:10px">Generator Voucher Promo</div>
+        <input class="input-custom" id="vGenCode" placeholder="Kode Voucher (cth: SULTAN100)" style="margin-bottom:8px">
+        <div class="grid2" style="margin-bottom:8px">
+          <input class="input-custom" id="vGenDays" type="number" placeholder="Durasi (Hari)">
+          <input class="input-custom" id="vGenQuota" type="number" placeholder="Kuota (0 = ∞)">
         </div>
-        <div style="font-weight:700;font-size:14px;margin:12px 0 8px">Voucher Aktif</div>
-        <div id="oVoucherList"></div>
+        <button class="btn-custom" onclick="createVoucher(this)">Buat Voucher</button>
       </div>
+      <div style="font-weight:700;font-size:14px;margin:12px 0 8px">Voucher Aktif</div>
+      <div id="oVoucherList"></div>
+    </div>
 
-      <div id="oTabBroadcast" class="view">
-        <div class="glass-card">
-          <div style="font-weight:700;font-size:14px;margin-bottom:8px">Kirim Broadcast Pesan Massal</div>
-          <textarea class="input-custom" id="bcTextInput" style="height:120px;resize:none;margin-bottom:10px" placeholder="Tuliskan pesan HTML yang akan dikirimkan langsung ke seluruh user..."></textarea>
-          <button class="btn-custom" id="btnSendBc" onclick="sendBroadcast()">
-            Kirim Broadcast Sekarang
-          </button>
+    <div id="oTabBroadcast" class="view">
+      <div class="glass-card">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">Kirim Broadcast Pesan Massal</div>
+        <textarea class="input-custom" id="bcTextInput" style="height:120px;resize:none;margin-bottom:10px" placeholder="Tuliskan pesan HTML broadcast massal..."></textarea>
+        <button class="btn-custom" id="btnSendBc" onclick="sendBroadcast(this)">
+          Kirim Broadcast Sekarang
+        </button>
+      </div>
+    </div>
+
+    <div id="oTabAnalytics" class="view">
+      <div style="font-weight:800;font-size:18px;margin-bottom:12px">Analitik Pendapatan Studio</div>
+      <div class="grid2">
+        <div class="stat-card">
+          <div class="stat-val" id="oRev">Rp 0</div>
+          <div class="stat-lbl">Total Revenue</div>
         </div>
-      </div>
-
-      <div id="oTabAnalytics" class="view">
-        <div style="font-weight:800;font-size:18px;margin-bottom:12px">Analitik Pendapatan</div>
-        <div class="grid2">
-          <div class="stat-card">
-            <div class="stat-val" id="oRev">Rp 0</div>
-            <div class="stat-lbl">Total Revenue</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val" id="oUsers">0</div>
-            <div class="stat-lbl">Total User Valid</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val" id="oVip">0</div>
-            <div class="stat-lbl">Pengguna VIP</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val" id="oFix">0</div>
-            <div class="stat-lbl">Total Pesanan</div>
-          </div>
+        <div class="stat-card">
+          <div class="stat-val" id="oUsers">0</div>
+          <div class="stat-lbl">Total User Valid</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="oVip">0</div>
+          <div class="stat-lbl">Pengguna VIP</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="oFix">0</div>
+          <div class="stat-lbl">Total Pesanan</div>
         </div>
       </div>
     </div>
@@ -527,7 +527,7 @@ module.exports = async (req, res) => {
 
   let currentUserId = null;
   let activeInvoiceId = null;
-  let ownerPassword = '';
+  let isUserOwner = false;
   let toastTimeout = null;
 
   function initApp() {
@@ -553,6 +553,8 @@ module.exports = async (req, res) => {
 
       if (data.ok) {
         let u = data.user;
+        isUserOwner = u.isOwner;
+
         document.getElementById('uName').textContent = u.first_name;
         document.getElementById('uIdText').textContent = 'ID: ' + u.id;
         document.getElementById('uRankBadge').textContent = u.rank.name;
@@ -575,11 +577,17 @@ module.exports = async (req, res) => {
           else el.classList.remove('active');
         }
 
-        if (u.isOwner) {
+        if (isUserOwner) {
           document.getElementById('viewUserArea').style.display = 'none';
           document.getElementById('userNavBar').style.display = 'none';
           document.getElementById('viewOwnerArea').style.display = 'block';
           document.getElementById('ownerNavBar').style.display = 'flex';
+          loadOwnerData();
+        } else {
+          document.getElementById('viewUserArea').style.display = 'block';
+          document.getElementById('userNavBar').style.display = 'flex';
+          document.getElementById('viewOwnerArea').style.display = 'none';
+          document.getElementById('ownerNavBar').style.display = 'none';
         }
 
         let invBox = document.getElementById('activeInvoiceBox');
@@ -592,9 +600,19 @@ module.exports = async (req, res) => {
               <div style="font-size:12px;margin-top:4px">Paket \${inv.days} Hari - \${inv.amountFormatted || 'Rp ' + inv.amount}</div>
               <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Status: <b>\${inv.status === 'waiting_approval' ? 'Menunggu Konfirmasi Owner' : 'Belum Dibayar / Upload Bukti'}</b></div>
               
+              \${inv.proofImage ? \`
+                <div class="proof-preview-container">
+                  <img src="\${inv.proofImage}" class="proof-preview-img" onclick="openZoomModal('\${inv.proofImage}')">
+                  <div class="zoom-btn-overlay" onclick="openZoomModal('\${inv.proofImage}')">
+                    <svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    Perbesar Foto Fullscreen
+                  </div>
+                </div>
+              \` : ''}
+
               <div style="display:flex;gap:8px;margin-top:12px">
-                <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="triggerUploadProof()">Upload Foto Bukti</button>
-                <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="cancelOrder('\${inv.id}')">Batalkan Pembelian</button>
+                <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="triggerUploadProof()">\${inv.proofImage ? 'Ganti Foto Bukti' : 'Upload Foto Bukti'}</button>
+                <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="cancelOrder('\${inv.id}', this)">Batalkan Pembelian</button>
               </div>
             </div>
           \`;
@@ -612,6 +630,15 @@ module.exports = async (req, res) => {
     }
   }
 
+  function openZoomModal(imgSrc) {
+    document.getElementById('zoomedImageSrc').src = imgSrc;
+    document.getElementById('imageZoomModal').classList.add('active');
+  }
+
+  function closeZoomModal() {
+    document.getElementById('imageZoomModal').classList.remove('active');
+  }
+
   function switchTab(tabName, event) {
     if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
     document.querySelectorAll('#viewUserArea .view').forEach(v => v.classList.remove('active'));
@@ -623,7 +650,7 @@ module.exports = async (req, res) => {
 
   function switchOwnerTab(tabName, event) {
     if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-    document.querySelectorAll('#ownerContent .view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('#viewOwnerArea .view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('#ownerNavBar .nav-tab').forEach(t => t.classList.remove('active'));
 
     document.getElementById('oTab' + tabName).classList.add('active');
@@ -664,7 +691,9 @@ module.exports = async (req, res) => {
     toastTimeout = setTimeout(() => { t.classList.remove('show'); }, 3500);
   }
 
-  async function triggerSpin() {
+  async function triggerSpin(btn) {
+    let orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
     try {
       let res = await fetch('/api/spin', {
         method: 'POST',
@@ -676,10 +705,14 @@ module.exports = async (req, res) => {
       if (data.ok) loadUserData();
     } catch (e) {
       showToast('Error', 'Gagal memproses spin', 'error');
+    } finally {
+      if (btn && !data.ok) { btn.disabled = false; btn.innerHTML = orig; }
     }
   }
 
-  async function triggerCheckin() {
+  async function triggerCheckin(btn) {
+    let orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Proses Check-in...'; }
     try {
       let res = await fetch('/api/checkin', {
         method: 'POST',
@@ -691,10 +724,14 @@ module.exports = async (req, res) => {
       if (data.ok) loadUserData();
     } catch (e) {
       showToast('Error', 'Gagal melakukan check-in', 'error');
+    } finally {
+      if (btn && !data.ok) { btn.disabled = false; btn.innerHTML = orig; }
     }
   }
 
-  async function redeemPoints(option) {
+  async function redeemPoints(option, btn) {
+    let orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Proses...'; }
     try {
       let res = await fetch('/api/redeem_points', {
         method: 'POST',
@@ -706,10 +743,14 @@ module.exports = async (req, res) => {
       if (data.ok) loadUserData();
     } catch (e) {
       showToast('Error', 'Gagal menukarkan poin', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
     }
   }
 
-  async function createOrder(days, amount) {
+  async function createOrder(days, amount, btn) {
+    let orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Membuat Invoice...'; }
     try {
       let res = await fetch('/api/order', {
         method: 'POST',
@@ -718,17 +759,21 @@ module.exports = async (req, res) => {
       });
       let data = await res.json();
       if (data.ok) {
-        showToast('Invoice Berhasil Dibuat', 'Invoice: ' + (data.invoice.invoice || data.invoice.id), 'success');
+        showToast('Invoice Dibuat', 'ID: ' + (data.invoice.invoice || data.invoice.id), 'success');
         loadUserData();
       } else {
         showToast('Gagal Order', data.message, 'error');
       }
     } catch (e) {
       showToast('Error', 'Gagal membuat invoice', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
     }
   }
 
-  async function cancelOrder(invoiceId) {
+  async function cancelOrder(invoiceId, btn) {
+    let orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Membatalkan...'; }
     try {
       let res = await fetch('/api/cancel_order', {
         method: 'POST',
@@ -740,6 +785,8 @@ module.exports = async (req, res) => {
       if (data.ok) loadUserData();
     } catch (e) {
       showToast('Error', 'Gagal membatalkan invoice', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
     }
   }
 
@@ -768,15 +815,18 @@ module.exports = async (req, res) => {
         showToast(data.ok ? 'Sukses Upload' : 'Gagal Upload', data.message, data.ok ? 'success' : 'error');
         if (data.ok) loadUserData();
       } catch (err) {
-        showToast('Error', 'Gagal mengirimkan foto bukti', 'error');
+        showToast('Error', 'Gagal mengunggah foto bukti', 'error');
       }
     };
     reader.readAsDataURL(file);
   }
 
-  async function claimVoucher() {
+  async function claimVoucher(btn) {
     let code = document.getElementById('vCodeInput').value.trim();
     if (!code) return showToast('Peringatan', 'Masukkan kode voucher promo!', 'warning');
+
+    let orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Mengklaim...'; }
 
     try {
       let res = await fetch('/api/redeem', {
@@ -792,6 +842,8 @@ module.exports = async (req, res) => {
       }
     } catch (e) {
       showToast('Error', 'Gagal mengklaim voucher', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
     }
   }
 
@@ -800,31 +852,6 @@ module.exports = async (req, res) => {
     input.select();
     document.execCommand('copy');
     showToast('Berhasil Disalin', 'Link referral tersalin ke clipboard!', 'success');
-  }
-
-  async function verifyOwner() {
-    let pass = document.getElementById('ownerPassInput').value.trim();
-    if (!pass) return showToast('Error', 'Masukkan password owner!', 'warning');
-
-    try {
-      let res = await fetch('/api/verify_owner', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id: currentUserId, password: pass })
-      });
-      let data = await res.json();
-      if (data.ok) {
-        ownerPassword = pass;
-        document.getElementById('ownerLoginBox').style.display = 'none';
-        document.getElementById('ownerContent').style.display = 'block';
-        showToast('Autentikasi Diterima', 'Selamat datang di Studio Owner!', 'success');
-        loadOwnerData();
-      } else {
-        showToast('Akses Ditolak', data.message, 'error');
-      }
-    } catch (e) {
-      showToast('Error', 'Gagal verifikasi owner', 'error');
-    }
   }
 
   async function loadOwnerData() {
@@ -844,10 +871,18 @@ module.exports = async (req, res) => {
             <div class="glass-card">
               <div style="font-weight:700;font-size:13px">Invoice: \${p.id}</div>
               <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">User: \${p.userId} | Paket: \${p.days} Hari (\${p.amountFormatted || 'Rp ' + p.amount})</div>
-              \${p.proofImage ? \`<div style="margin-top:8px"><img src="\${p.proofImage}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border-card)"></div>\` : '<div style="font-size:11px;color:var(--accent-rose);margin-top:4px">Belum upload foto bukti.</div>'}
+              \${p.proofImage ? \`
+                <div class="proof-preview-container">
+                  <img src="\${p.proofImage}" class="proof-preview-img" onclick="openZoomModal('\${p.proofImage}')">
+                  <div class="zoom-btn-overlay" onclick="openZoomModal('\${p.proofImage}')">
+                    <svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    Lihat Foto Fullscreen
+                  </div>
+                </div>
+              \` : '<div style="font-size:11px;color:var(--accent-rose);margin-top:4px">Belum upload foto bukti.</div>'}
               <div style="display:flex;gap:8px;margin-top:10px">
-                <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="ownerAct('\${p.id}', 'approve')">Setujui Pembayaran</button>
-                <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="ownerAct('\${p.id}', 'reject')">Tolak</button>
+                <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="ownerAct('\${p.id}', 'approve', this)">Setujui Pembayaran</button>
+                <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="ownerAct('\${p.id}', 'reject', this)">Tolak</button>
               </div>
             </div>
           \`).join('');
@@ -879,7 +914,7 @@ module.exports = async (req, res) => {
                   <div style="font-weight:700;font-size:13px">\${c.code}</div>
                   <div style="font-size:11px;color:var(--text-secondary)">\${c.days} Hari | Terpakai: \${c.used || 0}/\${c.quota || '∞'}</div>
                 </div>
-                <button class="btn-custom" style="width:auto;padding:6px 12px;font-size:11px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="deleteVoucher('\${c.code}')">Hapus</button>
+                <button class="btn-custom" style="width:auto;padding:6px 12px;font-size:11px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="deleteVoucher('\${c.code}', this)">Hapus</button>
               </div>
             </div>
           \`).join('');
@@ -890,12 +925,13 @@ module.exports = async (req, res) => {
     } catch (e) {}
   }
 
-  async function ownerAct(invoice, action) {
+  async function ownerAct(invoice, action, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
     try {
       let res = await fetch('/api/owner_action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id: currentUserId, password: ownerPassword, invoice, action })
+        body: JSON.stringify({ owner_id: currentUserId, invoice, action })
       });
       let data = await res.json();
       showToast(data.ok ? 'Sukses' : 'Gagal', data.message, data.ok ? 'success' : 'error');
@@ -905,18 +941,20 @@ module.exports = async (req, res) => {
     }
   }
 
-  async function createVoucher() {
+  async function createVoucher(btn) {
     let code = document.getElementById('vGenCode').value.trim();
     let days = document.getElementById('vGenDays').value;
     let quota = document.getElementById('vGenQuota').value;
 
     if (!code || !days) return showToast('Error', 'Lengkapi kode dan durasi hari!', 'warning');
 
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Membuat...'; }
+
     try {
       let res = await fetch('/api/create_code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id: currentUserId, password: ownerPassword, code, days, quota })
+        body: JSON.stringify({ owner_id: currentUserId, code, days, quota })
       });
       let data = await res.json();
       showToast(data.ok ? 'Voucher Dibuat' : 'Gagal', data.message, data.ok ? 'success' : 'error');
@@ -928,15 +966,18 @@ module.exports = async (req, res) => {
       }
     } catch (e) {
       showToast('Error', 'Gagal membuat voucher', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Buat Voucher'; }
     }
   }
 
-  async function deleteVoucher(code) {
+  async function deleteVoucher(code, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Hapus...'; }
     try {
       let res = await fetch('/api/delete_code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id: currentUserId, password: ownerPassword, code })
+        body: JSON.stringify({ owner_id: currentUserId, code })
       });
       let data = await res.json();
       showToast(data.ok ? 'Voucher Dihapus' : 'Gagal', data.message, data.ok ? 'success' : 'error');
@@ -946,19 +987,17 @@ module.exports = async (req, res) => {
     }
   }
 
-  async function sendBroadcast() {
+  async function sendBroadcast(btn) {
     let text = document.getElementById('bcTextInput').value.trim();
     if (!text) return showToast('Error', 'Pesan broadcast tidak boleh kosong!', 'warning');
 
-    let btn = document.getElementById('btnSendBc');
-    btn.disabled = true;
-    btn.textContent = 'Mengirim Broadcast...';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Mengirim Broadcast...'; }
 
     try {
       let res = await fetch('/api/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id: currentUserId, password: ownerPassword, text })
+        body: JSON.stringify({ owner_id: currentUserId, text })
       });
       let data = await res.json();
 
@@ -972,8 +1011,7 @@ module.exports = async (req, res) => {
     } catch (e) {
       showToast('Error', 'Gagal mengirim broadcast', 'error');
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Kirim Broadcast Sekarang';
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Kirim Broadcast Sekarang'; }
     }
   }
 
