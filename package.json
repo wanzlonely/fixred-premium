@@ -1,9 +1,11 @@
 {
   "name": "walzy-vercel-bot",
-  "version": "9.2-vercel-manual",
+  "version": "10.0-final-ready",
   "description": "FixRed Walzy Bot for Vercel Webhook + Manual Deposit",
   "main": "api/bot.js",
-  "scripts": { "dev": "vercel dev" },
+  "scripts": {
+    "dev": "vercel dev"
+  },
   "dependencies": {
     "@upstash/redis": "^1.34.3",
     "dotenv": "^16.4.5",
