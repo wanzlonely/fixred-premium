@@ -27,8 +27,6 @@ function ensureDB(db) {
   if (!db.codes) db.codes = {};
   if (!db.stats) db.stats = { totalFix: 0, totalSuccess: 0, totalFailed: 0, revenue: 0, revenueHistory: [], lastReset: Date.now() };
   if (!db.history) db.history = {};
-  if (!db.pending) db.pending = {};
-  if (!db.supportMap) db.supportMap = {};
 }
 
 function cleanDB(db) {
@@ -93,7 +91,6 @@ function getUser(db, id) {
       premiumUntil: 0,
       lastSpin: null,
       awaitingNumber: false,
-      awaitingBroadcast: false,
       awaitingSupport: false,
       pendingDeposit: null
     };
@@ -159,26 +156,27 @@ function fmtMoney(n) {
   return 'Rp ' + (n || 0).toLocaleString('id-ID');
 }
 
+function bq(text) {
+  return `<blockquote>${text}</blockquote>`;
+}
+
 function getOwnerMenu(chatId, db, user) {
   const validUsers = getUniqueUsers(db.users);
   const pendingOrders = Object.values(db.payments || {}).filter(p => p.status === 'waiting_approval').length;
   const revenue = db.stats.revenue || 0;
-  const now = new Date();
+  const vipCount = validUsers.filter(u => isPremium(u)).length;
 
   const text =
 `Owner Panel 👑
 
-Halo ${esc(user.first_name)}!
+Halo <b>${esc(user.first_name)}</b>!
 
-Users Valid: ${validUsers.length}
-VIP Active: ${validUsers.filter(u => isPremium(u)).length}
-Pending ACC: ${pendingOrders}
-Revenue: ${fmtMoney(revenue)}
+${bq(`<b>Users Valid:</b> ${validUsers.length}
+<b>VIP Active:</b> ${vipCount}
+<b>Pending ACC:</b> ${pendingOrders}
+<b>Revenue:</b> ${fmtMoney(revenue)}`)}
 
-Jam: ${now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB
-
-Buka Owner WebApp di bawah untuk kelola semua fitur.
-Semua fitur owner sudah pindah ke WebApp.`;
+Buka Owner WebApp di bawah untuk kelola semua fitur.`;
 
   return {
     text,
@@ -201,18 +199,18 @@ function getUserMenu(chatId, db, user) {
     : `Gratis sisa ${can.remaining}/3 hari ini`;
 
   const text =
-`Halo ${esc(user.first_name)}! 👋
+`Halo <b>${esc(user.first_name)}</b>! 👋
 
-Status: ${status}
-Rank: ${rnk.name} ${rnk.icon}
-ID: ${user.id}
+${bq(`<b>Status:</b> ${esc(status)}
+<b>Rank:</b> ${rnk.name} ${rnk.icon}
+<b>ID:</b> <code>${user.id}</code>`)}
 
-Total Order: ${user.totalFix || 0}
-Referral: ${user.referralCount || 0} orang
-Gabung: ${new Date(user.joinedAt).toLocaleDateString('id-ID')}
+${bq(`<b>Total Order:</b> ${user.totalFix || 0}
+<b>Referral:</b> ${user.referralCount || 0} orang
+<b>Gabung:</b> ${new Date(user.joinedAt).toLocaleDateString('id-ID')}`)}
 
-Buka Walzy Store di bawah untuk beli paket premium dan fix merah.
-Bayar via DANA ${config.DANA_NUMBER}`;
+Buka Walzy Store di bawah untuk beli paket premium.
+Bayar via DANA <code>${config.DANA_NUMBER}</code>`;
 
   return {
     text,
@@ -221,7 +219,7 @@ Bayar via DANA ${config.DANA_NUMBER}`;
       reply_markup: {
         inline_keyboard: [
           [{ text: '🎨 Buka Walzy Store', web_app: { url: `${process.env.PUBLIC_URL || ''}/webapp` } }],
-          [{ text: '💬 Bantuan', callback_data: 'user_contact_owner' }]
+          [{ text: '💬 Bantuan Owner', callback_data: 'user_contact_owner' }]
         ]
       }
     }
@@ -239,7 +237,7 @@ async function handleMessage(bot, db, msg) {
   user.username = msg.from.username || user.username;
 
   if (!checkRateLimit(chatId)) {
-    return bot.sendMessage(chatId, '⏳ Tunggu sebentar, jangan spam.', { parse_mode: 'HTML' });
+    return bot.sendMessage(chatId, '⏳ Tunggu sebentar, jangan spam.');
   }
 
   const joinCheck = await checkJoin(bot, chatId);
@@ -248,41 +246,8 @@ async function handleMessage(bot, db, msg) {
     joinButtons.push([{ text: '✅ Sudah Join', callback_data: 'check_join' }]);
     return bot.sendMessage(
       chatId,
-      `Wajib join channel dulu:\n${joinCheck.notJoined.map(c => '- ' + c.title).join('\n')}\n\nKlik Sudah Join setelah join.`,
-      { parse_mode: 'HTML', reply_markup: { inline_keyboard: joinButtons } }
-    );
-  }
-
-  if (user.awaitingBroadcast && isOwner(chatId)) {
-    if (text.toLowerCase() === 'batal') {
-      user.awaitingBroadcast = false;
-      await saveDB(db);
-      const m = getOwnerMenu(chatId, db, user);
-      return bot.sendMessage(chatId, m.text, m.opts);
-    }
-    if (text.length < 5) return bot.sendMessage(chatId, 'Pesan terlalu pendek, min 5 karakter.');
-    if (text.length > 1000) return bot.sendMessage(chatId, 'Pesan kepanjangan, max 1000.');
-    
-    const unique = getUniqueUsers(db.users);
-    let sent = 0, failed = 0;
-    const statusMsg = await bot.sendMessage(chatId, `Mulai broadcast ke ${unique.length} user...`);
-    
-    for (let i = 0; i < unique.length; i++) {
-      const u = unique[i];
-      try {
-        await bot.sendMessage(u.id, `📢 Info dari Walzy Store:\n\n${esc(text)}`);
-        sent++;
-      } catch (e) {
-        failed++;
-      }
-      await new Promise(r => setTimeout(r, 80));
-    }
-    
-    user.awaitingBroadcast = false;
-    await saveDB(db);
-    return bot.editMessageText(
-      `Broadcast selesai\nTotal: ${unique.length}\nBerhasil: ${sent}\nGagal: ${failed}`,
-      { chat_id: chatId, message_id: statusMsg.message_id }
+      `Wajib join channel dulu:\n${joinCheck.notJoined.map(c => '- ' + c.title).join('\n')}`,
+      { reply_markup: { inline_keyboard: joinButtons } }
     );
   }
 
@@ -297,20 +262,17 @@ async function handleMessage(bot, db, msg) {
       return bot.sendMessage(chatId, 'Tunggu 1 menit sebelum kirim lagi.');
     }
     if (text.length < 10) return bot.sendMessage(chatId, 'Keluhan terlalu pendek, min 10 karakter.');
-    if (text.length > 500) return bot.sendMessage(chatId, 'Keluhan kepanjangan, max 500.');
+    if (text.length > 500) return bot.sendMessage(chatId, 'Max 500 karakter.');
 
     user.awaitingSupport = false;
     await saveDB(db);
 
     for (let ownerId of config.OWNER_IDS) {
       try {
-        await bot.sendMessage(
-          ownerId,
-          `Keluhan baru dari ${esc(user.first_name)} (${chatId}):\n${esc(text)}`
-        );
+        await bot.sendMessage(ownerId, `Keluhan dari ${esc(user.first_name)} (${chatId}):\n${bq(esc(text))}`, { parse_mode: 'HTML' });
       } catch (e) {}
     }
-    return bot.sendMessage(chatId, 'Keluhan terkirim ke owner, akan dibalas segera.');
+    return bot.sendMessage(chatId, 'Keluhan terkirim ke owner.');
   }
 
   if (user.awaitingNumber) {
@@ -321,21 +283,19 @@ async function handleMessage(bot, db, msg) {
       return bot.sendMessage(chatId, m.text, m.opts);
     }
     if (!isValidNumber(text)) {
-      return bot.sendMessage(chatId, 'Nomor salah. Format 08xxxx atau 62xxxx\nContoh: 08123456789\nKetik batal untuk batal.');
+      return bot.sendMessage(chatId, `Nomor salah. Format 08xxxx\nContoh: 08123456789\nKetik batal untuk batal.`);
     }
 
     const can = canUseFix(db, user);
     if (!can.allowed) {
       user.awaitingNumber = false;
       await saveDB(db);
-      return bot.sendMessage(chatId, 'Limit habis, sudah 3x hari ini. Tunggu besok atau upgrade VIP.', {
-        reply_markup: {
-          inline_keyboard: [[{ text: 'Buka Walzy Store', web_app: { url: `${process.env.PUBLIC_URL || ''}/webapp` } }]]
-        }
+      return bot.sendMessage(chatId, 'Limit habis 3x hari ini. Besok reset atau upgrade VIP.', {
+        reply_markup: { inline_keyboard: [[{ text: 'Buka Store', web_app: { url: `${process.env.PUBLIC_URL || ''}/webapp` } }]] }
       });
     }
 
-    const procMsg = await bot.sendMessage(chatId, `Proses fix nomor ${esc(text)}...\nTarget: ${config.TARGET_BOT}\nTunggu 10-25 detik.`);
+    const procMsg = await bot.sendMessage(chatId, `Proses fix ${esc(text)}...\nTunggu 10-25 detik.`);
 
     try {
       const result = await sendToTarget(text);
@@ -343,17 +303,18 @@ async function handleMessage(bot, db, msg) {
         incrementFixCount(db, user);
         db.stats.totalSuccess = (db.stats.totalSuccess || 0) + 1;
         await saveDB(db);
-        await bot.editMessageText(
-          `Fix berhasil!\nNomor: ${esc(text)}\nSisa: ${can.remaining - 1}/3\n\nHasil: ${(result.text || 'Berhasil').substring(0, 800)}`,
-          { chat_id: chatId, message_id: procMsg.message_id }
-        );
+        await bot.editMessageText(`Fix berhasil!\nNomor: ${esc(text)}\nSisa: ${can.remaining - 1}/3\n\n${bq(esc((result.text || 'Berhasil').substring(0, 700)))}`, {
+          chat_id: chatId,
+          message_id: procMsg.message_id,
+          parse_mode: 'HTML'
+        });
       } else {
         db.stats.totalFailed = (db.stats.totalFailed || 0) + 1;
         await saveDB(db);
-        await bot.editMessageText(
-          `Fix gagal\nNomor: ${esc(text)}\nAlasan: ${esc(result.message || 'Tidak respon')}`,
-          { chat_id: chatId, message_id: procMsg.message_id }
-        );
+        await bot.editMessageText(`Fix gagal\nNomor: ${esc(text)}\nAlasan: ${esc(result.message || 'Tidak respon')}`, {
+          chat_id: chatId,
+          message_id: procMsg.message_id
+        });
       }
     } catch (e) {
       await bot.editMessageText(`Error: ${esc(e.message)}`, {
@@ -384,14 +345,12 @@ async function handleMessage(bot, db, msg) {
         await bot.sendPhoto(ownerId, pay.proofPhoto, {
           caption: `Bukti baru\nInvoice: ${pay.id}\nUser: ${esc(user.first_name)} (${chatId})\nPaket: ${pay.days}H ${fmtMoney(pay.amount)}`,
           reply_markup: {
-            inline_keyboard: [
-              [{ text: '✅ ACC', callback_data: 'approve_' + pay.id }, { text: '❌ Tolak', callback_data: 'reject_' + pay.id }]
-            ]
+            inline_keyboard: [[{ text: '✅ ACC', callback_data: 'approve_' + pay.id }, { text: '❌ Tolak', callback_data: 'reject_' + pay.id }]]
           }
         });
       } catch (e) {}
     }
-    return bot.sendMessage(chatId, `Bukti diterima\nInvoice: ${pay.id}\nMenunggu ACC owner 5-10 menit.`);
+    return bot.sendMessage(chatId, `Bukti diterima\nInvoice: ${pay.id}\nMenunggu ACC owner.`);
   }
 
   if (text.startsWith('/start')) {
@@ -431,7 +390,7 @@ async function handleMessage(bot, db, msg) {
       delete db.codes[code.toUpperCase()];
     }
     await saveDB(db);
-    return bot.sendMessage(chatId, `Berhasil redeem ${code.toUpperCase()} ${days} hari\nAktif sampai ${new Date(user.premiumUntil).toLocaleDateString('id-ID')}`);
+    return bot.sendMessage(chatId, `Berhasil redeem ${code.toUpperCase()} ${days} hari\nSampai ${new Date(user.premiumUntil).toLocaleDateString('id-ID')}`);
   }
 
   if (isValidNumber(text)) {
@@ -442,9 +401,7 @@ async function handleMessage(bot, db, msg) {
       user.awaitingNumber = false;
       await saveDB(db);
       return bot.sendMessage(chatId, 'Limit habis 3x hari ini. Besok reset atau upgrade VIP.', {
-        reply_markup: {
-          inline_keyboard: [[{ text: 'Buka Walzy Store', web_app: { url: `${process.env.PUBLIC_URL || ''}/webapp` } }]]
-        }
+        reply_markup: { inline_keyboard: [[{ text: 'Buka Walzy Store', web_app: { url: `${process.env.PUBLIC_URL || ''}/webapp` } }]] }
       });
     }
     return bot.sendMessage(chatId, `Konfirmasi fix nomor ${esc(text)}\nSisa: ${can.remaining}/3\nKetik YA untuk lanjut, batal untuk batal.`);
@@ -467,33 +424,24 @@ async function handleCallback(bot, db, query) {
     const joinCheck = await checkJoin(bot, chatId);
     if (joinCheck.joined) {
       const m = isOwner(chatId) ? getOwnerMenu(chatId, db, user) : getUserMenu(chatId, db, user);
-      await bot.editMessageText(m.text, {
-        chat_id: chatId,
-        message_id: msgId,
-        reply_markup: m.opts.reply_markup
-      });
+      await bot.editMessageText(m.text, { chat_id: chatId, message_id: msgId, parse_mode: 'HTML', reply_markup: m.opts.reply_markup });
     } else {
-      await bot.answerCallbackQuery(query.id, { text: 'Belum join semua channel' });
+      await bot.answerCallbackQuery(query.id, { text: 'Belum join semua' });
     }
     return;
   }
 
   if (data === 'menu_main') {
     const m = isOwner(chatId) ? getOwnerMenu(chatId, db, user) : getUserMenu(chatId, db, user);
-    return bot.editMessageText(m.text, {
-      chat_id: chatId,
-      message_id: msgId,
-      reply_markup: m.opts.reply_markup
-    });
+    return bot.editMessageText(m.text, { chat_id: chatId, message_id: msgId, parse_mode: 'HTML', reply_markup: m.opts.reply_markup });
   }
 
   if (data.startsWith('approve_')) {
     if (!isOwner(chatId)) return bot.answerCallbackQuery(query.id, { text: 'Bukan owner' });
     const inv = data.split('approve_')[1];
     const pay = db.payments[inv];
-    if (!pay) return bot.answerCallbackQuery(query.id, { text: 'Invoice tidak ada' });
+    if (!pay) return bot.answerCallbackQuery(query.id, { text: 'Tidak ada' });
     if (pay.status === 'paid') return bot.editMessageText(`Sudah ACC ${inv}`, { chat_id: chatId, message_id: msgId });
-    if (isSuspiciousId(pay.userId)) return bot.editMessageText(`User tidak valid ${inv}`, { chat_id: chatId, message_id: msgId });
     pay.status = 'paid';
     const u = getUser(db, pay.userId);
     if (!u) return;
@@ -504,9 +452,7 @@ async function handleCallback(bot, db, query) {
     db.stats.revenueHistory.push({ date: new Date().toISOString(), amount: pay.amount, invoice: inv, userId: pay.userId });
     await saveDB(db);
     await bot.editMessageText(`ACC berhasil ${inv}`, { chat_id: chatId, message_id: msgId });
-    try {
-      await bot.sendMessage(pay.userId, `LUNAS! Invoice ${inv} disetujui\nPaket ${pay.days}H sampai ${new Date(u.premiumUntil).toLocaleDateString('id-ID')}`);
-    } catch (e) {}
+    try { await bot.sendMessage(pay.userId, `LUNAS! Invoice ${inv} disetujui\nPaket ${pay.days}H`); } catch (e) {}
     return;
   }
 
@@ -520,16 +466,14 @@ async function handleCallback(bot, db, query) {
     if (u) u.pendingDeposit = null;
     await saveDB(db);
     await bot.editMessageText(`Ditolak ${inv}`, { chat_id: chatId, message_id: msgId });
-    try {
-      await bot.sendMessage(pay.userId, `Ditolak ${inv} ditolak, hubungi owner.`);
-    } catch (e) {}
+    try { await bot.sendMessage(pay.userId, `Ditolak ${inv}`); } catch (e) {}
     return;
   }
 
   if (data === 'user_contact_owner') {
     db.users[String(chatId)].awaitingSupport = true;
     await saveDB(db);
-    return bot.editMessageText('Tulis keluhan kamu (max 500 karakter)\nKetik batal untuk batal.', {
+    return bot.editMessageText('Tulis keluhan kamu (max 500)\nKetik batal untuk batal.', {
       chat_id: chatId,
       message_id: msgId,
       reply_markup: { inline_keyboard: [[{ text: 'Batal', callback_data: 'cancel_action' }]] }
@@ -537,16 +481,11 @@ async function handleCallback(bot, db, query) {
   }
 
   if (data === 'cancel_action') {
-    user.awaitingBroadcast = false;
     user.awaitingSupport = false;
     user.awaitingNumber = false;
     await saveDB(db);
     const m = isOwner(chatId) ? getOwnerMenu(chatId, db, user) : getUserMenu(chatId, db, user);
-    return bot.editMessageText(m.text, {
-      chat_id: chatId,
-      message_id: msgId,
-      reply_markup: m.opts.reply_markup
-    });
+    return bot.editMessageText(m.text, { chat_id: chatId, message_id: msgId, parse_mode: 'HTML', reply_markup: m.opts.reply_markup });
   }
 }
 
