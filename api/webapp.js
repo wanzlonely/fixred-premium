@@ -112,7 +112,7 @@ module.exports = async (req, res) => {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
     width: calc(100% - 32px); max-width: 480px; background: rgba(13, 18, 30, 0.92);
     backdrop-filter: blur(20px); border: 1px solid var(--border-card); border-radius: 24px;
-    display: flex; justify-content: space-around; padding: 6px; z-index: 80;
+    display: flex; justify-space-around; padding: 6px; z-index: 80;
     box-shadow: 0 12px 32px rgba(0,0,0,0.5);
   }
   .nav-tab {
@@ -164,7 +164,7 @@ module.exports = async (req, res) => {
   .loader-screen {
     position: fixed; inset: 0; background: var(--bg-main); z-index: 9999;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: opacity 0.3s ease;
   }
 
   .modal-overlay {
@@ -192,6 +192,14 @@ module.exports = async (req, res) => {
   <div style="font-weight:800;font-size:18px;letter-spacing:1px">WALZY STORE PRO</div>
   <div style="font-size:12px;color:var(--text-secondary)" id="loadText">Menghubungkan ke server...</div>
 </div>
+
+<script>
+  // Script darurat: Paksa hilangkan loader maksimal 1 detik setelah halaman dibuka
+  setTimeout(function() {
+    var el = document.getElementById('loader');
+    if (el) { el.style.display = 'none'; }
+  }, 1000);
+</script>
 
 <div class="toast" id="toast">
   <div id="toastIcon" style="color:var(--accent-blue);display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.05)">
@@ -534,7 +542,9 @@ module.exports = async (req, res) => {
 
 <script>
   var tg = window.Telegram ? window.Telegram.WebApp : null;
-  if (tg) { tg.ready(); tg.expand(); }
+  if (tg) { 
+    try { tg.ready(); tg.expand(); } catch(e) {}
+  }
 
   var currentUserId = null;
   var activeInvoiceId = null;
@@ -555,8 +565,7 @@ module.exports = async (req, res) => {
   function dismissLoader() {
     var ldr = document.getElementById('loader');
     if (ldr) {
-      ldr.style.opacity = '0';
-      ldr.style.visibility = 'hidden';
+      ldr.style.display = 'none';
     }
   }
 
@@ -596,7 +605,7 @@ module.exports = async (req, res) => {
   }
 
   function initApp() {
-    setTimeout(dismissLoader, 800);
+    dismissLoader();
 
     try {
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -1109,7 +1118,12 @@ module.exports = async (req, res) => {
     }
   }
 
-  window.onload = initApp;
+  // Auto-run instant tanpa menunggu window.onload (Mencegah stuck di Telegram Webview)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+  } else {
+    initApp();
+  }
 </script>
 </body>
 </html>`;
