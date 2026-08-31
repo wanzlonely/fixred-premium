@@ -73,7 +73,7 @@ function bq(t) { return `<blockquote>${t}</blockquote>`; }
 function getOwnerMenu(user) {
   const webappUrl = process.env.PUBLIC_URL ? `${process.env.PUBLIC_URL}/webapp` : '';
 
-  const text = `⚡️ <b>WALZY OWNER STUDIO PRO</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n${bq(`👑 <b>Owner:</b> ${esc(user.first_name)}\n🛡️ <b>Akses:</b> Administrator Full Studio\n\nSemua fitur utama (Fix Merah, Katalog Order, Kelola User, Generator Voucher, Broadcast Pesan, Analitik Bot) dapat diakses langsung melalui WebApp Studio Owner.`)}\n━━━━━━━━━━━━━━━━━━━━━━━\n🕒 <i>${new Date().toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</i>`;
+  const text = `⚡️ <b>WALZY OWNER STUDIO PRO</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n${bq(`👑 <b>Owner:</b> ${esc(user.first_name)}\n🛡️ <b>Akses:</b> Full Administrator Studio\n\nSeluruh manajemen toko (Order, User, Voucher, Broadcast, & Analitik) dapat diakses langsung via WebApp Studio Owner.`)}\n━━━━━━━━━━━━━━━━━━━━━━━\n🕒 <i>${new Date().toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</i>`;
 
   const keyboard = [
     [{ text: '🎨 Buka Studio Owner (WebApp)', web_app: { url: webappUrl } }]
@@ -87,7 +87,7 @@ function getUserMenu(user, chatId) {
   const status = isPremium(user) ? `💎 <b>VIP (${getPremiumLeft(user)} Hari)</b>` : `🎫 <b>Akses Gratis</b>`;
   const webappUrl = process.env.PUBLIC_URL ? `${process.env.PUBLIC_URL}/webapp` : '';
 
-  const text = `✨ <b>WALZY STORE OFFICIAL</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n${bq(`Halo, <b>${esc(user.first_name)}</b>! 👋\n\n🆔 <b>ID Anda:</b> <code>${chatId}</code>\n⭐ <b>Status:</b> ${status}\n🏅 <b>Level:</b> ${rnk.icon} ${rnk.name}\n🪙 <b>Poin:</b> <code>${user.points || 0} PTS</code>`)}\n━━━━━━━━━━━━━━━━━━━━━━━\n💡 <i>Gunakan WebApp resmi kami untuk mengakses seluruh layanan toko, spin harian, daily check-in, dan pembelian VIP!</i>`;
+  const text = `✨ <b>WALZY STORE OFFICIAL</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n${bq(`Halo, <b>${esc(user.first_name)}</b>! 👋\n\n🆔 <b>ID Anda:</b> <code>${chatId}</code>\n⭐ <b>Status:</b> ${status}\n🏅 <b>Level:</b> ${rnk.icon} ${rnk.name}\n🪙 <b>Poin:</b> <code>${user.points || 0} PTS</code>`)}\n━━━━━━━━━━━━━━━━━━━━━━━\n💡 <i>Gunakan WebApp resmi kami untuk transaksi produk VIP, daily check-in, point shop, dan spin wheel!</i>`;
 
   const keyboard = [
     [{ text: '🛍️ Buka WebApp Walzy Store', web_app: { url: webappUrl } }]
