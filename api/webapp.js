@@ -126,13 +126,17 @@ module.exports = async (req, res) => {
   .view.active { display: block; opacity: 1; transform: translateY(0); }
 
   .toast {
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-    width: calc(100% - 40px); max-width: 380px; background: var(--bg-card); backdrop-filter: blur(20px);
-    border: 1px solid var(--accent-blue); border-radius: 16px; padding: 14px 18px; z-index: 100;
-    display: flex; align-items: center; gap: 12px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-120px) scale(0.9);
+    width: calc(100% - 32px); max-width: 420px;
+    background: rgba(13, 19, 33, 0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--accent-blue); border-radius: 18px; padding: 14px 18px; z-index: 999;
+    display: flex; align-items: center; gap: 14px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.15);
+    overflow: hidden; opacity: 0; pointer-events: none;
   }
-  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.show { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+  .toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--accent-blue); width: 100%; transition: width 3.5s linear; }
 
   .streak-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 14px 0; }
   .streak-day {
@@ -174,13 +178,14 @@ module.exports = async (req, res) => {
 </div>
 
 <div class="toast" id="toast">
-  <div id="toastIcon" style="color:var(--accent-blue)">
+  <div id="toastIcon" style="color:var(--accent-blue);display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.05)">
     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
   </div>
   <div>
-    <div id="toastTitle" style="font-weight:700;font-size:13px">Notifikasi</div>
-    <div id="toastMsg" style="font-size:11px;color:var(--text-secondary)">Pesan deskripsi</div>
+    <div id="toastTitle" style="font-weight:800;font-size:13px;letter-spacing:-0.2px">Notifikasi</div>
+    <div id="toastMsg" style="font-size:11px;color:var(--text-secondary);margin-top:2px">Pesan deskripsi</div>
   </div>
+  <div class="toast-progress" id="toastProgress"></div>
 </div>
 
 <div class="modal-overlay" id="invoiceModal">
@@ -508,6 +513,7 @@ module.exports = async (req, res) => {
 
   let currentUserId = null;
   let ownerPassword = '';
+  let toastTimeout = null;
 
   function initApp() {
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -570,10 +576,10 @@ module.exports = async (req, res) => {
 
         document.getElementById('loader').style.display = 'none';
       } else {
-        showToast('Error', data.message);
+        showToast('Error', data.message, 'error');
       }
     } catch (e) {
-      showToast('Error', 'Gagal memuat data dari server');
+      showToast('Error', 'Gagal memuat data dari server', 'error');
     }
   }
 
@@ -584,9 +590,9 @@ module.exports = async (req, res) => {
         <b>ID Invoice:</b> \${invId}<br>
         <b>Paket VIP:</b> \${days} Hari<br>
         <b>Total Bayar:</b> \${amount}<br>
-        <b>Status:</b> Menunggu Konfirmasi/Persetujuan Admin
+        <b>Status:</b> Menunggu Konfirmasi Admin
       </div>
-      <div style="margin-top:10px;font-size:11px">Silakan selesaikan pembayaran dan notifikasi persetujuan akan otomatis dikirimkan via Bot & WebApp.</div>
+      <div style="margin-top:10px;font-size:11px">Selesaikan transaksi pembayaran Anda dan verifikasi notifikasi akan masuk secara otomatis.</div>
     \`;
     document.getElementById('invoiceModal').classList.add('active');
   }
@@ -615,12 +621,38 @@ module.exports = async (req, res) => {
     if (event && event.currentTarget) event.currentTarget.classList.add('active');
   }
 
-  function showToast(title, msg) {
+  function showToast(title, msg, type = 'info') {
     let t = document.getElementById('toast');
+    let iconContainer = document.getElementById('toastIcon');
+    let progress = document.getElementById('toastProgress');
+    
+    let colors = {
+      success: 'var(--accent-emerald)',
+      error: 'var(--accent-rose)',
+      warning: 'var(--accent-amber)',
+      info: 'var(--accent-blue)'
+    };
+    let color = colors[type] || colors.info;
+
+    t.style.borderColor = color;
+    iconContainer.style.color = color;
+    if (progress) progress.style.background = color;
+
     document.getElementById('toastTitle').textContent = title;
     document.getElementById('toastMsg').textContent = msg;
+
+    if (progress) {
+      progress.style.transition = 'none';
+      progress.style.width = '100%';
+      setTimeout(() => {
+        progress.style.transition = 'width 3.5s linear';
+        progress.style.width = '0%';
+      }, 50);
+    }
+
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3500);
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => { t.classList.remove('show'); }, 3500);
   }
 
   async function triggerSpin() {
@@ -631,10 +663,10 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ user_id: currentUserId })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Spin Berhasil' : 'Informasi', data.message);
+      showToast(data.ok ? 'Spin Berhasil' : 'Informasi', data.message, data.ok ? 'success' : 'warning');
       if (data.ok) loadUserData();
     } catch (e) {
-      showToast('Error', 'Gagal memproses spin');
+      showToast('Error', 'Gagal memproses spin', 'error');
     }
   }
 
@@ -646,10 +678,10 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ user_id: currentUserId })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Check-in Berhasil' : 'Informasi', data.message);
+      showToast(data.ok ? 'Check-in Berhasil' : 'Informasi', data.message, data.ok ? 'success' : 'warning');
       if (data.ok) loadUserData();
     } catch (e) {
-      showToast('Error', 'Gagal melakukan check-in');
+      showToast('Error', 'Gagal melakukan check-in', 'error');
     }
   }
 
@@ -661,10 +693,10 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ user_id: currentUserId, option })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Point Store' : 'Gagal', data.message);
+      showToast(data.ok ? 'Point Vault' : 'Gagal Transaksi', data.message, data.ok ? 'success' : 'error');
       if (data.ok) loadUserData();
     } catch (e) {
-      showToast('Error', 'Gagal menukarkan poin');
+      showToast('Error', 'Gagal menukarkan poin', 'error');
     }
   }
 
@@ -677,19 +709,19 @@ module.exports = async (req, res) => {
       });
       let data = await res.json();
       if (data.ok) {
-        showToast('Invoice Berhasil Dibuat', 'Invoice: ' + (data.invoice.invoice || data.invoice.id));
+        showToast('Invoice Berhasil Dibuat', 'Invoice: ' + (data.invoice.invoice || data.invoice.id), 'success');
         loadUserData();
       } else {
-        showToast('Gagal Order', data.message);
+        showToast('Gagal Order', data.message, 'error');
       }
     } catch (e) {
-      showToast('Error', 'Gagal membuat invoice');
+      showToast('Error', 'Gagal membuat invoice', 'error');
     }
   }
 
   async function claimVoucher() {
     let code = document.getElementById('vCodeInput').value.trim();
-    if (!code) return showToast('Peringatan', 'Masukkan kode voucher!');
+    if (!code) return showToast('Peringatan', 'Masukkan kode voucher promo!', 'warning');
 
     try {
       let res = await fetch('/api/redeem', {
@@ -698,13 +730,13 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ user_id: currentUserId, code })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Sukses' : 'Gagal', data.message);
+      showToast(data.ok ? 'Sukses Klaim' : 'Gagal Klaim', data.message, data.ok ? 'success' : 'error');
       if (data.ok) {
         document.getElementById('vCodeInput').value = '';
         loadUserData();
       }
     } catch (e) {
-      showToast('Error', 'Gagal mengklaim voucher');
+      showToast('Error', 'Gagal mengklaim voucher', 'error');
     }
   }
 
@@ -712,12 +744,12 @@ module.exports = async (req, res) => {
     let input = document.getElementById('refUrlInput');
     input.select();
     document.execCommand('copy');
-    showToast('Berhasil', 'Tautan referral telah disalin!');
+    showToast('Berhasil Disalin', 'Link referral tersalin ke clipboard!', 'success');
   }
 
   async function verifyOwner() {
     let pass = document.getElementById('ownerPassInput').value.trim();
-    if (!pass) return showToast('Error', 'Masukkan password owner!');
+    if (!pass) return showToast('Error', 'Masukkan password owner!', 'warning');
 
     try {
       let res = await fetch('/api/verify_owner', {
@@ -730,13 +762,13 @@ module.exports = async (req, res) => {
         ownerPassword = pass;
         document.getElementById('ownerLoginBox').style.display = 'none';
         document.getElementById('ownerContent').style.display = 'block';
-        showToast('Akses Diterima', 'Selamat datang Owner!');
+        showToast('Autentikasi Diterima', 'Selamat datang di Studio Owner!', 'success');
         loadOwnerData();
       } else {
-        showToast('Akses Ditolak', data.message);
+        showToast('Akses Ditolak', data.message, 'error');
       }
     } catch (e) {
-      showToast('Error', 'Gagal verifikasi owner');
+      showToast('Error', 'Gagal verifikasi owner', 'error');
     }
   }
 
@@ -810,10 +842,10 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ owner_id: currentUserId, password: ownerPassword, invoice, action })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Sukses' : 'Gagal', data.message);
+      showToast(data.ok ? 'Sukses' : 'Gagal', data.message, data.ok ? 'success' : 'error');
       if (data.ok) loadOwnerData();
     } catch (e) {
-      showToast('Error', 'Gagal memproses aksi');
+      showToast('Error', 'Gagal memproses aksi', 'error');
     }
   }
 
@@ -822,7 +854,7 @@ module.exports = async (req, res) => {
     let days = document.getElementById('vGenDays').value;
     let quota = document.getElementById('vGenQuota').value;
 
-    if (!code || !days) return showToast('Error', 'Lengkapi kode dan durasi hari!');
+    if (!code || !days) return showToast('Error', 'Lengkapi kode dan durasi hari!', 'warning');
 
     try {
       let res = await fetch('/api/create_code', {
@@ -831,7 +863,7 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ owner_id: currentUserId, password: ownerPassword, code, days, quota })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Sukses' : 'Gagal', data.message);
+      showToast(data.ok ? 'Voucher Dibuat' : 'Gagal', data.message, data.ok ? 'success' : 'error');
       if (data.ok) {
         document.getElementById('vGenCode').value = '';
         document.getElementById('vGenDays').value = '';
@@ -839,7 +871,7 @@ module.exports = async (req, res) => {
         loadOwnerData();
       }
     } catch (e) {
-      showToast('Error', 'Gagal membuat voucher');
+      showToast('Error', 'Gagal membuat voucher', 'error');
     }
   }
 
@@ -851,16 +883,16 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ owner_id: currentUserId, password: ownerPassword, code })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Sukses' : 'Gagal', data.message);
+      showToast(data.ok ? 'Voucher Dihapus' : 'Gagal', data.message, data.ok ? 'success' : 'error');
       if (data.ok) loadOwnerData();
     } catch (e) {
-      showToast('Error', 'Gagal menghapus voucher');
+      showToast('Error', 'Gagal menghapus voucher', 'error');
     }
   }
 
   async function sendBroadcast() {
     let text = document.getElementById('bcTextInput').value.trim();
-    if (!text) return showToast('Error', 'Pesan broadcast tidak boleh kosong!');
+    if (!text) return showToast('Error', 'Pesan broadcast tidak boleh kosong!', 'warning');
 
     let btn = document.getElementById('btnSendBc');
     btn.disabled = true;
@@ -875,14 +907,14 @@ module.exports = async (req, res) => {
       let data = await res.json();
 
       if (data.ok) {
-        showToast('Broadcast Selesai', data.message);
+        showToast('Broadcast Selesai', data.message, 'success');
         document.getElementById('bcTextInput').value = '';
         loadOwnerData();
       } else {
-        showToast('Gagal Broadcast', data.message);
+        showToast('Gagal Broadcast', data.message, 'error');
       }
     } catch (e) {
-      showToast('Error', 'Gagal mengirim broadcast');
+      showToast('Error', 'Gagal mengirim broadcast', 'error');
     } finally {
       btn.disabled = false;
       btn.textContent = 'Kirim Broadcast Sekarang';
