@@ -10,50 +10,50 @@ module.exports = async (req, res) => {
 <title>WALZY STORE</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f6fa; color: #1a1a2e; min-height: 100vh; }
-  .header { position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 1px solid #e5e7eb; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #f5f6fa; color: #111827; min-height: 100vh; }
+  .header { position: sticky; top: 0; z-index: 50; background: #ffffff; border-bottom: 1px solid #e5e7eb; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-icon { width: 36px; height: 36px; border-radius: 10px; background: #2563eb; display: grid; place-items: center; color: #fff; font-weight: 800; }
-  .brand-text { font-weight: 700; font-size: 15px; }
-  .live { font-size: 11px; color: #6b7280; background: #f3f4f6; padding: 4px 10px; border-radius: 20px; }
   .container { max-width: 600px; margin: 0 auto; padding: 12px 12px 90px; }
   .view { display: none; }
   .view.active { display: block; }
   .card { background: #fff; border-radius: 16px; border: 1px solid #e5e7eb; margin-bottom: 10px; overflow: hidden; }
-  .card-head { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; }
+  .card-head { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; font-weight: 700; font-size: 13px; display: flex; justify-content: space-between; }
   .card-body { padding: 14px 16px; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .stat { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; }
-  .stat-num { font-size: 20px; font-weight: 700; }
+  .stat-num { font-size: 20px; font-weight: 800; }
   .stat-label { font-size: 11px; color: #6b7280; margin-top: 4px; }
-  .btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e7eb; background: #fff; font-weight: 600; cursor: pointer; text-align: center; }
+  .btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e7eb; background: #fff; font-weight: 600; cursor: pointer; }
   .btn-primary { background: #2563eb; color: #fff; border: 0; }
   .btn:active { transform: scale(0.98); }
-  .input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e7eb; outline: none; font-size: 13px; }
+  .input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e7eb; outline: none; }
   .input:focus { border-color: #2563eb; }
   .pkg { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
   .pkg:last-child { border-bottom: 0; }
-  .pkg-name { font-weight: 600; font-size: 13px; }
+  .pkg-name { font-weight: 700; font-size: 13px; }
   .pkg-desc { font-size: 11px; color: #6b7280; margin-top: 2px; }
-  .pkg-price { font-weight: 700; font-size: 13px; color: #2563eb; }
+  .pkg-price { font-weight: 800; font-size: 13px; color: #2563eb; }
   .nav { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid #e5e7eb; display: flex; gap: 4px; padding: 6px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); z-index: 40; width: calc(100% - 24px); max-width: 400px; }
-  .nav.hidden { display: none; }
-  .nav-item { flex: 1; text-align: center; padding: 8px 4px; border-radius: 10px; cursor: pointer; color: #6b7280; font-size: 10px; font-weight: 600; }
-  .nav-item.active { background: #1a1a2e; color: #fff; }
+  .nav.hidden { display: none !important; }
+  .nav-item { flex: 1; text-align: center; padding: 8px 4px; border-radius: 10px; cursor: pointer; color: #6b7280; font-size: 10px; font-weight: 700; }
+  .nav-item.active { background: #111827; color: #fff; }
   .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 280px; background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.12); padding: 20px; display: none; text-align: center; z-index: 100; }
   .toast.show { display: block; }
   .loading { position: fixed; inset: 0; background: #f5f6fa; z-index: 99; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
   .loading.hide { display: none; }
   .login-full { position: fixed; inset: 0; background: #f5f6fa; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .login-card { width: 100%; max-width: 320px; background: #fff; border: 1px solid #e5e7eb; border-radius: 20px; padding: 24px 20px; text-align: center; }
-  .page-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-  .page-sub { font-size: 12px; color: #6b7280; margin-bottom: 16px; }
+  blockquote { border-left: 3px solid #2563eb; background: #f8fafc; margin: 10px 0; padding: 10px 12px; border-radius: 0 10px 10px 0; font-size: 12px; line-height: 1.6; }
+  blockquote b { color: #111827; }
+  .page-title { font-size: 16px; font-weight: 800; }
+  .page-sub { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
   .back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280; cursor: pointer; margin-bottom: 12px; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   th { text-align: left; padding: 8px; font-size: 10px; color: #6b7280; border-bottom: 1px solid #f3f4f6; text-transform: uppercase; }
   td { padding: 8px; border-bottom: 1px solid #f3f4f6; }
-  .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
   .badge-blue { background: #dbeafe; color: #1e40af; }
   .badge-green { background: #dcfce7; color: #166534; }
   .badge-orange { background: #fef3c7; color: #92400e; }
@@ -63,8 +63,8 @@ module.exports = async (req, res) => {
 
 <div class="loading" id="loading">
   <div style="width:48px;height:48px;border-radius:12px;background:#2563eb;display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px">W</div>
-  <div style="font-weight:600">Walzy Store</div>
-  <div style="font-size:12px;color:#6b7280" id="loadTxt">Memuat...</div>
+  <div style="font-weight:700">Walzy Store</div>
+  <div style="font-size:12px;color:#6b7280" id="loadTxt">Memuat data...</div>
 </div>
 
 <div class="toast" id="toast">
@@ -76,25 +76,30 @@ module.exports = async (req, res) => {
 <div class="header" id="mainHeader">
   <div class="brand">
     <div class="brand-icon">W</div>
-    <div class="brand-text" id="headerTitle">walzy store</div>
+    <div style="font-weight:700;font-size:15px" id="headerTitle">walzy store</div>
   </div>
-  <div class="live" id="time">--:--</div>
+  <div style="font-size:11px;color:#6b7280" id="time">--:--</div>
 </div>
 
 <div class="container">
 
-  <!-- USER ROOT -->
   <div id="userRoot" style="display:none">
-
     <div id="uHome" class="view active">
       <div class="card">
         <div class="card-body" style="display:flex;gap:12px;align-items:center">
           <div id="uAv" style="width:56px;height:56px;border-radius:14px;background:#dbeafe;display:grid;place-items:center;font-weight:700;color:#2563eb">W</div>
           <div style="flex:1">
             <div id="uName" style="font-weight:700">Memuat...</div>
-            <div id="uRank" class="badge badge-blue" style="margin-top:4px">BASIC</div>
+            <div id="uRank" style="margin-top:4px;font-size:11px"><span class="badge badge-blue">BASIC</span></div>
             <div id="uStatus" style="font-size:11px;color:#6b7280;margin-top:4px">Memuat status...</div>
           </div>
+        </div>
+        <div class="card-body" style="padding-top:0">
+          <blockquote>
+            <b>Status:</b> <span id="bStatus">Gratis sisa 3/3</span><br>
+            <b>ID:</b> <span id="bId">--</span><br>
+            <b>Rank:</b> <span id="bRank">BASIC</span>
+          </blockquote>
         </div>
       </div>
 
@@ -111,22 +116,27 @@ module.exports = async (req, res) => {
       </div>
 
       <div class="card">
-        <div class="card-head">Paket Premium <span style="font-size:10px;color:#6b7280">Terlaris</span></div>
+        <div class="card-head">Paket Premium</div>
         <div class="card-body" id="pkgHome"></div>
       </div>
 
       <div class="grid2">
         <div class="card">
           <div class="card-body">
-            <div style="font-size:11px;font-weight:600;margin-bottom:8px">Referral</div>
-            <div id="refLink" style="font-size:10px;background:#f3f4f6;padding:8px;border-radius:8px;word-break:break-all;color:#6b7280">Memuat...</div>
+            <div style="font-size:11px;font-weight:700;margin-bottom:8px">Referral Link</div>
+            <blockquote>
+              <b>Link:</b> <span id="refLink" style="font-size:10px;word-break:break-all">Memuat...</span>
+            </blockquote>
             <button class="btn" style="margin-top:8px;padding:8px;font-size:11px" onclick="copyRef()">Salin Link</button>
           </div>
         </div>
         <div class="card">
           <div class="card-body">
-            <div style="font-size:11px;font-weight:600;margin-bottom:8px">Redeem</div>
-            <input id="redeemInput" class="input" placeholder="KODE" style="text-transform:uppercase;text-align:center">
+            <div style="font-size:11px;font-weight:700;margin-bottom:8px">Redeem Voucher</div>
+            <blockquote>
+              <b>Kode:</b> Masukkan kode voucher di bawah
+            </blockquote>
+            <input id="redeemInput" class="input" placeholder="KODE" style="text-transform:uppercase;text-align:center;margin-top:8px">
             <button class="btn btn-primary" style="margin-top:8px;padding:8px;font-size:11px" onclick="doRedeem()">Tukar</button>
           </div>
         </div>
@@ -134,10 +144,12 @@ module.exports = async (req, res) => {
     </div>
 
     <div id="uOrder" class="view">
-      <div class="back" onclick="showUserView('uHome')">← Kembali</div>
+      <div class="back" onclick="showUserView('uHome')">← Kembali ke Home</div>
       <div class="page-title">Order Paket</div>
-      <div class="page-sub">Pilih paket premium</div>
-      <div class="card"><div class="card-body" id="pkgOrder"></div></div>
+      <div class="page-sub">Pilih paket dan bayar</div>
+      <div class="card">
+        <div class="card-body" id="pkgOrder"></div>
+      </div>
       <div class="card" id="invoiceCard" style="display:none">
         <div class="card-head">Invoice Aktif <span id="invStatus" class="badge badge-orange">Menunggu</span></div>
         <div class="card-body"><div id="invoiceBox"></div></div>
@@ -145,9 +157,9 @@ module.exports = async (req, res) => {
     </div>
 
     <div id="uTrans" class="view">
-      <div class="back" onclick="showUserView('uHome')">← Kembali</div>
-      <div class="page-title">Riwayat</div>
-      <div class="page-sub">Transaksi dan statistik</div>
+      <div class="back" onclick="showUserView('uHome')">← Kembali ke Home</div>
+      <div class="page-title">Riwayat Transaksi</div>
+      <div class="page-sub">Semua pembayaran kamu</div>
       <div class="card"><div class="card-body" style="padding:0">
         <table><thead><tr><th>Invoice</th><th>Paket</th><th>Status</th><th>Tgl</th></tr></thead><tbody id="hTable"><tr><td colspan="4" style="text-align:center;padding:16px;color:#6b7280">Memuat...</td></tr></tbody></table>
       </div></div>
@@ -158,18 +170,17 @@ module.exports = async (req, res) => {
     </div>
 
     <div id="uProfil" class="view">
-      <div class="back" onclick="showUserView('uHome')">← Kembali</div>
+      <div class="back" onclick="showUserView('uHome')">← Kembali ke Home</div>
       <div class="page-title">Profil</div>
-      <div class="page-sub">Info akun</div>
       <div class="card"><div class="card-body" style="text-align:center">
         <div id="pAv" style="width:64px;height:64px;border-radius:16px;background:#dbeafe;display:grid;place-items:center;margin:0 auto;font-weight:700;color:#2563eb">W</div>
         <div id="pName" style="font-weight:700;margin-top:10px">--</div>
         <div id="pId" style="font-size:11px;color:#6b7280">ID --</div>
-      </div></div>
-      <div class="card"><div class="card-body" style="font-size:12px;line-height:2">
-        <div style="display:flex;justify-content:space-between"><span style="color:#6b7280">Status</span><span id="pStatus">--</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:#6b7280">Referral</span><span id="pRef">--</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:#6b7280">Order</span><span id="pFix">--</span></div>
+        <blockquote style="text-align:left;margin-top:12px">
+          <b>Status:</b> <span id="pStatus">--</span><br>
+          <b>Referral:</b> <span id="pRef">--</span><br>
+          <b>Order:</b> <span id="pFix">--</span>
+        </blockquote>
       </div></div>
     </div>
 
@@ -179,18 +190,15 @@ module.exports = async (req, res) => {
       <div class="nav-item" data-view="uTrans" onclick="showUserView('uTrans')">Riwayat</div>
       <div class="nav-item" data-view="uProfil" onclick="showUserView('uProfil')">Profil</div>
     </div>
-
   </div>
 
-  <!-- OWNER ROOT -->
   <div id="ownerRoot" style="display:none">
-
     <div id="oLogin" class="view active">
-      <div class="login-full">
+      <div class="login-full" id="loginFull">
         <div class="login-card">
-          <div style="width:48px;height:48px;background:#1a1a2e;border-radius:12px;display:grid;place-items:center;color:#fff;margin:0 auto 12px;font-size:20px">🔒</div>
+          <div style="width:48px;height:48px;background:#111827;border-radius:12px;display:grid;place-items:center;color:#fff;margin:0 auto 12px;font-size:20px">🔒</div>
           <div style="font-weight:700;font-size:16px">Owner Login</div>
-          <div style="height:20px"></div>
+          <div style="height:16px"></div>
           <input type="password" id="ownerPass" class="input" placeholder="Password" style="text-align:center">
           <div id="oLoginErr" style="font-size:11px;color:#ef4444;margin-top:8px;display:none"></div>
           <button class="btn btn-primary" style="margin-top:12px" onclick="verifyOwner()">Masuk</button>
@@ -201,28 +209,26 @@ module.exports = async (req, res) => {
     <div id="oDash" class="view">
       <div class="page-title">Owner Dashboard</div>
       <div class="page-sub">Kelola semua via WebApp</div>
-
-      <div class="grid2">
+      <blockquote>
+        <b>Panel:</b> Owner khusus, user tidak bisa lihat<br>
+        <b>Keamanan:</b> Hanya password valid yang bisa masuk
+      </blockquote>
+      <div class="grid2" style="margin-top:10px">
         <div class="stat"><div class="stat-num" id="oUsers">0</div><div class="stat-label">Users Valid</div></div>
         <div class="stat"><div class="stat-num" id="oVip">0</div><div class="stat-label">VIP</div></div>
         <div class="stat"><div class="stat-num" id="oToday">0</div><div class="stat-label">Order Hari Ini</div></div>
         <div class="stat"><div class="stat-num" id="oRev">Rp 0</div><div class="stat-label">Revenue</div></div>
       </div>
-
       <div class="grid2" style="margin-top:10px">
-        <div class="card" style="cursor:pointer" onclick="openOwnerPage('pending')"><div class="card-body"><div style="font-weight:600">Pending ACC</div><div style="font-size:11px;color:#6b7280;margin-top:4px" id="oPendingCount">0 menunggu</div></div></div>
-        <div class="card" style="cursor:pointer" onclick="openOwnerPage('users')"><div class="card-body"><div style="font-weight:600">Users</div><div style="font-size:11px;color:#6b7280;margin-top:4px" id="oUsersCount">0 user</div></div></div>
-        <div class="card" style="cursor:pointer" onclick="openOwnerPage('voucher')"><div class="card-body"><div style="font-weight:600">Voucher</div><div style="font-size:11px;color:#6b7280;margin-top:4px">Buat kode</div></div></div>
-        <div class="card" style="cursor:pointer" onclick="openOwnerPage('broadcast')"><div class="card-body"><div style="font-weight:600">Broadcast</div><div style="font-size:11px;color:#6b7280;margin-top:4px">Kirim pesan</div></div></div>
+        <div class="card" style="cursor:pointer" onclick="openOwnerPage('pending')"><div class="card-body"><div style="font-weight:700">Pending ACC</div><div style="font-size:11px;color:#6b7280;margin-top:4px" id="oPendingCount">0 menunggu</div></div></div>
+        <div class="card" style="cursor:pointer" onclick="openOwnerPage('users')"><div class="card-body"><div style="font-weight:700">Users</div><div style="font-size:11px;color:#6b7280;margin-top:4px" id="oUsersCount">0 user</div></div></div>
+        <div class="card" style="cursor:pointer" onclick="openOwnerPage('voucher')"><div class="card-body"><div style="font-weight:700">Voucher</div><div style="font-size:11px;color:#6b7280">Buat kode</div></div></div>
+        <div class="card" style="cursor:pointer" onclick="openOwnerPage('broadcast')"><div class="card-body"><div style="font-weight:700">Broadcast</div><div style="font-size:11px;color:#6b7280">Kirim pesan</div></div></div>
       </div>
-
       <div class="card">
         <div class="card-head">Revenue Terbaru</div>
-        <div class="card-body" style="padding:0">
-          <table><thead><tr><th>Invoice</th><th>User</th><th>Jumlah</th></tr></thead><tbody id="oRevTable"><tr><td colspan="3" style="text-align:center;padding:12px;color:#6b7280">Memuat...</td></tr></tbody></table>
-        </div>
+        <div class="card-body" style="padding:0"><table><thead><tr><th>Invoice</th><th>User</th><th>Jumlah</th></tr></thead><tbody id="oRevTable"><tr><td colspan="3" style="text-align:center;padding:12px;color:#6b7280">Memuat...</td></tr></tbody></table></div>
       </div>
-
       <button class="btn" style="margin-top:10px" onclick="logoutOwner()">Keluar</button>
     </div>
 
@@ -235,26 +241,18 @@ module.exports = async (req, res) => {
     <div id="oUsers" class="view">
       <div class="back" onclick="openOwnerPage('dash')">← Kembali ke Dashboard</div>
       <div class="page-title">Users</div>
-      <div class="card"><div class="card-body" style="padding:0">
-        <table><thead><tr><th>ID</th><th>Nama</th><th>Order</th><th>Status</th></tr></thead><tbody id="oUsersTable"></tbody></table>
-      </div></div>
+      <div class="card"><div class="card-body" style="padding:0"><table><thead><tr><th>ID</th><th>Nama</th><th>Order</th><th>Status</th></tr></thead><tbody id="oUsersTable"></tbody></table></div></div>
     </div>
 
     <div id="oVoucher" class="view">
       <div class="back" onclick="openOwnerPage('dash')">← Kembali ke Dashboard</div>
       <div class="page-title">Voucher</div>
-      <div class="card">
-        <div class="card-head">Buat Voucher</div>
-        <div class="card-body">
-          <input id="vCode" class="input" placeholder="Kode (contoh WALZY30)" style="text-transform:uppercase">
-          <div class="grid2" style="margin-top:8px">
-            <input id="vDays" class="input" type="number" placeholder="Hari">
-            <input id="vQuota" class="input" type="number" placeholder="Kuota 0=∞">
-          </div>
-          <select id="vType" class="input" style="margin-top:8px"><option value="public">Public</option><option value="private">Private</option></select>
-          <button class="btn btn-primary" style="margin-top:10px" onclick="createVoucher()">Buat</button>
-        </div>
-      </div>
+      <div class="card"><div class="card-head">Buat Voucher</div><div class="card-body">
+        <input id="vCode" class="input" placeholder="Kode WALZY30" style="text-transform:uppercase">
+        <div class="grid2" style="margin-top:8px"><input id="vDays" class="input" type="number" placeholder="Hari"><input id="vQuota" class="input" type="number" placeholder="Kuota 0=∞"></div>
+        <select id="vType" class="input" style="margin-top:8px"><option value="public">Public</option><option value="private">Private</option></select>
+        <button class="btn btn-primary" style="margin-top:10px" onclick="createVoucher()">Buat</button>
+      </div></div>
       <div class="card"><div class="card-head">Daftar Voucher</div><div class="card-body" id="oVoucherList"></div></div>
     </div>
 
@@ -262,6 +260,7 @@ module.exports = async (req, res) => {
       <div class="back" onclick="openOwnerPage('dash')">← Kembali ke Dashboard</div>
       <div class="page-title">Broadcast</div>
       <div class="card"><div class="card-body">
+        <blockquote><b>Info:</b> Pesan akan dikirim ke semua user valid</blockquote>
         <textarea id="bcText" class="input" style="min-height:100px;resize:none" placeholder="Tulis pesan broadcast..."></textarea>
         <div style="font-size:11px;color:#6b7280;margin-top:6px" id="bcCount">0 / 1000 • 0 user</div>
         <button class="btn btn-primary" style="margin-top:10px" onclick="sendBc()">Kirim Broadcast</button>
@@ -283,7 +282,6 @@ module.exports = async (req, res) => {
 <script>
 let userId = null;
 let tgUser = null;
-let isOwner = false;
 let ownerPass = sessionStorage.getItem('walzy_pass') || '';
 let ownerVerified = sessionStorage.getItem('walzy_verified') === 'true';
 let currentInvoice = null;
@@ -292,26 +290,25 @@ let cacheStats = null;
 
 async function fetchJson(url, opts) {
   opts = opts || {};
-  let r = await fetch(url, opts);
+  let r;
+  try { r = await fetch(url, opts); } catch(e) { throw new Error('Network error, cek koneksi'); }
   let txt = await r.text();
   if (!r.ok) {
-    try { let j = JSON.parse(txt); throw new Error(j.message || 'Error'); } catch(e) {
-      if (txt.includes('<!DOCTYPE')) throw new Error('API Error');
-      throw e;
-    }
+    try { let j = JSON.parse(txt); throw new Error(j.message || 'Server error'); }
+    catch(e2) { if (txt.includes('<!DOCTYPE')) throw new Error('API 404, cek vercel.json'); throw e2; }
   }
-  if (txt.trim().startsWith('<')) throw new Error('API HTML Error');
+  if (txt.trim().startsWith('<')) throw new Error('API mengembalikan HTML, cek rewrites');
   return JSON.parse(txt);
 }
 
-function showT(title, msg, type) {
+function showT(title, msg) {
   document.getElementById('tTitle').textContent = title;
   document.getElementById('tMsg').textContent = msg;
   document.getElementById('toast').classList.add('show');
   setTimeout(hideT, 2500);
 }
 function hideT() { document.getElementById('toast').classList.remove('show'); }
-function hideLoad() { document.getElementById('loading').classList.add('hide'); }
+function hideLoad() { let el = document.getElementById('loading'); if (el) el.classList.add('hide'); }
 
 function showUserRoot() {
   document.getElementById('userRoot').style.display = 'block';
@@ -327,6 +324,10 @@ function showOwnerRoot() {
   document.getElementById('ownerRoot').style.display = 'block';
   document.getElementById('oLogin').classList.remove('active');
   document.getElementById('oDash').classList.add('active');
+  document.getElementById('oPending').classList.remove('active');
+  document.getElementById('oUsers').classList.remove('active');
+  document.getElementById('oVoucher').classList.remove('active');
+  document.getElementById('oBroadcast').classList.remove('active');
   document.getElementById('mainHeader').style.display = 'flex';
   document.getElementById('uNav').classList.add('hidden');
   document.getElementById('oNav').classList.remove('hidden');
@@ -338,6 +339,10 @@ function showOwnerLogin() {
   document.getElementById('ownerRoot').style.display = 'block';
   document.getElementById('oLogin').classList.add('active');
   document.getElementById('oDash').classList.remove('active');
+  document.getElementById('oPending').classList.remove('active');
+  document.getElementById('oUsers').classList.remove('active');
+  document.getElementById('oVoucher').classList.remove('active');
+  document.getElementById('oBroadcast').classList.remove('active');
   document.getElementById('mainHeader').style.display = 'none';
   document.getElementById('uNav').classList.add('hidden');
   document.getElementById('oNav').classList.add('hidden');
@@ -373,19 +378,20 @@ function renderUser(d) {
   let u = d.user;
   document.getElementById('uName').textContent = u.first_name || 'User';
   document.getElementById('uAv').textContent = (u.first_name || 'W')[0].toUpperCase();
-  document.getElementById('uRank').textContent = u.rank.name + ' ' + u.rank.icon;
-  document.getElementById('uStatus').textContent = u.isPremium ? 'VIP ' + u.premiumLeft + ' hari' : 'Gratis sisa ' + u.dailyFix.remaining + '/3';
+  document.getElementById('uStatus').textContent = u.isPremium ? 'VIP ' + u.premiumLeft + ' hari' : 'Gratis';
+  document.getElementById('bStatus').textContent = u.isPremium ? 'VIP ' + u.premiumLeft + ' hari' : 'Gratis sisa ' + u.dailyFix.remaining + '/3';
+  document.getElementById('bId').textContent = u.id;
+  document.getElementById('bRank').textContent = u.rank.name + ' ' + u.rank.icon;
   document.getElementById('sTotal').textContent = u.totalFix;
   document.getElementById('sRef').textContent = u.referralCount;
   document.getElementById('stFix').textContent = d.global.totalSuccess || 0;
-  document.getElementById('stRate').textContent = (d.global.totalFix ? Math.round((d.global.totalSuccess/d.global.totalFix)*100) : 0) + '%');
+  document.getElementById('stRate').textContent = (d.global.totalFix ? Math.round((d.global.totalSuccess/d.global.totalFix)*100) : 0) + '%';
   document.getElementById('pAv').textContent = (u.first_name || 'W')[0].toUpperCase();
   document.getElementById('pName').textContent = u.first_name || 'User';
   document.getElementById('pId').textContent = 'ID: ' + u.id;
   document.getElementById('pStatus').textContent = u.isPremium ? 'VIP ' + u.premiumLeft + ' hari' : 'Gratis';
   document.getElementById('pRef').textContent = u.referralCount + ' orang';
   document.getElementById('pFix').textContent = u.totalFix + ' order';
-
   let link = 'https://t.me/walzystore_bot?start=' + u.id;
   document.getElementById('refLink').textContent = link;
 
@@ -395,24 +401,15 @@ function renderUser(d) {
     { days: 90, name: 'Sultan 90 Hari', price: 'Rp 99K', desc: 'Best value' }
   ];
 
-  let htmlHome = pkgs.slice(0,2).map(p => '<div class="pkg" onclick="buyPkg(' + p.days + ')"><div><div class="pkg-name">' + p.name + '</div><div class="pkg-desc">' + p.desc + '</div></div><div class="pkg-price">' + p.price + '</div></div>').join('');
-  let htmlOrder = pkgs.map(p => '<div class="pkg" onclick="buyPkg(' + p.days + ')"><div><div class="pkg-name">' + p.name + '</div><div class="pkg-desc">' + p.desc + '</div></div><div class="pkg-price">' + p.price + '</div></div>').join('');
-
-  document.getElementById('pkgHome').innerHTML = htmlHome;
-  document.getElementById('pkgOrder').innerHTML = htmlOrder;
+  document.getElementById('pkgHome').innerHTML = pkgs.slice(0,2).map(p => '<div class="pkg" onclick="buyPkg(' + p.days + ')"><div><div class="pkg-name">' + p.name + '</div><div class="pkg-desc">' + p.desc + '</div></div><div class="pkg-price">' + p.price + '</div></div>').join('');
+  document.getElementById('pkgOrder').innerHTML = pkgs.map(p => '<div class="pkg" onclick="buyPkg(' + p.days + ')"><div><div class="pkg-name">' + p.name + '</div><div class="pkg-desc">' + p.desc + '</div></div><div class="pkg-price">' + p.price + '</div></div>').join('');
 
   if (d.currentInvoice) {
     currentInvoice = d.currentInvoice.id;
     document.getElementById('invoiceCard').style.display = 'block';
     let inv = d.currentInvoice;
     document.getElementById('invStatus').textContent = inv.status;
-    document.getElementById('invoiceBox').innerHTML =
-      '<div>Invoice: ' + inv.id + '</div>' +
-      '<div style="margin-top:6px">Paket: ' + inv.days + ' Hari - ' + (inv.amountFormatted || 'Rp ' + inv.amount) + '</div>' +
-      '<div style="margin-top:8px;font-size:11px;color:#6b7280">Bayar ke DANA 083124469855 a.n WALZY STORE lalu upload bukti</div>' +
-      (inv.status !== 'waiting_approval' ?
-      '<div style="margin-top:10px;position:relative"><button class="btn btn-primary">Upload Bukti</button><input type="file" accept="image/*" onchange="uploadProof(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer"></div><div id="upStat" style="margin-top:6px;font-size:11px;color:#6b7280"></div>' :
-      '<div style="margin-top:10px;background:#fef3c7;padding:8px;border-radius:8px;font-size:11px;text-align:center">Menunggu ACC Owner</div>');
+    document.getElementById('invoiceBox').innerHTML = '<blockquote><b>Invoice:</b> ' + inv.id + '<br><b>Paket:</b> ' + inv.days + ' Hari - ' + (inv.amountFormatted || 'Rp ' + inv.amount) + '</blockquote>' + (inv.status !== 'waiting_approval' ? '<div style="margin-top:10px;position:relative"><button class="btn btn-primary">Upload Bukti</button><input type="file" accept="image/*" onchange="uploadProof(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer"></div>' : '<div style="margin-top:10px;background:#fef3c7;padding:8px;border-radius:8px;font-size:11px;text-align:center">Menunggu ACC Owner</div>');
   } else {
     document.getElementById('invoiceCard').style.display = 'none';
   }
@@ -424,16 +421,14 @@ function renderUser(d) {
   }
 
   let btn = document.getElementById('spinBtn');
-  if (btn) btn.textContent = u.canSpin ? 'Putar Spin Harian' : 'Sudah Diklaim Hari Ini';
-  if (btn) btn.disabled = !u.canSpin;
+  if (btn) { btn.textContent = u.canSpin ? 'Putar Spin Harian' : 'Sudah Diklaim'; btn.disabled = !u.canSpin; }
 }
 
 function renderStats(d) {
   if (!d) return;
   cacheStats = d;
-  isOwner = d.isOwner || false;
 
-  if (isOwner) {
+  if (d.isOwner) {
     if (ownerVerified) {
       showOwnerRoot();
       document.getElementById('oUsers').textContent = d.usersValid || 0;
@@ -462,7 +457,7 @@ function renderPendingPage() {
   let list = cacheStats.pendingPayments || [];
   let el = document.getElementById('oPendingList');
   if (list.length === 0) { el.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;color:#6b7280">Tidak ada pending</div></div>'; return; }
-  el.innerHTML = list.map(p => '<div class="card"><div class="card-body"><div>Invoice: ' + p.id + '</div><div style="font-size:12px;color:#6b7280;margin-top:4px">User ' + p.userId + ' • ' + p.days + 'H • Rp ' + p.amount + '</div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary" style="flex:1" onclick="ownerAct(\\'' + p.id + '\\',\\'approve\\')">ACC</button><button class="btn" style="flex:1" onclick="ownerAct(\\'' + p.id + '\\',\\'reject\\')">Tolak</button></div></div></div>').join('');
+  el.innerHTML = list.map(p => '<div class="card"><div class="card-body"><blockquote><b>Invoice:</b> ' + p.id + '<br><b>User:</b> ' + p.userId + '<br><b>Paket:</b> ' + p.days + 'H • Rp ' + p.amount + '</blockquote><div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary" style="flex:1" onclick="ownerAct(\\'' + p.id + '\\',\\'approve\\')">ACC</button><button class="btn" style="flex:1" onclick="ownerAct(\\'' + p.id + '\\',\\'reject\\')">Tolak</button></div></div></div>').join('');
 }
 
 function renderUsersPage() {
@@ -478,7 +473,7 @@ function renderVoucherPage() {
   let codes = cacheStats.codes || [];
   let el = document.getElementById('oVoucherList');
   if (codes.length === 0) { el.innerHTML = '<div style="text-align:center;padding:12px;color:#6b7280">Belum ada voucher</div>'; return; }
-  el.innerHTML = codes.map(c => '<div class="pkg"><div><div style="font-weight:600">' + c.code + ' • ' + c.days + 'H</div><div style="font-size:11px;color:#6b7280">Kuota ' + (c.quota||'∞') + ' • Pakai ' + (c.used||0) + '</div></div><button class="btn" style="width:auto;padding:6px 12px;font-size:11px" onclick="delVoucher(\\'' + c.code + '\\')">Hapus</button></div>').join('');
+  el.innerHTML = codes.map(c => '<div class="pkg"><div><div style="font-weight:700">' + c.code + ' • ' + c.days + 'H</div><div style="font-size:11px;color:#6b7280">Kuota ' + (c.quota||'∞') + ' • Pakai ' + (c.used||0) + '</div></div><button class="btn" style="width:auto;padding:6px 12px;font-size:11px" onclick="delVoucher(\\'' + c.code + '\\')">Hapus</button></div>').join('');
 }
 
 async function verifyOwner() {
@@ -499,7 +494,7 @@ async function verifyOwner() {
     } else {
       err.style.display = 'block';
       err.textContent = r.message || 'Password salah';
-      showT('Gagal', r.message || 'Password salah');
+      showT('Gagal', r.message || 'Salah');
     }
   } catch(e) {
     err.style.display = 'block';
@@ -521,7 +516,13 @@ async function loadUser() {
   try {
     let d = await fetchJson('/api/user?user_id=' + userId);
     if (d.ok) renderUser(d);
-  } catch(e) {}
+  } catch(e) {
+    console.error('loadUser', e);
+    if (!cacheUser) {
+      showUserRoot();
+      showT('Info', 'Gagal load, coba refresh: ' + e.message);
+    }
+  }
 }
 
 async function loadStats() {
@@ -529,7 +530,13 @@ async function loadStats() {
   try {
     let d = await fetchJson('/api/stats?user_id=' + userId);
     if (d.ok) renderStats(d);
-  } catch(e) {}
+    else {
+      if (!d.isOwner) showUserRoot();
+    }
+  } catch(e) {
+    console.error('loadStats', e);
+    showUserRoot();
+  }
 }
 
 async function ownerAct(inv, act) {
@@ -548,7 +555,7 @@ async function createVoucher() {
   if (!code || !days) return showT('Gagal', 'Isi kode dan hari');
   try {
     let r = await fetchJson('/api/create_code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ owner_id: userId, code, days, quota, type, password: ownerPass }) });
-    if (r.ok) { showT('Berhasil', 'Voucher ' + code + ' dibuat'); document.getElementById('vCode').value = ''; document.getElementById('vDays').value = ''; document.getElementById('vQuota').value = ''; loadStats(); }
+    if (r.ok) { showT('Berhasil', 'Voucher ' + code); document.getElementById('vCode').value = ''; document.getElementById('vDays').value = ''; document.getElementById('vQuota').value = ''; loadStats(); }
     else showT('Gagal', r.message);
   } catch(e) { showT('Gagal', e.message); }
 }
@@ -646,25 +653,42 @@ function copyRef() {
     let sp = new URLSearchParams(window.location.search);
     userId = sp.get('user_id') || sp.get('userId') || null;
   }
+
   if (!userId) {
-    document.getElementById('loadTxt').textContent = 'Buka via Telegram Bot';
-    document.getElementById('loading').classList.add('hide');
+    document.getElementById('loadTxt').textContent = 'Buka via Telegram Bot untuk data real';
+    document.getElementById('loading').classList.remove('hide');
+    document.getElementById('userRoot').style.display = 'block';
+    document.getElementById('uName').textContent = 'Buka via Bot';
+    document.getElementById('uStatus').textContent = 'Silakan buka dari tombol di bot';
+    setTimeout(hideLoad, 800);
     return;
   }
+
   loadUser();
   loadStats();
+
+  setTimeout(() => {
+    if (document.getElementById('loading').classList.contains('hide') === false) {
+      if (!cacheUser && !cacheStats) {
+        showUserRoot();
+        hideLoad();
+      }
+    }
+  }, 2500);
+
   setInterval(() => {
     let el = document.getElementById('time');
     if (el) el.textContent = new Date().toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' }) + ' WIB';
   }, 1000);
+
   let passEl = document.getElementById('ownerPass');
   if (passEl) passEl.addEventListener('keypress', e => { if (e.key === 'Enter') verifyOwner(); });
+
   let bc = document.getElementById('bcText');
   if (bc) bc.addEventListener('input', e => {
     let c = document.getElementById('bcCount');
     if (c) c.textContent = e.target.value.length + ' / 1000 • ' + (cacheStats?.usersValid || 0) + ' user';
   });
-  setTimeout(() => document.getElementById('loading').classList.add('hide'), 1500);
 })();
 </script>
 </body>
