@@ -28,7 +28,15 @@
       "destination": "/api/api"
     },
     {
+      "source": "/api/order",
+      "destination": "/api/api"
+    },
+    {
       "source": "/api/deposit",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/cancel_order",
       "destination": "/api/api"
     },
     {
@@ -37,6 +45,14 @@
     },
     {
       "source": "/api/spin",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/checkin",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/redeem_points",
       "destination": "/api/api"
     },
     {
