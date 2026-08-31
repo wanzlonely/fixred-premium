@@ -1,7 +1,7 @@
 {
   "name": "walzy-vercel-bot",
-  "version": "10.0-final-ready",
-  "description": "FixRed Walzy Bot for Vercel Webhook + Manual Deposit",
+  "version": "11.0-final-fixed",
+  "description": "Walzy Store FixRed Bot - Final Zero Clean Anti JSON Error",
   "main": "api/bot.js",
   "scripts": {
     "dev": "vercel dev"
