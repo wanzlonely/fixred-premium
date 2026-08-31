@@ -68,15 +68,25 @@ function getPremiumLeft(u) {
   return Math.ceil((u.premiumUntil - Date.now()) / 86400000);
 }
 
-function bq(t) { return `<blockquote>${t}</blockquote>`; }
-
 function getOwnerMenu(user) {
   const webappUrl = process.env.PUBLIC_URL ? `${process.env.PUBLIC_URL}/webapp` : '';
 
-  const text = `⚡️ <b>WALZY OWNER STUDIO PRO</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n${bq(`👑 <b>Owner:</b> ${esc(user.first_name)}\n🛡️ <b>Akses:</b> Full Administrator Studio\n\nSeluruh manajemen toko (Order, User, Voucher, Broadcast, & Analitik) dapat diakses langsung via WebApp Studio Owner.`)}\n━━━━━━━━━━━━━━━━━━━━━━━\n🕒 <i>${new Date().toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</i>`;
+  const text = `👑 <b>WALZY EXECUTIVE STUDIO ADMIN</b>
+<code>━━━━━━━━━━━━━━━━━━━━━━</code>
+
+🛡️ <b>OPERATOR SYSTEM STATUS</b>
+├ <b>Operator:</b> <b>${esc(user.first_name)}</b>
+├ <b>Access Tier:</b> <code>SUPER ADMINISTRATOR</code>
+└ <b>Server Link:</b> 🟢 <code>ONLINE & ENCRYPTED</code>
+
+📑 <b>STUDIO MANAGEMENT PORTAL</b>
+Seluruh manajemen transaksi, pengguna, pembuatan voucher, pengiriman broadcast massal, dan analitik pendapatan diakses langsung melalui WebApp Studio Pro.
+
+<code>━━━━━━━━━━━━━━━━━━━━━━</code>
+🕒 <i>Server System Sync: ${new Date().toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</i>`;
 
   const keyboard = [
-    [{ text: '🎨 Buka Studio Owner (WebApp)', web_app: { url: webappUrl } }]
+    [{ text: '⚡ BUKA STUDIO OWNER (WEBAPP)', web_app: { url: webappUrl } }]
   ];
 
   return { text, opts: { parse_mode: 'HTML', reply_markup: { inline_keyboard: keyboard } } };
@@ -84,13 +94,28 @@ function getOwnerMenu(user) {
 
 function getUserMenu(user, chatId) {
   const rnk = getRank(user.referralCount || 0);
-  const status = isPremium(user) ? `💎 <b>VIP (${getPremiumLeft(user)} Hari)</b>` : `🎫 <b>Akses Gratis</b>`;
+  const isPrem = isPremium(user);
+  const statusBadge = isPrem ? `💎 <b>VIP MEMBER (${getPremiumLeft(user)} Hari)</b>` : `🎫 <b>FREE MEMBER</b>`;
   const webappUrl = process.env.PUBLIC_URL ? `${process.env.PUBLIC_URL}/webapp` : '';
 
-  const text = `✨ <b>WALZY STORE OFFICIAL</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n${bq(`Halo, <b>${esc(user.first_name)}</b>! 👋\n\n🆔 <b>ID Anda:</b> <code>${chatId}</code>\n⭐ <b>Status:</b> ${status}\n🏅 <b>Level:</b> ${rnk.icon} ${rnk.name}\n🪙 <b>Poin:</b> <code>${user.points || 0} PTS</code>`)}\n━━━━━━━━━━━━━━━━━━━━━━━\n💡 <i>Gunakan WebApp resmi kami untuk transaksi produk VIP, daily check-in, point shop, dan spin wheel!</i>`;
+  const text = `⚡ <b>WALZY PLATFORM NEXT-GEN</b>
+<code>━━━━━━━━━━━━━━━━━━━━━━</code>
+
+👤 <b>IDENTITAS AKUN</b>
+├ <b>Nama:</b> <b>${esc(user.first_name)}</b>
+├ <b>ID Akses:</b> <code>${chatId}</code>
+├ <b>Peringkat:</b> ${rnk.icon} <code>${rnk.name}</code>
+└ <b>Saldo Poin:</b> 🪙 <code>${user.points || 0} PTS</code>
+
+🛡️ <b>STATUS HAK AKSES</b>
+├ <b>Tier:</b> ${statusBadge}
+└ <b>Sistem:</b> 🟢 <code>ONLINE & SYNCED</code>
+
+<code>━━━━━━━━━━━━━━━━━━━━━━</code>
+💡 <i>Klik tombol di bawah untuk membuka WebApp Store versi Cyberglass dengan fitur terlengkap!</i>`;
 
   const keyboard = [
-    [{ text: '🛍️ Buka WebApp Walzy Store', web_app: { url: webappUrl } }]
+    [{ text: '🛍️ BUKA WALZY STORE (WEBAPP)', web_app: { url: webappUrl } }]
   ];
 
   return { text, opts: { parse_mode: 'HTML', reply_markup: { inline_keyboard: keyboard } } };
@@ -138,7 +163,7 @@ module.exports = async (req, res) => {
                 if (!Array.isArray(inviter.referrals)) inviter.referrals = [];
                 inviter.referrals.push(uid);
                 try {
-                  await bot.sendMessage(refId, `🎉 <b>REFERRAL BARU!</b>\n<b>${esc(user.first_name)}</b> bergabung via link Anda! Anda mendapatkan <b>+50 Poin</b>.`, { parse_mode: 'HTML' });
+                  await bot.sendMessage(refId, `🎉 <b>REFERRAL REWARD!</b>\n<code>━━━━━━━━━━━━━━━━━━━━━━</code>\n\n<b>${esc(user.first_name)}</b> telah bergabung via tautan undangan Anda.\nBonus Poin: 🪙 <b>+50 PTS</b>`, { parse_mode: 'HTML' });
                 } catch (e) {}
               }
             }
@@ -159,6 +184,6 @@ module.exports = async (req, res) => {
     res.status(200).send('OK');
   } catch (err) {
     console.error('Bot Error:', err);
-    res.status(500).send('Internal Error');
+    res.status(500).send('Internal Server Error');
   }
 };
