@@ -3,60 +3,14 @@
     "api/bot.js": {
       "maxDuration": 60
     },
-    "api/cron.js": {
-      "maxDuration": 60
-    },
     "api/webapp.js": {
       "maxDuration": 10
     },
     "api/api.js": {
       "maxDuration": 10
-    },
-    "api/user.js": {
-      "maxDuration": 10
-    },
-    "api/stats.js": {
-      "maxDuration": 10
-    },
-    "api/deposit.js": {
-      "maxDuration": 10
-    },
-    "api/upload_proof.js": {
-      "maxDuration": 10
-    },
-    "api/spin.js": {
-      "maxDuration": 10
-    },
-    "api/redeem.js": {
-      "maxDuration": 10
-    },
-    "api/create_code.js": {
-      "maxDuration": 10
-    },
-    "api/delete_code.js": {
-      "maxDuration": 10
-    },
-    "api/broadcast.js": {
-      "maxDuration": 10
-    },
-    "api/owner_action.js": {
-      "maxDuration": 10
-    },
-    "api/fix.js": {
-      "maxDuration": 20
     }
   },
-  "crons": [
-    {
-      "path": "/api/cron?job=notify",
-      "schedule": "0 0 * * *"
-    }
-  ],
   "rewrites": [
-    {
-      "source": "/admin",
-      "destination": "/api/admin"
-    },
     {
       "source": "/webapp",
       "destination": "/api/webapp"
