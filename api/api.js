@@ -46,9 +46,11 @@ module.exports = async (req, res) => {
     if(!db.stats) db.stats={ totalFix:0, totalSuccess:0, totalFailed:0, revenue:0, revenueHistory:[], lastReset:Date.now() };
     if(!db.history) db.history={};
 
+    // Clean suspicious
     for(let k of Object.keys(db.users)){ if(isSuspiciousId(k)) delete db.users[k]; }
     for(let k of Object.keys(db.payments)){ const p=db.payments[k]; if(p && isSuspiciousId(p.userId)) delete db.payments[k]; }
 
+    // /api/user
     if(url.includes('/api/user')){
       const userId = query.user_id || body.user_id;
       if(!userId) return res.status(400).json({ok:false,message:'user_id required'});
@@ -82,6 +84,7 @@ module.exports = async (req, res) => {
       return res.json({ok:true,user:userData,global,currentInvoice,hasProof,invoices,pendingInvoice:currentInvoice});
     }
 
+    // /api/stats
     if(url.includes('/api/stats')){
       const userId = query.user_id || body.user_id;
       if(!userId) return res.status(400).json({ok:false,message:'user_id required'});
@@ -123,6 +126,7 @@ module.exports = async (req, res) => {
       });
     }
 
+    // /api/deposit
     if(url.includes('/api/deposit')){
       const userId = query.user_id || body.user_id;
       const days = parseInt(query.days || body.days);
@@ -137,6 +141,7 @@ module.exports = async (req, res) => {
       return res.json({ok:true,invoice:{ id:invoice, days, amount, amountFormatted:'Rp '+amount.toLocaleString('id-ID'), transferTo:{ bank:config.DANA_NAME, number:config.DANA_NUMBER } }});
     }
 
+    // /api/upload_proof
     if(url.includes('/api/upload_proof')){
       const userId = body.user_id;
       const invoice = body.invoice;
@@ -148,6 +153,7 @@ module.exports = async (req, res) => {
       pay.proofFileId = imageBase64 ? 'base64_uploaded' : pay.proofFileId;
       pay.status='waiting_approval';
       if(db.users[String(userId)]) db.users[String(userId)].pendingDeposit=null;
+      // Try send to owner as photo if bot token available - skip base64 handling for simplicity, just notify owner via bot if possible
       try{
         const bot = new (require('node-telegram-bot-api'))(config.BOT_TOKEN);
         for(let oid of config.OWNER_IDS){
@@ -158,6 +164,7 @@ module.exports = async (req, res) => {
       return res.json({ok:true,message:'Bukti terkirim - Menunggu ACC owner'});
     }
 
+    // /api/spin
     if(url.includes('/api/spin')){
       const userId = query.user_id || body.user_id;
       if(!userId) return res.status(400).json({ok:false,message:'user_id required'});
@@ -173,6 +180,7 @@ module.exports = async (req, res) => {
       return res.json({ok:true,message:'Spin berhasil',reward});
     }
 
+    // /api/redeem
     if(url.includes('/api/redeem')){
       const userId = query.user_id || body.user_id;
       const code = (query.code || body.code || '').toUpperCase().trim();
@@ -197,6 +205,7 @@ module.exports = async (req, res) => {
       return res.json({ok:true,message:`VIP ${days} Hari aktif`});
     }
 
+    // /api/create_code
     if(url.includes('/api/create_code')){
       const ownerId=String(body.owner_id||'');
       const password=body.password;
@@ -213,6 +222,7 @@ module.exports = async (req, res) => {
       return res.json({ok:true,message:`Voucher ${code} dibuat`});
     }
 
+    // /api/delete_code
     if(url.includes('/api/delete_code')){
       const ownerId=String(body.owner_id||'');
       const password=body.password;
@@ -225,6 +235,7 @@ module.exports = async (req, res) => {
       return res.json({ok:true,message:`Voucher ${code} dihapus`});
     }
 
+    // /api/broadcast
     if(url.includes('/api/broadcast')){
       const ownerId=String(body.owner_id||'');
       const password=body.password;
@@ -242,6 +253,7 @@ module.exports = async (req, res) => {
       return res.json({ok:true,sent,failed,message:`Terkirim ke ${sent} pengguna`});
     }
 
+    // /api/owner_action
     if(url.includes('/api/owner_action')){
       const ownerId=String(body.owner_id||'');
       const password=body.password;
