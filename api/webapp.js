@@ -144,7 +144,6 @@ body{
 <body>
 <div class="confetti-layer" id="confettiLayer"></div>
 <div class="vip-toast" id="vipToast"><div class="vip-toast-card"><div class="icon">🎉</div><h2>VIP Aktif!</h2><p>Selamat, VIP kamu sudah aktif sekarang</p></div></div>
-
 <div class="header">
   <div class="brand">
     <div class="brand-icon">🦖</div>
@@ -152,9 +151,7 @@ body{
   </div>
   <div class="mono" style="font-size:11px;color:var(--muted)" id="time">--:-- WIB</div>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <div class="container" id="userView" style="display:none">
   <div class="card">
     <div class="card-title">👤 PROFIL AKUN</div>
@@ -169,14 +166,12 @@ body{
     <div class="progress"><div class="progress-bar" id="limitBar" style="width:0%"></div></div>
     <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)"><span>Daily Limit</span><span class="mono" id="limitText">Memuat...</span></div>
   </div>
-
   <div class="stat-grid">
     <div class="stat"><div class="stat-value mono" id="myFix">-</div><div class="stat-label">Total Fix</div></div>
     <div class="stat"><div class="stat-value mono" id="globalFix">-</div><div class="stat-label">Global Fix</div></div>
     <div class="stat"><div class="stat-value mono" id="refCount">-</div><div class="stat-label">Referral</div></div>
     <div class="stat"><div class="stat-value mono" id="revCount">-</div><div class="stat-label">Revenue</div></div>
   </div>
-
   <div class="card" style="margin-top:14px">
     <div class="card-title">🎰 DAILY SPIN</div>
     <div class="spin-wheel" id="wheel"><div class="spin-inner">🎰</div></div>
@@ -186,12 +181,9 @@ body{
       <button class="btn btn-primary" style="margin-top:10px" id="spinBtn" onclick="doSpin()">🎰 PUTAR SEKARANG</button>
     </div>
   </div>
-
   <div class="card">
     <div class="card-title">💎 VIP MANUAL DEPOSIT</div>
-    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px" id="vipDesc">
-      Upgrade VIP untuk unlimited fix 5 baris.
-    </div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px" id="vipDesc">Upgrade VIP untuk unlimited fix 5 baris.</div>
     <div class="package-grid">
       <div class="package"><div><b>1 Hari</b><div class="mono" style="font-size:11px;color:var(--muted)">Rp 2.000</div></div><button class="btn" style="width:auto;padding:8px 14px" onclick="buyPackage(1)">Beli</button></div>
       <div class="package package-popular"><div><b>5 Hari</b> <span class="badge">POPULAR</span><div class="mono" style="font-size:11px;color:var(--muted)">Rp 5.000</div></div><button class="btn btn-vip" style="width:auto;padding:8px 14px" onclick="buyPackage(5)">Beli</button></div>
@@ -200,19 +192,16 @@ body{
     </div>
     <div id="invoiceBox" style="display:none;margin-top:12px;padding:12px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:12px" class="mono"></div>
   </div>
-
   <div class="card">
     <div class="card-title">🤝 REFERRAL PROGRAM</div>
     <div class="referral-box" id="refLink">Memuat link...</div>
     <button class="btn" style="margin-top:10px" onclick="copyRef()">📋 Copy Link</button>
   </div>
-
   <div class="card">
     <div class="card-title">📜 HISTORY FIX</div>
     <div id="historyBox" class="mono" style="font-size:11px;color:var(--muted)">Memuat history...</div>
   </div>
 </div>
-
 <div class="container" id="ownerView" style="display:none">
   <div class="stat-grid">
     <div class="stat"><div class="stat-value mono" id="oUsers">-</div><div class="stat-label">Total User</div></div>
@@ -220,42 +209,41 @@ body{
     <div class="stat"><div class="stat-value mono" id="oFix">-</div><div class="stat-label">Total Fix</div></div>
     <div class="stat"><div class="stat-value mono" id="oRevenue">-</div><div class="stat-label">Revenue</div></div>
   </div>
-
   <div class="card" style="margin-top:14px">
     <div class="card-title">💳 ANTREAN BUKTI TRANSFER</div>
     <div id="queueBox">Memuat antrean...</div>
   </div>
-
   <div class="card">
     <div class="card-title">👥 USER TERBARU</div>
     <table class="table" id="userTable"><tr><th>ID</th><th>Nama</th><th>Status</th><th>Fix</th></tr></table>
   </div>
 </div>
-
 <div class="nav">
   <div class="nav-item active"><span>🏠</span><span>Home</span></div>
   <div class="nav-item" onclick="location.href='/admin'"><span>📊</span><span>Dashboard</span></div>
   <div class="nav-item" onclick="Telegram.WebApp.close()"><span>❌</span><span>Close</span></div>
 </div>
-
 <script>
-const tg = Telegram.WebApp;
-tg.ready();
-tg.expand();
-const tgUser = tg.initDataUnsafe.user;
+const tg = window.Telegram ? window.Telegram.WebApp : null;
+if(tg){ tg.ready(); tg.expand(); }
+const tgUser = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
 const timeEl = document.getElementById('time');
 const toastEl = document.getElementById('toast');
 const OWNER_IDS = ${JSON.stringify(require('../config').OWNER_IDS.map(String))};
+const BOT_USERNAME = ${JSON.stringify(require('../config').BOT_USERNAME || 'fixedredbot')};
+const DANA_NAME = ${JSON.stringify(require('../config').DANA_NAME || 'DANA')};
+const DANA_NUMBER = ${JSON.stringify(require('../config').DANA_NUMBER || '-')};
 
 function showToast(msg, duration=3000){
   toastEl.textContent = msg;
   toastEl.classList.add('show');
   setTimeout(()=>toastEl.classList.remove('show'), duration);
 }
-
 function updateTime(){
-  const now = new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',second:'2-digit'}).replace(/\\./g,':');
-  timeEl.textContent = now + ' WIB';
+  try{
+    const now = new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',second:'2-digit'}).replace(/\./g,':');
+    timeEl.textContent = now + ' WIB';
+  }catch{}
 }
 setInterval(updateTime,1000);updateTime();
 
@@ -281,7 +269,7 @@ function launchConfetti(){
   }
   const vipToast = document.getElementById('vipToast');
   vipToast.style.display = 'grid';
-  tg.HapticFeedback.notificationOccurred('success');
+  if(tg && tg.HapticFeedback){ tg.HapticFeedback.notificationOccurred('success'); }
   setTimeout(()=>{
     vipToast.style.display = 'none';
     layer.style.display = 'none';
@@ -296,37 +284,29 @@ async function loadUser(){
     document.getElementById('uid').textContent = 'User ID tidak terdeteksi';
     return;
   }
-
   if(isOwnerUser){
     document.getElementById('ownerView').style.display = 'block';
     document.getElementById('userView').style.display = 'none';
     return loadOwnerData();
   }
-
   document.getElementById('userView').style.display = 'block';
-
   try{
     const r = await fetch('/api/user?user_id=' + userId);
     const data = await r.json();
-
     if(!data.ok){
       document.getElementById('name').textContent = data.message || 'User tidak ditemukan';
       document.getElementById('uid').textContent = 'Silakan /start di bot dulu';
       return;
     }
-
     const u = data.user;
     const g = data.global;
-
     if(lastKnownPremium === false && u.isPremium === true){
       launchConfetti();
     }
     lastKnownPremium = u.isPremium;
-
     document.getElementById('name').textContent = u.first_name + (u.username ? ' @' + u.username : '');
     document.getElementById('uid').textContent = 'ID: ' + u.id + ' | Bergabung: ' + new Date(u.joinedAt).toLocaleDateString('id-ID');
     document.getElementById('avatar').textContent = u.first_name.charAt(0).toUpperCase();
-
     const badgesEl = document.getElementById('badges');
     let badgesHtml = '<span class="rank-badge">' + u.rank.icon + ' ' + u.rank.name + '</span>';
     if(u.isPremium){
@@ -335,16 +315,13 @@ async function loadUser(){
       badgesHtml += '<span class="rank-badge">🎫 FREE</span>';
     }
     badgesEl.innerHTML = badgesHtml;
-
     const limitPct = u.isPremium ? 100 : ((u.dailyFix.used / 3) * 100);
     document.getElementById('limitBar').style.width = Math.min(100, limitPct) + '%';
     document.getElementById('limitText').textContent = u.isPremium ? 'Unlimited (VIP)' : u.dailyFix.used + '/3 - Sisa ' + u.dailyFix.remaining;
-
     document.getElementById('myFix').textContent = u.totalFix;
     document.getElementById('globalFix').textContent = g.totalFix;
     document.getElementById('refCount').textContent = u.referralCount;
     document.getElementById('revCount').textContent = 'Rp ' + g.revenue.toLocaleString('id-ID');
-
     if(u.canSpin){
       document.getElementById('spinStatus').textContent = 'Siap spin!';
       document.getElementById('spinLast').textContent = 'Last spin: ' + (u.lastSpin || 'Belum pernah');
@@ -356,20 +333,15 @@ async function loadUser(){
       document.getElementById('spinBtn').disabled = true;
       document.getElementById('spinBtn').textContent = '✅ Sudah Spin Hari Ini';
     }
-
-    document.getElementById('refLink').textContent = 'https://t.me/' + (u.username ? u.username : 'fixedredbot') + '?start=' + u.id;
-
+    document.getElementById('refLink').textContent = 'https://t.me/' + BOT_USERNAME + '?start=' + u.id;
     const histBox = document.getElementById('historyBox');
     if(u.history && u.history.length>0){
       histBox.innerHTML = u.history.map(h=>'<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">📅 ' + new Date(h.date).toLocaleString('id-ID') + ' - Fix +1</div>').join('');
     } else {
       histBox.textContent = 'Belum ada history fix';
     }
-
     document.getElementById('vipDesc').textContent = u.isPremium ? 'VIP aktif sampai ' + new Date(u.premiumUntil).toLocaleDateString('id-ID') + ' (' + u.premiumLeft + ' hari lagi)' : 'Upgrade VIP untuk unlimited fix 5 baris.';
-
   }catch(e){
-    console.error(e);
     document.getElementById('name').textContent = 'Gagal load data: ' + e.message;
     showToast('Gagal load data: ' + e.message);
   }
@@ -380,12 +352,10 @@ async function loadOwnerData(){
     const r = await fetch('/api/stats?user_id=' + userId);
     const data = await r.json();
     if(!data.ok || !data.isOwner) return;
-
     document.getElementById('oUsers').textContent = data.users;
     document.getElementById('oPremium').textContent = data.premium;
     document.getElementById('oFix').textContent = data.totalFix;
     document.getElementById('oRevenue').textContent = 'Rp ' + data.revenue.toLocaleString('id-ID');
-
     const queueBox = document.getElementById('queueBox');
     const pending = data.pendingPayments || [];
     if(pending.length === 0){
@@ -403,14 +373,12 @@ async function loadOwnerData(){
         </div>
       \`).join('');
     }
-
     const userTable = document.getElementById('userTable');
     const recent = data.recentUsers || [];
     userTable.innerHTML = '<tr><th>ID</th><th>Nama</th><th>Status</th><th>Fix</th></tr>' + recent.map(u => \`
       <tr><td class="mono">\${u.id}</td><td>\${(u.first_name||'User').substring(0,12)}</td><td>\${u.isPremium?'💎 VIP':'🎫 FREE'}</td><td class="mono">\${u.totalFix}</td></tr>
     \`).join('');
   }catch(e){
-    console.error(e);
     showToast('Gagal load data owner: ' + e.message);
   }
 }
@@ -425,7 +393,7 @@ async function ownerAction(invoice, action){
     const data = await r.json();
     if(data.ok){
       showToast('✅ ' + data.message);
-      tg.HapticFeedback.notificationOccurred('success');
+      if(tg && tg.HapticFeedback){ tg.HapticFeedback.notificationOccurred('success'); }
       loadOwnerData();
     } else {
       showToast('❌ ' + data.message);
@@ -437,20 +405,16 @@ async function ownerAction(invoice, action){
 
 async function doSpin(){
   if(!userId) return showToast('Buka via Telegram untuk spin');
-
   const wheel = document.getElementById('wheel');
   const btn = document.getElementById('spinBtn');
   const statusEl = document.getElementById('spinStatus');
-
   wheel.classList.add('spinning');
   btn.disabled = true;
   btn.textContent = 'Memutar...';
   statusEl.textContent = 'Menghubungi server...';
-
   try{
     const r = await fetch('/api/spin?user_id=' + userId, { method:'POST' });
     const data = await r.json();
-
     setTimeout(()=>{
       wheel.classList.remove('spinning');
       if(data.ok){
@@ -458,7 +422,7 @@ async function doSpin(){
         document.getElementById('spinLast').textContent = 'Last spin: ' + new Date().toLocaleDateString('id-ID');
         btn.textContent = '✅ Hadiah: ' + data.reward.label;
         showToast('🎉 Reward: ' + data.reward.label + ' - ' + data.reward.desc);
-        tg.HapticFeedback.notificationOccurred('success');
+        if(tg && tg.HapticFeedback){ tg.HapticFeedback.notificationOccurred('success'); }
         setTimeout(loadUser, 1000);
       } else {
         statusEl.textContent = '❌ ' + data.message;
@@ -479,21 +443,20 @@ let currentInvoice = null;
 
 async function buyPackage(days){
   if(!userId) return showToast('Buka via Telegram untuk beli');
-
   try{
     const r = await fetch('/api/deposit?user_id=' + userId + '&days=' + days, { method:'POST' });
     const data = await r.json();
-
     if(data.ok){
       const inv = data.invoice;
       currentInvoice = inv.id;
       const box = document.getElementById('invoiceBox');
       box.style.display = 'block';
-      box.innerHTML = '<b>✅ Invoice Dibuat:</b><br>ID: ' + inv.id + '<br>Paket: ' + inv.days + ' Hari<br>Total: ' + inv.amountFormatted + '<br>Transfer ke: ' + inv.transferTo.bank + ' ' + inv.transferTo.number +
-        '<br><br><div class="file-input-wrap"><button class="btn btn-vip" type="button">📤 Upload Bukti Transfer</button><input type="file" accept="image/*" onchange="handleProofUpload(event)"></div>' +
-        '<div id="uploadStatus" style="margin-top:8px;font-size:11px;color:var(--muted)"></div>';
-      showToast('✅ Invoice: ' + inv.id + ' - ' + inv.amountFormatted);
-      tg.HapticFeedback.notificationOccurred('success');
+      const bank = inv.transferTo ? inv.transferTo.bank : DANA_NAME;
+      const number = inv.transferTo ? inv.transferTo.number : DANA_NUMBER;
+      const amount = inv.amountFormatted || ('Rp ' + (inv.amount||0).toLocaleString('id-ID'));
+      box.innerHTML = '<b>✅ Invoice Dibuat:</b><br>ID: ' + inv.id + '<br>Paket: ' + inv.days + ' Hari<br>Total: ' + amount + '<br>Transfer ke: ' + bank + ' ' + number + '<br><br><div class="file-input-wrap"><button class="btn btn-vip" type="button">📤 Upload Bukti Transfer</button><input type="file" accept="image/*" onchange="handleProofUpload(event)"></div><div id="uploadStatus" style="margin-top:8px;font-size:11px;color:var(--muted)"></div>';
+      showToast('✅ Invoice: ' + inv.id + ' - ' + amount);
+      if(tg && tg.HapticFeedback){ tg.HapticFeedback.notificationOccurred('success'); }
     } else {
       showToast('❌ Gagal: ' + data.message);
     }
@@ -507,7 +470,6 @@ function handleProofUpload(evt){
   if(!file || !currentInvoice) return;
   const statusEl = document.getElementById('uploadStatus');
   statusEl.textContent = 'Mengompresi gambar...';
-
   const reader = new FileReader();
   reader.onload = function(e){
     const img = new Image();
@@ -539,7 +501,7 @@ async function uploadProof(base64, statusEl){
     if(data.ok){
       statusEl.textContent = '✅ Bukti terkirim, menunggu approval admin';
       showToast('✅ Bukti transfer terkirim');
-      tg.HapticFeedback.notificationOccurred('success');
+      if(tg && tg.HapticFeedback){ tg.HapticFeedback.notificationOccurred('success'); }
     } else {
       statusEl.textContent = '❌ ' + data.message;
       showToast('❌ ' + data.message);
@@ -555,10 +517,28 @@ function copyRef(){
   if(txt.includes('Memuat')){
     return showToast('Link belum ready');
   }
-  navigator.clipboard.writeText(txt).then(()=>{
-    showToast('✅ Link disalin: ' + txt.slice(0,40) + '...');
-    tg.HapticFeedback.notificationOccurred('success');
-  });
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>{
+      showToast('✅ Link disalin');
+      if(tg && tg.HapticFeedback){ tg.HapticFeedback.notificationOccurred('success'); }
+    }).catch(()=>{
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('✅ Link disalin');
+    });
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✅ Link disalin');
+  }
 }
 
 loadUser();
