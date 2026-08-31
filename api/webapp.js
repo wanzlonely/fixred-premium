@@ -147,9 +147,19 @@ module.exports = async (req, res) => {
 
   .product-shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
   .shop-item {
-    background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); border-radius: 16px; padding: 14px;
-    display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); border-radius: 18px; padding: 14px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 10px; position: relative; overflow: hidden;
   }
+
+  .wheel-container {
+    position: relative; width: 260px; height: 260px; margin: 10px auto; display: flex; justify-content: center; align-items: center;
+  }
+  .wheel-pointer {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent;
+    border-top: 24px solid var(--accent-rose); z-index: 20; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+  }
+  #spinCanvas { width: 260px; height: 260px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.1); box-shadow: 0 0 20px rgba(59,130,246,0.3); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
 
   .loader-screen {
     position: fixed; inset: 0; background: var(--bg-main); z-index: 99;
@@ -248,13 +258,19 @@ module.exports = async (req, res) => {
       </div>
 
       <div class="glass-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">
             <svg class="icon-svg spin-slow" style="color:var(--accent-amber)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            Spin Wheel Hadiah
+            Spin Wheel Keberuntungan
           </div>
         </div>
-        <button class="btn-custom" id="spinBtn" onclick="triggerSpin(this)">
+
+        <div class="wheel-container">
+          <div class="wheel-pointer"></div>
+          <canvas id="spinCanvas" width="300" height="300"></canvas>
+        </div>
+
+        <button class="btn-custom" id="spinBtn" style="margin-top:12px" onclick="triggerSpin(this)">
           Putar Spin Harian
         </button>
       </div>
@@ -285,63 +301,57 @@ module.exports = async (req, res) => {
 
     <div id="viewOrder" class="view">
       <div style="font-weight:800;font-size:18px;margin-bottom:4px">Katalog VIP Store</div>
-      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Pilih paket langganan VIP dan nikmati seluruh akses bot tanpa batas!</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Pilih paket langganan VIP dan nikmati akses penuh tanpa batas!</div>
 
       <div id="activeInvoiceBox"></div>
 
-      <div class="glass-card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="product-shop-grid">
+        <div class="shop-item">
           <div>
-            <div style="font-weight:700;font-size:15px">VIP Trial 3 Hari</div>
-            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 3 Hari Full</div>
+            <div style="font-weight:800;font-size:15px">VIP Trial</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses Full 3 Hari</div>
           </div>
-          <div style="font-weight:800;font-size:16px;color:var(--accent-blue)">Rp 7.000</div>
+          <div style="font-weight:800;font-size:16px;color:var(--accent-blue);margin-top:6px">Rp 7.000</div>
+          <button class="btn-custom btn-buy-pkg" style="padding:10px;font-size:12px" onclick="createOrder(3, 7000, this)">Beli VIP 3H</button>
         </div>
-        <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(3, 7000, this)">Beli VIP 3 Hari</button>
-      </div>
 
-      <div class="glass-card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="shop-item">
           <div>
-            <div style="font-weight:700;font-size:15px">VIP Hemat 5 Hari</div>
-            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 5 Hari Full</div>
+            <div style="font-weight:800;font-size:15px">VIP Hemat</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses Full 5 Hari</div>
           </div>
-          <div style="font-weight:800;font-size:16px;color:var(--accent-blue)">Rp 10.000</div>
+          <div style="font-weight:800;font-size:16px;color:var(--accent-blue);margin-top:6px">Rp 10.000</div>
+          <button class="btn-custom btn-buy-pkg" style="padding:10px;font-size:12px" onclick="createOrder(5, 10000, this)">Beli VIP 5H</button>
         </div>
-        <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(5, 10000, this)">Beli VIP 5 Hari</button>
-      </div>
 
-      <div class="glass-card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="shop-item">
           <div>
-            <div style="font-weight:700;font-size:15px">VIP Starter 7 Hari</div>
-            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 7 Hari Popular</div>
+            <div style="font-weight:800;font-size:15px">VIP Starter</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">7 Hari Popular</div>
           </div>
-          <div style="font-weight:800;font-size:16px;color:var(--accent-emerald)">Rp 15.000</div>
+          <div style="font-weight:800;font-size:16px;color:var(--accent-emerald);margin-top:6px">Rp 15.000</div>
+          <button class="btn-custom btn-buy-pkg" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="createOrder(7, 15000, this)">Beli VIP 7H</button>
         </div>
-        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="createOrder(7, 15000, this)">Beli VIP 7 Hari</button>
-      </div>
 
-      <div class="glass-card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="shop-item">
           <div>
-            <div style="font-weight:700;font-size:15px">VIP Pro 14 Hari</div>
-            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 14 Hari Best Value</div>
+            <div style="font-weight:800;font-size:15px">VIP Pro</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">14 Hari Best Value</div>
           </div>
-          <div style="font-weight:800;font-size:16px;color:var(--accent-purple)">Rp 25.000</div>
+          <div style="font-weight:800;font-size:16px;color:var(--accent-purple);margin-top:6px">Rp 25.000</div>
+          <button class="btn-custom btn-buy-pkg" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="createOrder(14, 25000, this)">Beli VIP 14H</button>
         </div>
-        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="createOrder(14, 25000, this)">Beli VIP 14 Hari</button>
-      </div>
 
-      <div class="glass-card" style="border-color:rgba(245, 158, 11, 0.4)">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-weight:700;font-size:15px">VIP Sultan 30 Hari</div>
-            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 30 Hari Priority Support</div>
+        <div class="shop-item" style="grid-column: span 2;border-color:rgba(245, 158, 11, 0.4)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:800;font-size:16px">VIP Sultan 30 Hari</div>
+              <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Priority Support & Full Unlimited</div>
+            </div>
+            <div style="font-weight:800;font-size:18px;color:var(--accent-amber)">Rp 45.000</div>
           </div>
-          <div style="font-weight:800;font-size:16px;color:var(--accent-amber)">Rp 45.000</div>
+          <button class="btn-custom btn-buy-pkg" style="margin-top:10px;padding:12px;font-size:13px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="createOrder(30, 45000, this)">Beli VIP 30 Hari Sultan</button>
         </div>
-        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="createOrder(30, 45000, this)">Beli VIP 30 Hari</button>
       </div>
     </div>
 
@@ -529,6 +539,52 @@ module.exports = async (req, res) => {
   let activeInvoiceId = null;
   let isUserOwner = false;
   let toastTimeout = null;
+  let isSpinning = false;
+  let currentWheelRotation = 0;
+
+  const wheelPrizes = [
+    { label: "ZONK ❌", color: "#f43f5e" },
+    { label: "+30 PTS 🪙", color: "#3b82f6" },
+    { label: "+50 PTS 🪙", color: "#8b5cf6" },
+    { label: "+100 PTS 🪙", color: "#f59e0b" },
+    { label: "+3 KUOTA ⚡", color: "#10b981" },
+    { label: "VIP 1 HARI 💎", color: "#06b6d4" }
+  ];
+
+  function drawWheel() {
+    const canvas = document.getElementById('spinCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const numSlices = wheelPrizes.length;
+    const sliceAngle = (2 * Math.PI) / numSlices;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const radius = cx - 10;
+
+    for (let i = 0; i < numSlices; i++) {
+      const angle = i * sliceAngle;
+      ctx.beginPath();
+      ctx.fillStyle = wheelPrizes[i].color;
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, angle, angle + sliceAngle);
+      ctx.lineTo(cx, cy);
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle + sliceAngle / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 12px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText(wheelPrizes[i].label, radius - 15, 4);
+      ctx.restore();
+    }
+  }
 
   function initApp() {
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -543,6 +599,7 @@ module.exports = async (req, res) => {
       return;
     }
 
+    drawWheel();
     loadUserData();
   }
 
@@ -591,9 +648,14 @@ module.exports = async (req, res) => {
         }
 
         let invBox = document.getElementById('activeInvoiceBox');
+        let buyBtns = document.querySelectorAll('.btn-buy-pkg');
+
         if (data.currentInvoice) {
           let inv = data.currentInvoice;
           activeInvoiceId = inv.id;
+
+          buyBtns.forEach(btn => btn.disabled = true);
+
           invBox.innerHTML = \`
             <div class="glass-card" style="border-color:var(--accent-amber)">
               <div style="font-weight:700;font-size:14px;color:var(--accent-amber)">Invoice Aktif: \${inv.id}</div>
@@ -619,6 +681,7 @@ module.exports = async (req, res) => {
         } else {
           activeInvoiceId = null;
           invBox.innerHTML = '';
+          buyBtns.forEach(btn => btn.disabled = false);
         }
 
         document.getElementById('loader').style.display = 'none';
@@ -692,8 +755,10 @@ module.exports = async (req, res) => {
   }
 
   async function triggerSpin(btn) {
-    let orig = btn ? btn.innerHTML : '';
-    if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
+    if (isSpinning) return;
+    isSpinning = true;
+    if (btn) btn.disabled = true;
+
     try {
       let res = await fetch('/api/spin', {
         method: 'POST',
@@ -701,12 +766,30 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ user_id: currentUserId })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Spin Berhasil' : 'Informasi', data.message, data.ok ? 'success' : 'warning');
-      if (data.ok) loadUserData();
+
+      if (data.ok) {
+        const pIndex = data.prizeIndex !== undefined ? data.prizeIndex : 0;
+        const numSlices = wheelPrizes.length;
+        const sliceDeg = 360 / numSlices;
+        const targetDeg = 360 - (pIndex * sliceDeg + sliceDeg / 2) - 90;
+
+        currentWheelRotation += (360 * 5) + (targetDeg - (currentWheelRotation % 360));
+        const canvas = document.getElementById('spinCanvas');
+        canvas.style.transform = `rotate(\${currentWheelRotation}deg)`;
+
+        setTimeout(() => {
+          showToast(data.prize.type === 'zonk' ? 'Informasi Spin' : 'Selamat!', data.message, data.prize.type === 'zonk' ? 'warning' : 'success');
+          loadUserData();
+          isSpinning = false;
+        }, 4200);
+      } else {
+        showToast('Informasi', data.message, 'warning');
+        isSpinning = false;
+      }
     } catch (e) {
       showToast('Error', 'Gagal memproses spin', 'error');
-    } finally {
-      if (btn && !data.ok) { btn.disabled = false; btn.innerHTML = orig; }
+      isSpinning = false;
+      if (btn) btn.disabled = false;
     }
   }
 
@@ -750,7 +833,7 @@ module.exports = async (req, res) => {
 
   async function createOrder(days, amount, btn) {
     let orig = btn ? btn.innerHTML : '';
-    if (btn) { btn.disabled = true; btn.innerHTML = 'Membuat Invoice...'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
     try {
       let res = await fetch('/api/order', {
         method: 'POST',
@@ -762,7 +845,7 @@ module.exports = async (req, res) => {
         showToast('Invoice Dibuat', 'ID: ' + (data.invoice.invoice || data.invoice.id), 'success');
         loadUserData();
       } else {
-        showToast('Gagal Order', data.message, 'error');
+        showToast('Transaksi Tertunda', data.message, 'warning');
       }
     } catch (e) {
       showToast('Error', 'Gagal membuat invoice', 'error');
@@ -947,7 +1030,6 @@ module.exports = async (req, res) => {
     let quota = document.getElementById('vGenQuota').value;
 
     if (!code || !days) return showToast('Error', 'Lengkapi kode dan durasi hari!', 'warning');
-
     if (btn) { btn.disabled = true; btn.innerHTML = 'Membuat...'; }
 
     try {
@@ -990,7 +1072,6 @@ module.exports = async (req, res) => {
   async function sendBroadcast(btn) {
     let text = document.getElementById('bcTextInput').value.trim();
     if (!text) return showToast('Error', 'Pesan broadcast tidak boleh kosong!', 'warning');
-
     if (btn) { btn.disabled = true; btn.innerHTML = 'Mengirim Broadcast...'; }
 
     try {
