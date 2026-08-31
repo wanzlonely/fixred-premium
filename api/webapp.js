@@ -110,13 +110,13 @@ module.exports = async (req, res) => {
 
   .nav-bar {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-    width: calc(100% - 32px); max-width: 440px; background: rgba(13, 18, 30, 0.88);
+    width: calc(100% - 32px); max-width: 480px; background: rgba(13, 18, 30, 0.92);
     backdrop-filter: blur(20px); border: 1px solid var(--border-card); border-radius: 24px;
     display: flex; justify-content: space-around; padding: 6px; z-index: 80;
     box-shadow: 0 12px 32px rgba(0,0,0,0.5);
   }
   .nav-tab {
-    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px;
     border-radius: 16px; color: var(--text-secondary); text-decoration: none; font-size: 10px; font-weight: 700;
     cursor: pointer; transition: all 0.3s ease; flex: 1; text-align: center;
   }
@@ -145,10 +145,6 @@ module.exports = async (req, res) => {
   }
   .streak-day.active { background: rgba(16, 185, 129, 0.2); border-color: var(--accent-emerald); color: var(--accent-emerald); }
 
-  .sub-tab-bar { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
-  .sub-tab { padding: 8px 14px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-card); font-size: 12px; font-weight: 700; color: var(--text-secondary); cursor: pointer; white-space: nowrap; }
-  .sub-tab.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
-
   .product-shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
   .shop-item {
     background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); border-radius: 16px; padding: 14px;
@@ -161,7 +157,7 @@ module.exports = async (req, res) => {
   }
 
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
     z-index: 90; display: none; place-items: center; padding: 16px;
   }
   .modal-overlay.active { display: grid; }
@@ -210,210 +206,212 @@ module.exports = async (req, res) => {
 
 <div class="container">
 
-  <div id="viewHome" class="view active">
-    <div class="glass-card glow-box">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-        <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,0.08);display:grid;place-items:center;color:var(--accent-blue)">
-          <svg class="icon-svg float" style="width:28px;height:28px" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <div>
-          <div id="uName" style="font-weight:800;font-size:16px">Memuat User...</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px" id="uIdText">ID: --</div>
-          <div style="display:flex;gap:6px;margin-top:6px">
-            <span class="user-badge" id="uRankBadge">BASIC</span>
-            <span class="user-badge" id="uStatusBadge" style="color:var(--accent-purple);border-color:rgba(139,92,246,0.3)">Gratis</span>
+  <div id="viewUserArea">
+    <div id="viewHome" class="view active">
+      <div class="glass-card glow-box">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+          <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,0.08);display:grid;place-items:center;color:var(--accent-blue)">
+            <svg class="icon-svg float" style="width:28px;height:28px" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <div id="uName" style="font-weight:800;font-size:16px">Memuat User...</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px" id="uIdText">ID: --</div>
+            <div style="display:flex;gap:6px;margin-top:6px">
+              <span class="user-badge" id="uRankBadge">BASIC</span>
+              <span class="user-badge" id="uStatusBadge" style="color:var(--accent-purple);border-color:rgba(139,92,246,0.3)">Gratis</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="grid3">
-      <div class="stat-card">
-        <div class="stat-val" id="sOrders">0</div>
-        <div class="stat-lbl">Total Order</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" id="sRefs">0</div>
-        <div class="stat-lbl">Referral</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--accent-amber)" id="sPoints">0</div>
-        <div class="stat-lbl">Poin Store</div>
-      </div>
-    </div>
-
-    <div class="glass-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">
-          <svg class="icon-svg spin-slow" style="color:var(--accent-amber)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          Spin Wheel Hadiah
+      <div class="grid3">
+        <div class="stat-card">
+          <div class="stat-val" id="sOrders">0</div>
+          <div class="stat-lbl">Total Order</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="sRefs">0</div>
+          <div class="stat-lbl">Referral</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--accent-amber)" id="sPoints">0</div>
+          <div class="stat-lbl">Poin Store</div>
         </div>
       </div>
-      <button class="btn-custom" id="spinBtn" onclick="triggerSpin()">
-        Putar Spin Harian
-      </button>
-    </div>
 
-    <div class="glass-card">
-      <div style="font-weight:700;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
-        <svg class="icon-svg" style="color:var(--accent-emerald)" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Redeem Kode Voucher
-      </div>
-      <input class="input-custom" id="vCodeInput" placeholder="Masukkan Kode Voucher Promo">
-      <button class="btn-custom" style="margin-top:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="claimVoucher()">
-        Tukarkan Kode
-      </button>
-    </div>
-
-    <div class="glass-card">
-      <div style="font-weight:700;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px">
-        <svg class="icon-svg" style="color:var(--accent-purple)" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Program Referral Undangan
-      </div>
-      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px">Dapatkan +50 Poin setiap kali ada user baru yang mendaftar menggunakan link Anda.</div>
-      <input class="input-custom" id="refUrlInput" readonly value="Memuat link...">
-      <button class="btn-custom" style="margin-top:10px" onclick="copyRefLink()">
-        Salin Link Referral
-      </button>
-    </div>
-  </div>
-
-  <div id="viewOrder" class="view">
-    <div style="font-weight:800;font-size:18px;margin-bottom:4px">Katalog VIP Store</div>
-    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Pilih paket langganan VIP dan nikmati seluruh akses bot tanpa batas!</div>
-
-    <div id="activeInvoiceBox"></div>
-
-    <div class="glass-card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:700;font-size:15px">VIP Trial 3 Hari</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 3 Hari Full</div>
+      <div class="glass-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">
+            <svg class="icon-svg spin-slow" style="color:var(--accent-amber)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Spin Wheel Hadiah
+          </div>
         </div>
-        <div style="font-weight:800;font-size:16px;color:var(--accent-blue)">Rp 7.000</div>
-      </div>
-      <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(3, 7000)">Beli VIP 3 Hari</button>
-    </div>
-
-    <div class="glass-card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:700;font-size:15px">VIP Hemat 5 Hari</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 5 Hari Full</div>
-        </div>
-        <div style="font-weight:800;font-size:16px;color:var(--accent-blue)">Rp 10.000</div>
-      </div>
-      <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(5, 10000)">Beli VIP 5 Hari</button>
-    </div>
-
-    <div class="glass-card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:700;font-size:15px">VIP Starter 7 Hari</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 7 Hari Popular</div>
-        </div>
-        <div style="font-weight:800;font-size:16px;color:var(--accent-emerald)">Rp 15.000</div>
-      </div>
-      <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="createOrder(7, 15000)">Beli VIP 7 Hari</button>
-    </div>
-
-    <div class="glass-card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:700;font-size:15px">VIP Pro 14 Hari</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 14 Hari Best Value</div>
-        </div>
-        <div style="font-weight:800;font-size:16px;color:var(--accent-purple)">Rp 25.000</div>
-      </div>
-      <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="createOrder(14, 25000)">Beli VIP 14 Hari</button>
-    </div>
-
-    <div class="glass-card" style="border-color:rgba(245, 158, 11, 0.4)">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:700;font-size:15px">VIP Sultan 30 Hari</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 30 Hari Priority Support</div>
-        </div>
-        <div style="font-weight:800;font-size:16px;color:var(--accent-amber)">Rp 45.000</div>
-      </div>
-      <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="createOrder(30, 45000)">Beli VIP 30 Hari</button>
-    </div>
-  </div>
-
-  <div id="viewCheckin" class="view">
-    <div style="font-weight:800;font-size:18px;margin-bottom:4px">Daily Check-in Poin</div>
-    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Check-in harian untuk mendapatkan poin bertingkat setiap minggunya!</div>
-
-    <div class="glass-card glow-box">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:11px;color:var(--text-secondary)">Poin Anda saat ini</div>
-          <div style="font-size:24px;font-weight:800;color:var(--accent-amber)" id="checkinPointsVal">0 PTS</div>
-        </div>
-        <button class="btn-custom" id="checkinBtn" style="width:auto;padding:10px 18px" onclick="triggerCheckin()">
-          Check-in Hari Ini
+        <button class="btn-custom" id="spinBtn" onclick="triggerSpin()">
+          Putar Spin Harian
         </button>
       </div>
 
-      <div class="streak-grid">
-        <div class="streak-day" id="stDay1"><span>H1</span><b>+30</b></div>
-        <div class="streak-day" id="stDay2"><span>H2</span><b>+50</b></div>
-        <div class="streak-day" id="stDay3"><span>H3</span><b>+75</b></div>
-        <div class="streak-day" id="stDay4"><span>H4</span><b>+100</b></div>
-        <div class="streak-day" id="stDay5"><span>H5</span><b>+150</b></div>
-        <div class="streak-day" id="stDay6"><span>H6</span><b>+200</b></div>
-        <div class="streak-day" id="stDay7"><span>H7</span><b>+350</b></div>
+      <div class="glass-card">
+        <div style="font-weight:700;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          <svg class="icon-svg" style="color:var(--accent-emerald)" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Redeem Kode Voucher
+        </div>
+        <input class="input-custom" id="vCodeInput" placeholder="Masukkan Kode Voucher Promo">
+        <button class="btn-custom" style="margin-top:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="claimVoucher()">
+          Tukarkan Kode
+        </button>
+      </div>
+
+      <div class="glass-card">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+          <svg class="icon-svg" style="color:var(--accent-purple)" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Program Referral Undangan
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px">Dapatkan +50 Poin setiap kali ada user baru yang mendaftar menggunakan link Anda.</div>
+        <input class="input-custom" id="refUrlInput" readonly value="Memuat link...">
+        <button class="btn-custom" style="margin-top:10px" onclick="copyRefLink()">
+          Salin Link Referral
+        </button>
       </div>
     </div>
 
-    <div style="font-weight:800;font-size:16px;margin:18px 0 10px">Point Shop - Tukar Poin Jadi VIP</div>
+    <div id="viewOrder" class="view">
+      <div style="font-weight:800;font-size:18px;margin-bottom:4px">Katalog VIP Store</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Pilih paket langganan VIP dan nikmati seluruh akses bot tanpa batas!</div>
 
-    <div class="product-shop-grid">
-      <div class="shop-item">
-        <div>
-          <div style="font-weight:700;font-size:14px">1 Hari VIP</div>
-          <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">100 PTS</div>
-        </div>
-        <button class="btn-custom" style="padding:8px;font-size:12px" onclick="redeemPoints(1)">Tukarkan</button>
-      </div>
+      <div id="activeInvoiceBox"></div>
 
-      <div class="shop-item">
-        <div>
-          <div style="font-weight:700;font-size:14px">3 Hari VIP</div>
-          <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">250 PTS</div>
-        </div>
-        <button class="btn-custom" style="padding:8px;font-size:12px" onclick="redeemPoints(2)">Tukarkan</button>
-      </div>
-
-      <div class="shop-item">
-        <div>
-          <div style="font-weight:700;font-size:14px">7 Hari VIP</div>
-          <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">500 PTS</div>
-        </div>
-        <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="redeemPoints(3)">Tukarkan</button>
-      </div>
-
-      <div class="shop-item">
-        <div>
-          <div style="font-weight:700;font-size:14px">14 Hari VIP</div>
-          <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">900 PTS</div>
-        </div>
-        <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="redeemPoints(4)">Tukarkan</button>
-      </div>
-
-      <div class="shop-item" style="grid-column: span 2">
+      <div class="glass-card">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <div style="font-weight:700;font-size:14px">30 Hari VIP Sultan</div>
-            <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">1.600 PTS</div>
+            <div style="font-weight:700;font-size:15px">VIP Trial 3 Hari</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 3 Hari Full</div>
           </div>
-          <button class="btn-custom" style="width:auto;padding:8px 20px;font-size:12px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="redeemPoints(5)">Tukarkan</button>
+          <div style="font-weight:800;font-size:16px;color:var(--accent-blue)">Rp 7.000</div>
+        </div>
+        <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(3, 7000)">Beli VIP 3 Hari</button>
+      </div>
+
+      <div class="glass-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:15px">VIP Hemat 5 Hari</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 5 Hari Full</div>
+          </div>
+          <div style="font-weight:800;font-size:16px;color:var(--accent-blue)">Rp 10.000</div>
+        </div>
+        <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(5, 10000)">Beli VIP 5 Hari</button>
+      </div>
+
+      <div class="glass-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:15px">VIP Starter 7 Hari</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 7 Hari Popular</div>
+          </div>
+          <div style="font-weight:800;font-size:16px;color:var(--accent-emerald)">Rp 15.000</div>
+        </div>
+        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="createOrder(7, 15000)">Beli VIP 7 Hari</button>
+      </div>
+
+      <div class="glass-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:15px">VIP Pro 14 Hari</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 14 Hari Best Value</div>
+          </div>
+          <div style="font-weight:800;font-size:16px;color:var(--accent-purple)">Rp 25.000</div>
+        </div>
+        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="createOrder(14, 25000)">Beli VIP 14 Hari</button>
+      </div>
+
+      <div class="glass-card" style="border-color:rgba(245, 158, 11, 0.4)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:15px">VIP Sultan 30 Hari</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 30 Hari Priority Support</div>
+          </div>
+          <div style="font-weight:800;font-size:16px;color:var(--accent-amber)">Rp 45.000</div>
+        </div>
+        <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="createOrder(30, 45000)">Beli VIP 30 Hari</button>
+      </div>
+    </div>
+
+    <div id="viewCheckin" class="view">
+      <div style="font-weight:800;font-size:18px;margin-bottom:4px">Daily Check-in Poin</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Check-in harian untuk mendapatkan poin bertingkat setiap minggunya!</div>
+
+      <div class="glass-card glow-box">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:11px;color:var(--text-secondary)">Poin Anda saat ini</div>
+            <div style="font-size:24px;font-weight:800;color:var(--accent-amber)" id="checkinPointsVal">0 PTS</div>
+          </div>
+          <button class="btn-custom" id="checkinBtn" style="width:auto;padding:10px 18px" onclick="triggerCheckin()">
+            Check-in Hari Ini
+          </button>
+        </div>
+
+        <div class="streak-grid">
+          <div class="streak-day" id="stDay1"><span>H1</span><b>+30</b></div>
+          <div class="streak-day" id="stDay2"><span>H2</span><b>+50</b></div>
+          <div class="streak-day" id="stDay3"><span>H3</span><b>+75</b></div>
+          <div class="streak-day" id="stDay4"><span>H4</span><b>+100</b></div>
+          <div class="streak-day" id="stDay5"><span>H5</span><b>+150</b></div>
+          <div class="streak-day" id="stDay6"><span>H6</span><b>+200</b></div>
+          <div class="streak-day" id="stDay7"><span>H7</span><b>+350</b></div>
+        </div>
+      </div>
+
+      <div style="font-weight:800;font-size:16px;margin:18px 0 10px">Point Shop - Tukar Poin Jadi VIP</div>
+
+      <div class="product-shop-grid">
+        <div class="shop-item">
+          <div>
+            <div style="font-weight:700;font-size:14px">1 Hari VIP</div>
+            <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">100 PTS</div>
+          </div>
+          <button class="btn-custom" style="padding:8px;font-size:12px" onclick="redeemPoints(1)">Tukarkan</button>
+        </div>
+
+        <div class="shop-item">
+          <div>
+            <div style="font-weight:700;font-size:14px">3 Hari VIP</div>
+            <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">250 PTS</div>
+          </div>
+          <button class="btn-custom" style="padding:8px;font-size:12px" onclick="redeemPoints(2)">Tukarkan</button>
+        </div>
+
+        <div class="shop-item">
+          <div>
+            <div style="font-weight:700;font-size:14px">7 Hari VIP</div>
+            <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">500 PTS</div>
+          </div>
+          <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="redeemPoints(3)">Tukarkan</button>
+        </div>
+
+        <div class="shop-item">
+          <div>
+            <div style="font-weight:700;font-size:14px">14 Hari VIP</div>
+            <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">900 PTS</div>
+          </div>
+          <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="redeemPoints(4)">Tukarkan</button>
+        </div>
+
+        <div class="shop-item" style="grid-column: span 2">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:700;font-size:14px">30 Hari VIP Sultan</div>
+              <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">1.600 PTS</div>
+            </div>
+            <button class="btn-custom" style="width:auto;padding:8px 20px;font-size:12px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="redeemPoints(5)">Tukarkan</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="viewOwner" class="view">
+  <div id="viewOwnerArea" style="display:none">
     <div id="ownerLoginBox" class="glass-card">
       <div style="font-weight:800;font-size:16px;margin-bottom:12px;text-align:center">OWNER STUDIO AUTHENTICATION</div>
       <input type="password" class="input-custom" id="ownerPassInput" placeholder="Masukkan Password Owner">
@@ -421,15 +419,44 @@ module.exports = async (req, res) => {
     </div>
 
     <div id="ownerContent" style="display:none">
-      <div class="sub-tab-bar">
-        <div class="sub-tab active" onclick="switchOwnerSubTab('Analytics', event)">Analitik</div>
-        <div class="sub-tab" onclick="switchOwnerSubTab('Orders', event)">Katalog Order</div>
-        <div class="sub-tab" onclick="switchOwnerSubTab('Users', event)">Kelola User</div>
-        <div class="sub-tab" onclick="switchOwnerSubTab('Vouchers', event)">Buat Voucher</div>
-        <div class="sub-tab" onclick="switchOwnerSubTab('Broadcast', event)">Broadcast</div>
+      <div id="oTabOrders" class="view active">
+        <div style="font-weight:800;font-size:18px;margin-bottom:4px">Katalog Order Pembayaran</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Daftar transaksi pending & verifikasi foto bukti pembayaran.</div>
+        <div id="oPendingList"></div>
       </div>
 
-      <div id="oTabAnalytics">
+      <div id="oTabUsers" class="view">
+        <div style="font-weight:800;font-size:18px;margin-bottom:4px">Kelola User Valid</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Daftar pengguna aktif platform.</div>
+        <div id="oUserList"></div>
+      </div>
+
+      <div id="oTabVouchers" class="view">
+        <div class="glass-card">
+          <div style="font-weight:700;font-size:14px;margin-bottom:10px">Generator Voucher Promo</div>
+          <input class="input-custom" id="vGenCode" placeholder="Kode Voucher (cth: SULTAN100)" style="margin-bottom:8px">
+          <div class="grid2" style="margin-bottom:8px">
+            <input class="input-custom" id="vGenDays" type="number" placeholder="Durasi (Hari)">
+            <input class="input-custom" id="vGenQuota" type="number" placeholder="Kuota (0 = ∞)">
+          </div>
+          <button class="btn-custom" onclick="createVoucher()">Buat Voucher</button>
+        </div>
+        <div style="font-weight:700;font-size:14px;margin:12px 0 8px">Voucher Aktif</div>
+        <div id="oVoucherList"></div>
+      </div>
+
+      <div id="oTabBroadcast" class="view">
+        <div class="glass-card">
+          <div style="font-weight:700;font-size:14px;margin-bottom:8px">Kirim Broadcast Pesan Massal</div>
+          <textarea class="input-custom" id="bcTextInput" style="height:120px;resize:none;margin-bottom:10px" placeholder="Tuliskan pesan HTML yang akan dikirimkan langsung ke seluruh user..."></textarea>
+          <button class="btn-custom" id="btnSendBc" onclick="sendBroadcast()">
+            Kirim Broadcast Sekarang
+          </button>
+        </div>
+      </div>
+
+      <div id="oTabAnalytics" class="view">
+        <div style="font-weight:800;font-size:18px;margin-bottom:12px">Analitik Pendapatan</div>
         <div class="grid2">
           <div class="stat-card">
             <div class="stat-val" id="oRev">Rp 0</div>
@@ -449,46 +476,12 @@ module.exports = async (req, res) => {
           </div>
         </div>
       </div>
-
-      <div id="oTabOrders" style="display:none">
-        <div style="font-weight:700;font-size:14px;margin-bottom:10px">Pending Pembayaran Deposit</div>
-        <div id="oPendingList"></div>
-      </div>
-
-      <div id="oTabUsers" style="display:none">
-        <div style="font-weight:700;font-size:14px;margin-bottom:10px">Daftar Pengguna Valid</div>
-        <div id="oUserList"></div>
-      </div>
-
-      <div id="oTabVouchers" style="display:none">
-        <div class="glass-card">
-          <div style="font-weight:700;font-size:14px;margin-bottom:10px">Generator Voucher Promo</div>
-          <input class="input-custom" id="vGenCode" placeholder="Kode Voucher (cth: SULTAN100)" style="margin-bottom:8px">
-          <div class="grid2" style="margin-bottom:8px">
-            <input class="input-custom" id="vGenDays" type="number" placeholder="Durasi (Hari)">
-            <input class="input-custom" id="vGenQuota" type="number" placeholder="Kuota (0 = ∞)">
-          </div>
-          <button class="btn-custom" onclick="createVoucher()">Buat Voucher</button>
-        </div>
-        <div style="font-weight:700;font-size:14px;margin:12px 0 8px">Voucher Aktif</div>
-        <div id="oVoucherList"></div>
-      </div>
-
-      <div id="oTabBroadcast" style="display:none">
-        <div class="glass-card">
-          <div style="font-weight:700;font-size:14px;margin-bottom:8px">Kirim Broadcast Pesan Massal</div>
-          <textarea class="input-custom" id="bcTextInput" style="height:120px;resize:none;margin-bottom:10px" placeholder="Tuliskan pesan HTML yang akan dikirimkan langsung ke seluruh user..."></textarea>
-          <button class="btn-custom" id="btnSendBc" onclick="sendBroadcast()">
-            Kirim Broadcast Sekarang
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 
 </div>
 
-<div class="nav-bar">
+<div class="nav-bar" id="userNavBar">
   <div class="nav-tab active" onclick="switchTab('Home', event)">
     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     Home
@@ -501,17 +494,39 @@ module.exports = async (req, res) => {
     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
     Check-in
   </div>
-  <div class="nav-tab" onclick="switchTab('Owner', event)">
-    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    Studio
+</div>
+
+<div class="nav-bar" id="ownerNavBar" style="display:none">
+  <div class="nav-tab active" onclick="switchOwnerTab('Orders', event)">
+    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Katalog
+  </div>
+  <div class="nav-tab" onclick="switchOwnerTab('Users', event)">
+    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    User
+  </div>
+  <div class="nav-tab" onclick="switchOwnerTab('Vouchers', event)">
+    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    Voucher
+  </div>
+  <div class="nav-tab" onclick="switchOwnerTab('Broadcast', event)">
+    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    Broadcast
+  </div>
+  <div class="nav-tab" onclick="switchOwnerTab('Analytics', event)">
+    <svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Analitik
   </div>
 </div>
+
+<input type="file" id="proofFileInput" accept="image/*" style="display:none" onchange="submitProofFile(event)">
 
 <script>
   let tg = window.Telegram ? window.Telegram.WebApp : null;
   if (tg) { tg.ready(); tg.expand(); }
 
   let currentUserId = null;
+  let activeInvoiceId = null;
   let ownerPassword = '';
   let toastTimeout = null;
 
@@ -560,17 +575,31 @@ module.exports = async (req, res) => {
           else el.classList.remove('active');
         }
 
+        if (u.isOwner) {
+          document.getElementById('viewUserArea').style.display = 'none';
+          document.getElementById('userNavBar').style.display = 'none';
+          document.getElementById('viewOwnerArea').style.display = 'block';
+          document.getElementById('ownerNavBar').style.display = 'flex';
+        }
+
         let invBox = document.getElementById('activeInvoiceBox');
         if (data.currentInvoice) {
           let inv = data.currentInvoice;
+          activeInvoiceId = inv.id;
           invBox.innerHTML = \`
             <div class="glass-card" style="border-color:var(--accent-amber)">
               <div style="font-weight:700;font-size:14px;color:var(--accent-amber)">Invoice Aktif: \${inv.id}</div>
               <div style="font-size:12px;margin-top:4px">Paket \${inv.days} Hari - \${inv.amountFormatted || 'Rp ' + inv.amount}</div>
-              <button class="btn-custom" style="margin-top:10px;padding:8px;font-size:12px" onclick="showInvoiceDetails('\${inv.id}', '\${inv.days}', '\${inv.amountFormatted || 'Rp ' + inv.amount}')">Lihat Detail Pembayaran</button>
+              <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Status: <b>\${inv.status === 'waiting_approval' ? 'Menunggu Konfirmasi Owner' : 'Belum Dibayar / Upload Bukti'}</b></div>
+              
+              <div style="display:flex;gap:8px;margin-top:12px">
+                <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="triggerUploadProof()">Upload Foto Bukti</button>
+                <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="cancelOrder('\${inv.id}')">Batalkan Pembelian</button>
+              </div>
             </div>
           \`;
         } else {
+          activeInvoiceId = null;
           invBox.innerHTML = '';
         }
 
@@ -583,41 +612,21 @@ module.exports = async (req, res) => {
     }
   }
 
-  function showInvoiceDetails(invId, days, amount) {
-    let modalContent = document.getElementById('modalInvoiceContent');
-    modalContent.innerHTML = \`
-      <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:12px;margin-top:10px">
-        <b>ID Invoice:</b> \${invId}<br>
-        <b>Paket VIP:</b> \${days} Hari<br>
-        <b>Total Bayar:</b> \${amount}<br>
-        <b>Status:</b> Menunggu Konfirmasi Admin
-      </div>
-      <div style="margin-top:10px;font-size:11px">Selesaikan transaksi pembayaran Anda dan verifikasi notifikasi akan masuk secara otomatis.</div>
-    \`;
-    document.getElementById('invoiceModal').classList.add('active');
-  }
-
-  function closeInvoiceModal() {
-    document.getElementById('invoiceModal').classList.remove('active');
-  }
-
   function switchTab(tabName, event) {
     if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-    
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#viewUserArea .view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('#userNavBar .nav-tab').forEach(t => t.classList.remove('active'));
 
     document.getElementById('view' + tabName).classList.add('active');
-    if (event && event.currentTarget) {
-      event.currentTarget.classList.add('active');
-    }
+    if (event && event.currentTarget) event.currentTarget.classList.add('active');
   }
 
-  function switchOwnerSubTab(subName, event) {
-    document.querySelectorAll('#ownerContent > div[id^="oTab"]').forEach(d => d.style.display = 'none');
-    document.querySelectorAll('.sub-tab').forEach(st => st.classList.remove('active'));
+  function switchOwnerTab(tabName, event) {
+    if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    document.querySelectorAll('#ownerContent .view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('#ownerNavBar .nav-tab').forEach(t => t.classList.remove('active'));
 
-    document.getElementById('oTab' + subName).style.display = 'block';
+    document.getElementById('oTab' + tabName).classList.add('active');
     if (event && event.currentTarget) event.currentTarget.classList.add('active');
   }
 
@@ -719,6 +728,52 @@ module.exports = async (req, res) => {
     }
   }
 
+  async function cancelOrder(invoiceId) {
+    try {
+      let res = await fetch('/api/cancel_order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId, invoice: invoiceId })
+      });
+      let data = await res.json();
+      showToast(data.ok ? 'Dibatalkan' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+      if (data.ok) loadUserData();
+    } catch (e) {
+      showToast('Error', 'Gagal membatalkan invoice', 'error');
+    }
+  }
+
+  function triggerUploadProof() {
+    document.getElementById('proofFileInput').click();
+  }
+
+  function submitProofFile(event) {
+    let file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      return showToast('Error Upload', 'Bukti pembayaran harus berupa file foto!', 'error');
+    }
+
+    let reader = new FileReader();
+    reader.onload = async function(e) {
+      let base64 = e.target.result;
+      try {
+        let res = await fetch('/api/upload_proof', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: currentUserId, invoice: activeInvoiceId, image_data: base64 })
+        });
+        let data = await res.json();
+        showToast(data.ok ? 'Sukses Upload' : 'Gagal Upload', data.message, data.ok ? 'success' : 'error');
+        if (data.ok) loadUserData();
+      } catch (err) {
+        showToast('Error', 'Gagal mengirimkan foto bukti', 'error');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function claimVoucher() {
     let code = document.getElementById('vCodeInput').value.trim();
     if (!code) return showToast('Peringatan', 'Masukkan kode voucher promo!', 'warning');
@@ -789,6 +844,7 @@ module.exports = async (req, res) => {
             <div class="glass-card">
               <div style="font-weight:700;font-size:13px">Invoice: \${p.id}</div>
               <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">User: \${p.userId} | Paket: \${p.days} Hari (\${p.amountFormatted || 'Rp ' + p.amount})</div>
+              \${p.proofImage ? \`<div style="margin-top:8px"><img src="\${p.proofImage}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border-card)"></div>\` : '<div style="font-size:11px;color:var(--accent-rose);margin-top:4px">Belum upload foto bukti.</div>'}
               <div style="display:flex;gap:8px;margin-top:10px">
                 <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="ownerAct('\${p.id}', 'approve')">Setujui Pembayaran</button>
                 <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="ownerAct('\${p.id}', 'reject')">Tolak</button>
