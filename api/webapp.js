@@ -1,5 +1,3 @@
-
-const { loadDB } = require('../lib/utils');
 module.exports = async (req, res) => {
   res.setHeader('Content-Type','text/html');
   res.send(`<!DOCTYPE html>
@@ -7,7 +5,7 @@ module.exports = async (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>FIXRED WALZY - Premium Mini App REAL</title>
+<title>FIXRED WALZY - Premium Mini App</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -81,6 +79,7 @@ body{
 .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
 .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;border-color:transparent}
 .btn-vip{background:linear-gradient(135deg,#ffcc33,#ffaa00);color:#000}
+.btn-danger{background:linear-gradient(135deg,#ff3b5c,#c81c3a);color:#fff}
 .referral-box{
   background:#0a0e0b;border:1px dashed rgba(0,255,136,0.3);border-radius:12px;padding:12px;
   font-family:'JetBrains Mono',monospace;font-size:12px;word-break:break-all;color:var(--accent);
@@ -122,88 +121,119 @@ body{
 }
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .loading{opacity:0.6;pointer-events:none}
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 6px;border-bottom:1px solid var(--border)}
+.table td{padding:8px 6px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.queue-item{padding:12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);margin-bottom:10px}
+.queue-actions{display:flex;gap:8px;margin-top:10px}
+.confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden;display:none}
+.confetti-piece{position:absolute;top:-20px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0.3}}
+.vip-toast{
+  position:fixed;inset:0;z-index:1000;display:none;place-items:center;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);
+}
+.vip-toast-card{background:linear-gradient(135deg,#191e22,#0a0e0b);border:1px solid rgba(255,204,51,0.4);border-radius:24px;padding:32px;text-align:center;max-width:300px}
+.vip-toast-card .icon{font-size:48px;margin-bottom:10px}
+.vip-toast-card h2{color:var(--vip);font-size:20px;margin-bottom:6px}
+.vip-toast-card p{color:var(--muted);font-size:13px}
+.file-input-wrap{position:relative}
+.file-input-wrap input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
 </style>
 </head>
 <body>
+<div class="confetti-layer" id="confettiLayer"></div>
+<div class="vip-toast" id="vipToast"><div class="vip-toast-card"><div class="icon">🎉</div><h2>VIP Aktif!</h2><p>Selamat, VIP kamu sudah aktif sekarang</p></div></div>
+
 <div class="header">
   <div class="brand">
     <div class="brand-icon">🦖</div>
-    <div class="brand-text">FIXRED <span>WALZY</span> <span class="mono" style="font-size:10px;color:var(--muted);margin-left:6px">V9.2 REAL</span></div>
+    <div class="brand-text">FIXRED <span>WALZY</span></div>
   </div>
   <div class="mono" style="font-size:11px;color:var(--muted)" id="time">--:-- WIB</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<div class="container">
-  <!-- Profile REAL -->
+<div class="container" id="userView" style="display:none">
   <div class="card">
-    <div class="card-title">👤 PROFIL AKUN REAL</div>
+    <div class="card-title">👤 PROFIL AKUN</div>
     <div class="profile-grid">
       <div class="avatar" id="avatar">?</div>
       <div style="flex:1">
-        <div style="font-weight:700;font-size:16px" id="name">Memuat data real...</div>
+        <div style="font-weight:700;font-size:16px" id="name">Memuat data...</div>
         <div class="mono" style="font-size:11px;color:var(--muted)" id="uid">ID: -</div>
         <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap" id="badges"></div>
       </div>
     </div>
     <div class="progress"><div class="progress-bar" id="limitBar" style="width:0%"></div></div>
-    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)"><span>Daily Limit Real</span><span class="mono" id="limitText">Memuat...</span></div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)"><span>Daily Limit</span><span class="mono" id="limitText">Memuat...</span></div>
   </div>
 
-  <!-- Stats REAL -->
   <div class="stat-grid">
-    <div class="stat"><div class="stat-value mono" id="myFix">-</div><div class="stat-label">My Total Fix (Real)</div></div>
-    <div class="stat"><div class="stat-value mono" id="globalFix">-</div><div class="stat-label">Global Fix (Real)</div></div>
-    <div class="stat"><div class="stat-value mono" id="refCount">-</div><div class="stat-label">Referral Real</div></div>
-    <div class="stat"><div class="stat-value mono" id="revCount">-</div><div class="stat-label">Revenue Real</div></div>
+    <div class="stat"><div class="stat-value mono" id="myFix">-</div><div class="stat-label">Total Fix</div></div>
+    <div class="stat"><div class="stat-value mono" id="globalFix">-</div><div class="stat-label">Global Fix</div></div>
+    <div class="stat"><div class="stat-value mono" id="refCount">-</div><div class="stat-label">Referral</div></div>
+    <div class="stat"><div class="stat-value mono" id="revCount">-</div><div class="stat-label">Revenue</div></div>
   </div>
 
   <div class="card" style="margin-top:14px">
-    <div class="card-title">🎰 DAILY SPIN - REAL REWARD</div>
+    <div class="card-title">🎰 DAILY SPIN</div>
     <div class="spin-wheel" id="wheel"><div class="spin-inner">🎰</div></div>
     <div style="text-align:center;margin-top:14px">
-      <div class="mono" style="font-size:12px;color:var(--muted)" id="spinStatus">Memuat status spin real...</div>
+      <div class="mono" style="font-size:12px;color:var(--muted)" id="spinStatus">Memuat status spin...</div>
       <div class="mono" style="font-size:10px;color:var(--muted);margin-top:4px" id="spinLast">Last spin: -</div>
-      <button class="btn btn-primary" style="margin-top:10px" id="spinBtn" onclick="doSpinReal()">🎰 PUTAR SEKARANG (REAL)</button>
+      <button class="btn btn-primary" style="margin-top:10px" id="spinBtn" onclick="doSpin()">🎰 PUTAR SEKARANG</button>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">💎 VIP MANUAL DEPOSIT - REAL</div>
+    <div class="card-title">💎 VIP MANUAL DEPOSIT</div>
     <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px" id="vipDesc">
-      Upgrade VIP untuk unlimited fix 5 baris. Data real dari server.
+      Upgrade VIP untuk unlimited fix 5 baris.
     </div>
     <div class="package-grid">
-      <div class="package"><div><b>1 Hari</b><div class="mono" style="font-size:11px;color:var(--muted)">Rp 2.000 - Real</div></div><button class="btn" style="width:auto;padding:8px 14px" onclick="buyReal(1)">Beli Real</button></div>
-      <div class="package package-popular"><div><b>5 Hari</b> <span class="badge">POPULAR</span><div class="mono" style="font-size:11px;color:var(--muted)">Rp 5.000 - Real</div></div><button class="btn btn-vip" style="width:auto;padding:8px 14px" onclick="buyReal(5)">Beli Real</button></div>
-      <div class="package"><div><b>10 Hari</b><div class="mono" style="font-size:11px;color:var(--muted)">Rp 10.000 - Real</div></div><button class="btn" style="width:auto;padding:8px 14px" onclick="buyReal(10)">Beli Real</button></div>
-      <div class="package"><div><b>30 Hari</b><div class="mono" style="font-size:11px;color:var(--muted)">Rp 60.000 - Real</div></div><button class="btn" style="width:auto;padding:8px 14px" onclick="buyReal(30)">Beli Real</button></div>
+      <div class="package"><div><b>1 Hari</b><div class="mono" style="font-size:11px;color:var(--muted)">Rp 2.000</div></div><button class="btn" style="width:auto;padding:8px 14px" onclick="buyPackage(1)">Beli</button></div>
+      <div class="package package-popular"><div><b>5 Hari</b> <span class="badge">POPULAR</span><div class="mono" style="font-size:11px;color:var(--muted)">Rp 5.000</div></div><button class="btn btn-vip" style="width:auto;padding:8px 14px" onclick="buyPackage(5)">Beli</button></div>
+      <div class="package"><div><b>10 Hari</b><div class="mono" style="font-size:11px;color:var(--muted)">Rp 10.000</div></div><button class="btn" style="width:auto;padding:8px 14px" onclick="buyPackage(10)">Beli</button></div>
+      <div class="package"><div><b>30 Hari</b><div class="mono" style="font-size:11px;color:var(--muted)">Rp 60.000</div></div><button class="btn" style="width:auto;padding:8px 14px" onclick="buyPackage(30)">Beli</button></div>
     </div>
     <div id="invoiceBox" style="display:none;margin-top:12px;padding:12px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:12px" class="mono"></div>
   </div>
 
   <div class="card">
-    <div class="card-title">🤝 REFERRAL PROGRAM REAL</div>
-    <div class="referral-box" id="refLink">Memuat link real...</div>
-    <button class="btn" style="margin-top:10px" onclick="copyRefReal()">📋 Copy Link Real</button>
-    <div style="margin-top:10px;font-size:11px;color:var(--muted)">Data referral real dari database Upstash. Top referral naik rank MASTER 👑</div>
+    <div class="card-title">🤝 REFERRAL PROGRAM</div>
+    <div class="referral-box" id="refLink">Memuat link...</div>
+    <button class="btn" style="margin-top:10px" onclick="copyRef()">📋 Copy Link</button>
   </div>
 
   <div class="card">
-    <div class="card-title">📊 LIVE STATS REAL DARI SERVER</div>
-    <div id="liveStats" class="mono" style="font-size:11px;color:var(--muted);white-space:pre-wrap;max-height:200px;overflow:auto">Memuat data real...</div>
-    <button class="btn" style="margin-top:12px" onclick="location.href='/admin'">📊 Buka Full Dashboard Real</button>
+    <div class="card-title">📜 HISTORY FIX</div>
+    <div id="historyBox" class="mono" style="font-size:11px;color:var(--muted)">Memuat history...</div>
+  </div>
+</div>
+
+<div class="container" id="ownerView" style="display:none">
+  <div class="stat-grid">
+    <div class="stat"><div class="stat-value mono" id="oUsers">-</div><div class="stat-label">Total User</div></div>
+    <div class="stat"><div class="stat-value mono" id="oPremium">-</div><div class="stat-label">VIP Aktif</div></div>
+    <div class="stat"><div class="stat-value mono" id="oFix">-</div><div class="stat-label">Total Fix</div></div>
+    <div class="stat"><div class="stat-value mono" id="oRevenue">-</div><div class="stat-label">Revenue</div></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">💳 ANTREAN BUKTI TRANSFER</div>
+    <div id="queueBox">Memuat antrean...</div>
   </div>
 
   <div class="card">
-    <div class="card-title">📜 HISTORY FIX REAL</div>
-    <div id="historyBox" class="mono" style="font-size:11px;color:var(--muted)">Memuat history real...</div>
+    <div class="card-title">👥 USER TERBARU</div>
+    <table class="table" id="userTable"><tr><th>ID</th><th>Nama</th><th>Status</th><th>Fix</th></tr></table>
   </div>
 </div>
 
 <div class="nav">
-  <div class="nav-item active"><span>🏠</span><span>Home Real</span></div>
+  <div class="nav-item active"><span>🏠</span><span>Home</span></div>
   <div class="nav-item" onclick="location.href='/admin'"><span>📊</span><span>Dashboard</span></div>
   <div class="nav-item" onclick="Telegram.WebApp.close()"><span>❌</span><span>Close</span></div>
 </div>
@@ -212,9 +242,10 @@ body{
 const tg = Telegram.WebApp;
 tg.ready();
 tg.expand();
-const user = tg.initDataUnsafe.user;
+const tgUser = tg.initDataUnsafe.user;
 const timeEl = document.getElementById('time');
 const toastEl = document.getElementById('toast');
+const OWNER_IDS = ${JSON.stringify(require('../config').OWNER_IDS.map(String))};
 
 function showToast(msg, duration=3000){
   toastEl.textContent = msg;
@@ -223,43 +254,79 @@ function showToast(msg, duration=3000){
 }
 
 function updateTime(){
-  const now = new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',second:'2-digit'}).replace(/\./g,':');
+  const now = new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',second:'2-digit'}).replace(/\\./g,':');
   timeEl.textContent = now + ' WIB';
 }
 setInterval(updateTime,1000);updateTime();
 
-let realUserId = user ? String(user.id) : null;
-let realUserData = null;
+let userId = tgUser ? String(tgUser.id) : null;
+let isOwnerUser = userId && OWNER_IDS.includes(userId);
+let lastKnownPremium = null;
 
-async function loadRealUser(){
-  if(!realUserId){
-    document.getElementById('name').textContent = 'Buka via Telegram untuk data REAL';
-    document.getElementById('uid').textContent = 'User ID tidak terdeteksi - Buka Mini App dari bot';
-    document.getElementById('refLink').textContent = 'Buka via Telegram';
+function launchConfetti(){
+  const layer = document.getElementById('confettiLayer');
+  layer.style.display = 'block';
+  layer.innerHTML = '';
+  const colors = ['#00ff88','#00d4ff','#ffcc33','#ff3b5c'];
+  for(let i=0;i<80;i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random()*100 + 'vw';
+    p.style.width = (6+Math.random()*6) + 'px';
+    p.style.height = (6+Math.random()*10) + 'px';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (2+Math.random()*2) + 's';
+    p.style.animationDelay = (Math.random()*0.5) + 's';
+    layer.appendChild(p);
+  }
+  const vipToast = document.getElementById('vipToast');
+  vipToast.style.display = 'grid';
+  tg.HapticFeedback.notificationOccurred('success');
+  setTimeout(()=>{
+    vipToast.style.display = 'none';
+    layer.style.display = 'none';
+    layer.innerHTML = '';
+  }, 3500);
+}
+
+async function loadUser(){
+  if(!userId){
+    document.getElementById('userView').style.display = 'block';
+    document.getElementById('name').textContent = 'Buka via Telegram untuk data akun';
+    document.getElementById('uid').textContent = 'User ID tidak terdeteksi';
     return;
   }
 
+  if(isOwnerUser){
+    document.getElementById('ownerView').style.display = 'block';
+    document.getElementById('userView').style.display = 'none';
+    return loadOwnerData();
+  }
+
+  document.getElementById('userView').style.display = 'block';
+
   try{
-    // REAL API call - no simulation
-    const r = await fetch('/api/user?user_id=' + realUserId);
+    const r = await fetch('/api/user?user_id=' + userId);
     const data = await r.json();
-    
+
     if(!data.ok){
       document.getElementById('name').textContent = data.message || 'User tidak ditemukan';
-      document.getElementById('uid').textContent = 'Silakan /start di bot dulu untuk registrasi REAL';
+      document.getElementById('uid').textContent = 'Silakan /start di bot dulu';
       return;
     }
 
-    realUserData = data.user;
     const u = data.user;
     const g = data.global;
 
-    // REAL profile
+    if(lastKnownPremium === false && u.isPremium === true){
+      launchConfetti();
+    }
+    lastKnownPremium = u.isPremium;
+
     document.getElementById('name').textContent = u.first_name + (u.username ? ' @' + u.username : '');
     document.getElementById('uid').textContent = 'ID: ' + u.id + ' | Bergabung: ' + new Date(u.joinedAt).toLocaleDateString('id-ID');
     document.getElementById('avatar').textContent = u.first_name.charAt(0).toUpperCase();
-    
-    // REAL badges
+
     const badgesEl = document.getElementById('badges');
     let badgesHtml = '<span class="rank-badge">' + u.rank.icon + ' ' + u.rank.name + '</span>';
     if(u.isPremium){
@@ -269,83 +336,132 @@ async function loadRealUser(){
     }
     badgesEl.innerHTML = badgesHtml;
 
-    // REAL limit
     const limitPct = u.isPremium ? 100 : ((u.dailyFix.used / 3) * 100);
     document.getElementById('limitBar').style.width = Math.min(100, limitPct) + '%';
-    document.getElementById('limitText').textContent = u.isPremium ? 'Unlimited (VIP) - REAL' : u.dailyFix.used + '/3 - Sisa ' + u.dailyFix.remaining + ' (REAL)';
+    document.getElementById('limitText').textContent = u.isPremium ? 'Unlimited (VIP)' : u.dailyFix.used + '/3 - Sisa ' + u.dailyFix.remaining;
 
-    // REAL stats - NO RANDOM
     document.getElementById('myFix').textContent = u.totalFix;
     document.getElementById('globalFix').textContent = g.totalFix;
     document.getElementById('refCount').textContent = u.referralCount;
     document.getElementById('revCount').textContent = 'Rp ' + g.revenue.toLocaleString('id-ID');
 
-    // REAL spin status
     if(u.canSpin){
-      document.getElementById('spinStatus').textContent = 'Siap spin! Hadiah real akan masuk DB';
-      document.getElementById('spinLast').textContent = 'Last spin: ' + (u.lastSpin || 'Belum pernah - REAL');
+      document.getElementById('spinStatus').textContent = 'Siap spin!';
+      document.getElementById('spinLast').textContent = 'Last spin: ' + (u.lastSpin || 'Belum pernah');
       document.getElementById('spinBtn').disabled = false;
-      document.getElementById('spinBtn').textContent = '🎰 PUTAR SEKARANG (REAL)';
+      document.getElementById('spinBtn').textContent = '🎰 PUTAR SEKARANG';
     } else {
-      document.getElementById('spinStatus').textContent = 'Spin hari ini sudah dipakai (REAL DB)';
-      document.getElementById('spinLast').textContent = 'Last spin: ' + u.lastSpin + ' - Kembali besok (REAL)';
+      document.getElementById('spinStatus').textContent = 'Spin hari ini sudah dipakai';
+      document.getElementById('spinLast').textContent = 'Last spin: ' + u.lastSpin + ' - Kembali besok';
       document.getElementById('spinBtn').disabled = true;
       document.getElementById('spinBtn').textContent = '✅ Sudah Spin Hari Ini';
     }
 
-    // REAL referral
     document.getElementById('refLink').textContent = 'https://t.me/' + (u.username ? u.username : 'fixedredbot') + '?start=' + u.id;
 
-    // REAL live stats
-    document.getElementById('liveStats').textContent = 'Total Fix: ' + g.totalFix + '\nSuccess: ' + g.totalSuccess + '\nFailed: ' + g.totalFailed + '\nTotal User: ' + g.totalUsers + '\nPremium: ' + g.premiumUsers + '\nRevenue: Rp ' + g.revenue.toLocaleString('id-ID') + '\n\nSemua data REAL dari Upstash Redis';
-
-    // REAL history
     const histBox = document.getElementById('historyBox');
     if(u.history && u.history.length>0){
-      histBox.innerHTML = u.history.map(h=>'<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">📅 ' + new Date(h.date).toLocaleString('id-ID') + ' - Fix +1 (REAL)</div>').join('');
+      histBox.innerHTML = u.history.map(h=>'<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">📅 ' + new Date(h.date).toLocaleString('id-ID') + ' - Fix +1</div>').join('');
     } else {
-      histBox.textContent = 'Belum ada history fix - Data real';
+      histBox.textContent = 'Belum ada history fix';
     }
 
-    // REAL VIP desc
-    document.getElementById('vipDesc').textContent = u.isPremium ? 'VIP aktif sampai ' + new Date(u.premiumUntil).toLocaleDateString('id-ID') + ' (' + u.premiumLeft + ' hari lagi) - REAL' : 'Upgrade VIP untuk unlimited fix 5 baris. Data real dari server Upstash.';
+    document.getElementById('vipDesc').textContent = u.isPremium ? 'VIP aktif sampai ' + new Date(u.premiumUntil).toLocaleDateString('id-ID') + ' (' + u.premiumLeft + ' hari lagi)' : 'Upgrade VIP untuk unlimited fix 5 baris.';
 
   }catch(e){
     console.error(e);
-    document.getElementById('name').textContent = 'Gagal load data REAL: ' + e.message;
-    showToast('Gagal load data real: ' + e.message);
+    document.getElementById('name').textContent = 'Gagal load data: ' + e.message;
+    showToast('Gagal load data: ' + e.message);
   }
 }
 
-async function doSpinReal(){
-  if(!realUserId) return showToast('Buka via Telegram untuk spin real');
-  
+async function loadOwnerData(){
+  try{
+    const r = await fetch('/api/stats?user_id=' + userId);
+    const data = await r.json();
+    if(!data.ok || !data.isOwner) return;
+
+    document.getElementById('oUsers').textContent = data.users;
+    document.getElementById('oPremium').textContent = data.premium;
+    document.getElementById('oFix').textContent = data.totalFix;
+    document.getElementById('oRevenue').textContent = 'Rp ' + data.revenue.toLocaleString('id-ID');
+
+    const queueBox = document.getElementById('queueBox');
+    const pending = data.pendingPayments || [];
+    if(pending.length === 0){
+      queueBox.innerHTML = '<div style="color:var(--muted);font-size:12px">Tidak ada antrean</div>';
+    } else {
+      queueBox.innerHTML = pending.map(p => \`
+        <div class="queue-item">
+          <div style="font-weight:700;font-size:13px">\${p.invoice}</div>
+          <div class="mono" style="font-size:11px;color:var(--muted)">User: \${p.userId} | \${p.days} Hari | Rp \${(p.amount||0).toLocaleString('id-ID')}</div>
+          <div class="mono" style="font-size:10px;color:var(--muted)">Status: \${p.status}</div>
+          <div class="queue-actions">
+            <button class="btn btn-primary" style="padding:8px" onclick="ownerAction('\${p.invoice}','approve')">✅ Approve</button>
+            <button class="btn btn-danger" style="padding:8px" onclick="ownerAction('\${p.invoice}','reject')">❌ Reject</button>
+          </div>
+        </div>
+      \`).join('');
+    }
+
+    const userTable = document.getElementById('userTable');
+    const recent = data.recentUsers || [];
+    userTable.innerHTML = '<tr><th>ID</th><th>Nama</th><th>Status</th><th>Fix</th></tr>' + recent.map(u => \`
+      <tr><td class="mono">\${u.id}</td><td>\${(u.first_name||'User').substring(0,12)}</td><td>\${u.isPremium?'💎 VIP':'🎫 FREE'}</td><td class="mono">\${u.totalFix}</td></tr>
+    \`).join('');
+  }catch(e){
+    console.error(e);
+    showToast('Gagal load data owner: ' + e.message);
+  }
+}
+
+async function ownerAction(invoice, action){
+  try{
+    const r = await fetch('/api/owner_action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ owner_id: userId, action, invoice })
+    });
+    const data = await r.json();
+    if(data.ok){
+      showToast('✅ ' + data.message);
+      tg.HapticFeedback.notificationOccurred('success');
+      loadOwnerData();
+    } else {
+      showToast('❌ ' + data.message);
+    }
+  }catch(e){
+    showToast('Error: ' + e.message);
+  }
+}
+
+async function doSpin(){
+  if(!userId) return showToast('Buka via Telegram untuk spin');
+
   const wheel = document.getElementById('wheel');
   const btn = document.getElementById('spinBtn');
   const statusEl = document.getElementById('spinStatus');
-  
+
   wheel.classList.add('spinning');
   btn.disabled = true;
-  btn.textContent = 'Memutar... (REAL)';
-  statusEl.textContent = 'Menghubungi server real...';
+  btn.textContent = 'Memutar...';
+  statusEl.textContent = 'Menghubungi server...';
 
   try{
-    // REAL API call to spin endpoint
-    const r = await fetch('/api/spin?user_id=' + realUserId, { method:'POST' });
+    const r = await fetch('/api/spin?user_id=' + userId, { method:'POST' });
     const data = await r.json();
-    
+
     setTimeout(()=>{
       wheel.classList.remove('spinning');
       if(data.ok){
-        statusEl.textContent = '🎉 REAL: ' + data.message;
-        document.getElementById('spinLast').textContent = 'Last spin: ' + new Date().toLocaleDateString('id-ID') + ' - REAL';
-        btn.textContent = '✅ Hadiah: ' + data.reward.label + ' (REAL)';
-        showToast('🎉 REAL Reward: ' + data.reward.label + ' - ' + data.reward.desc);
+        statusEl.textContent = '🎉 ' + data.message;
+        document.getElementById('spinLast').textContent = 'Last spin: ' + new Date().toLocaleDateString('id-ID');
+        btn.textContent = '✅ Hadiah: ' + data.reward.label;
+        showToast('🎉 Reward: ' + data.reward.label + ' - ' + data.reward.desc);
         tg.HapticFeedback.notificationOccurred('success');
-        // Reload real data
-        setTimeout(loadRealUser, 1000);
+        setTimeout(loadUser, 1000);
       } else {
-        statusEl.textContent = '❌ ' + data.message + ' (REAL)';
+        statusEl.textContent = '❌ ' + data.message;
         btn.textContent = data.alreadySpun ? '✅ Sudah Spin' : '🎰 Coba Lagi';
         btn.disabled = !!data.alreadySpun;
         showToast(data.message);
@@ -354,52 +470,99 @@ async function doSpinReal(){
   }catch(e){
     wheel.classList.remove('spinning');
     btn.disabled = false;
-    statusEl.textContent = 'Gagal spin real: ' + e.message;
-    showToast('Error spin real: ' + e.message);
+    statusEl.textContent = 'Gagal spin: ' + e.message;
+    showToast('Error spin: ' + e.message);
   }
 }
 
-async function buyReal(days){
-  if(!realUserId) return showToast('Buka via Telegram untuk beli real');
-  
-  if(!confirm('Buat invoice REAL untuk VIP ' + days + ' hari?\n\nTransfer manual ke DANA, upload bukti, admin approve.')){
-    return;
-  }
+let currentInvoice = null;
+
+async function buyPackage(days){
+  if(!userId) return showToast('Buka via Telegram untuk beli');
 
   try{
-    // REAL invoice creation
-    const r = await fetch('/api/deposit?user_id=' + realUserId + '&days=' + days, { method:'POST' });
+    const r = await fetch('/api/deposit?user_id=' + userId + '&days=' + days, { method:'POST' });
     const data = await r.json();
-    
+
     if(data.ok){
       const inv = data.invoice;
+      currentInvoice = inv.id;
       const box = document.getElementById('invoiceBox');
       box.style.display = 'block';
-      box.innerHTML = '<b>✅ Invoice REAL Dibuat:</b><br>ID: ' + inv.id + '<br>Paket: ' + inv.days + ' Hari<br>Total: ' + inv.amountFormatted + '<br>Transfer ke: ' + inv.transferTo.bank + ' ' + inv.transferTo.number + '<br><br>' + inv.nextStep + '<br><br><small>Cek chat bot untuk upload bukti foto.</small>';
-      showToast('✅ Invoice REAL: ' + inv.id + ' - ' + inv.amountFormatted);
+      box.innerHTML = '<b>✅ Invoice Dibuat:</b><br>ID: ' + inv.id + '<br>Paket: ' + inv.days + ' Hari<br>Total: ' + inv.amountFormatted + '<br>Transfer ke: ' + inv.transferTo.bank + ' ' + inv.transferTo.number +
+        '<br><br><div class="file-input-wrap"><button class="btn btn-vip" type="button">📤 Upload Bukti Transfer</button><input type="file" accept="image/*" onchange="handleProofUpload(event)"></div>' +
+        '<div id="uploadStatus" style="margin-top:8px;font-size:11px;color:var(--muted)"></div>';
+      showToast('✅ Invoice: ' + inv.id + ' - ' + inv.amountFormatted);
       tg.HapticFeedback.notificationOccurred('success');
     } else {
       showToast('❌ Gagal: ' + data.message);
     }
   }catch(e){
-    showToast('Error buat invoice real: ' + e.message);
+    showToast('Error buat invoice: ' + e.message);
   }
 }
 
-function copyRefReal(){
+function handleProofUpload(evt){
+  const file = evt.target.files[0];
+  if(!file || !currentInvoice) return;
+  const statusEl = document.getElementById('uploadStatus');
+  statusEl.textContent = 'Mengompresi gambar...';
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      const canvas = document.createElement('canvas');
+      const maxDim = 1024;
+      let w = img.width, h = img.height;
+      if(w > h && w > maxDim){ h = h*maxDim/w; w = maxDim; }
+      else if(h > maxDim){ w = w*maxDim/h; h = maxDim; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const base64 = canvas.toDataURL('image/jpeg', 0.7);
+      uploadProof(base64, statusEl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadProof(base64, statusEl){
+  statusEl.textContent = 'Mengunggah ke admin...';
+  try{
+    const r = await fetch('/api/upload_proof', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, invoice: currentInvoice, image_base64: base64 })
+    });
+    const data = await r.json();
+    if(data.ok){
+      statusEl.textContent = '✅ Bukti terkirim, menunggu approval admin';
+      showToast('✅ Bukti transfer terkirim');
+      tg.HapticFeedback.notificationOccurred('success');
+    } else {
+      statusEl.textContent = '❌ ' + data.message;
+      showToast('❌ ' + data.message);
+    }
+  }catch(e){
+    statusEl.textContent = '❌ Error: ' + e.message;
+    showToast('Error upload: ' + e.message);
+  }
+}
+
+function copyRef(){
   const txt = document.getElementById('refLink').textContent;
-  if(txt.includes('Memuat') || txt.includes('Buka via')){
-    return showToast('Link belum ready - data real belum load');
+  if(txt.includes('Memuat')){
+    return showToast('Link belum ready');
   }
   navigator.clipboard.writeText(txt).then(()=>{
-    showToast('✅ Link REAL disalin: ' + txt.slice(0,40) + '...');
+    showToast('✅ Link disalin: ' + txt.slice(0,40) + '...');
     tg.HapticFeedback.notificationOccurred('success');
   });
 }
 
-// Load real data on start
-loadRealUser();
-setInterval(loadRealUser, 10000);
+loadUser();
+setInterval(loadUser, 8000);
 </script>
 </body>
 </html>`);
