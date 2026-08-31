@@ -1,0 +1,13 @@
+{
+  "name": "walzy-vercel-bot",
+  "version": "9.2-vercel-manual",
+  "description": "FixRed Walzy Bot for Vercel Webhook + Manual Deposit",
+  "main": "api/bot.js",
+  "scripts": { "dev": "vercel dev" },
+  "dependencies": {
+    "@upstash/redis": "^1.34.3",
+    "dotenv": "^16.4.5",
+    "node-telegram-bot-api": "^0.61.0",
+    "telegram": "^2.22.2"
+  }
+}

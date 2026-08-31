@@ -1,0 +1,20 @@
+{
+  "functions": {
+    "api/bot.js": { "maxDuration": 60 },
+    "api/cron.js": { "maxDuration": 60 },
+    "api/spin.js": { "maxDuration": 10 },
+    "api/deposit.js": { "maxDuration": 10 },
+    "api/user.js": { "maxDuration": 10 },
+    "api/stats.js": { "maxDuration": 10 }
+  },
+  "crons": [
+    {
+      "path": "/api/cron?job=notify",
+      "schedule": "0 0 * * *"
+    }
+  ],
+  "rewrites": [
+    { "source": "/admin", "destination": "/api/admin" },
+    { "source": "/webapp", "destination": "/api/webapp" }
+  ]
+}
