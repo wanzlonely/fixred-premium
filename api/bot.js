@@ -125,13 +125,13 @@ module.exports = async (req, res) => {
 
         if (data === 'fix_merah') {
           await bot.answerCallbackQuery(qId, { text: '🔄 Memproses Perbaikan Kuota & Sesi...', show_alert: true });
-          await bot.sendMessage(uid, `<blockquote>🛠️ <b>SISTEM PERBAIKAN MERAH</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n✅ Sistem perbaikan kuota & error berhasil diproses.\nSeluruh sesi transaksi dan akun Anda telah disinkronkan.</blockquote>`, { parse_mode: 'HTML' });
+          await bot.sendMessage(uid, `<blockquote>🛠️ <b>SISTEM PERBAIKAN MERAH</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n✅ Perbaikan kuota & sinkronisasi sesi berhasil diproses secara otomatis. Sesi akun Anda kini telah diperbarui.</blockquote>`, { parse_mode: 'HTML' });
           return res.status(200).send('OK');
         }
 
         if (data === 'help') {
           await bot.answerCallbackQuery(qId, { text: '✨ Membuka Pusat Bantuan', show_alert: false });
-          await bot.sendMessage(uid, `<blockquote>❓ <b>PUSAT BANTUAN & PANDUAN</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n📍 <b>Panduan Layanan Walzy Store:</b>\n1. <b>Pembelian VIP:</b> Pembelian dilakukan langsung melalui menu <b>Mini Web</b>.\n2. <b>Redeem Voucher:</b> Masukkan kode voucher promo Anda di <b>Mini Web</b>.\n3. <b>Check-in & Spin:</b> Dapatkan poin gratis harian di dalam <b>Mini Web</b>.\n\n<i>Klik tombol <b>Mini Web</b> di bawah untuk membuka aplikasi toko.</i></blockquote>`, {
+          await bot.sendMessage(uid, `<blockquote>❓ <b>PUSAT BANTUAN & PANDUAN LENGKAP</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nWelcome to <b>Walzy Store Platform</b>! Berikut adalah panduan lengkap penggunaan bot & WebApp:\n\n📍 <b>1. CARA BELI AKSES VIP:</b>\n• Buka menu <b>Mini Web</b> di bawah.\n• Masuk ke tab <b>Order VIP</b>.\n• Pilih paket VIP yang Anda inginkan (3, 5, 7, 14, atau 30 Hari).\n• Selesaikan pembayaran sesuai nominal & upload foto bukti transfer.\n• Tunggu verifikasi otomatis dari Owner.\n\n🎟️ <b>2. CARA REDEEM VOUCHER PROMO:</b>\n• Buka <b>Mini Web</b> -> Halaman <b>Home</b>.\n• Masukkan kode voucher pada kolom "Redeem Kode Voucher".\n• Klik "Tukarkan Kode" untuk mengaktifkan VIP gratis/bonus.\n\n🎁 <b>3. DAILY CHECK-IN & SPIN WHEEL:</b>\n• Buka <b>Mini Web</b> -> Tab <b>Check-in</b> untuk klaim poin harian bertingkat.\n• Poin yang terkumpul bisa ditukarkan menjadi Durasi VIP Gratis di Point Shop!\n• Putar <b>Spin Wheel Hadiah</b> di halaman Home setiap hari.\n\n💬 <b>4. BANTUAN OPERATOR & CS:</b>\n• Jika ada kendala transaksi atau pertanyaan, tekan tombol <b>Hubungi Owner</b> di bot.\n\n<i>Klik tombol 🌐 <b>Buka Mini Web Walzy</b> di bawah ini untuk memulai!</i></blockquote>`, {
             parse_mode: 'HTML',
             reply_markup: {
               inline_keyboard: [[{ text: '🌐 Buka Mini Web Walzy', web_app: { url: webappUrl } }]]
