@@ -1,49 +1,89 @@
-const { loadDB, saveDB, UI } = require('../lib/utils');
-const config = require('../config');
-const TelegramBot = require('node-telegram-bot-api');
-
-function isOwner(id) {
-  return config.OWNER_IDS.map(String).includes(String(id));
-}
-
 module.exports = async (req, res) => {
-  try {
-    if (req.method !== 'POST') return res.status(405).json({ ok: false, message: 'Method not allowed' });
-    const { owner_id, action, invoice } = req.body || {};
-    if (!owner_id || !isOwner(owner_id)) return res.status(403).json({ ok: false, message: 'Bukan owner' });
-    if (!action || !invoice) return res.status(400).json({ ok: false, message: 'action dan invoice wajib diisi' });
-
+  const { loadDB, saveDB } = require('../lib/utils');
+  const config = require('../config');
+  const OWNER_PASSWORD = 'SUPER777';
+  function isOwner(id){
+    return config.OWNER_IDS.map(String).includes(String(id));
+  }
+  function ensureDB(db){
+    if(!db.users) db.users = {};
+    if(!db.payments) db.payments = {};
+    if(!db.stats) db.stats = { totalFix:0, totalSuccess:0, totalFailed:0, revenue:0, revenueHistory:[], lastReset: Date.now() };
+    if(db.stats.revenue === undefined) db.stats.revenue = 0;
+    if(!Array.isArray(db.stats.revenueHistory)) db.stats.revenueHistory = [];
+    if(!db.stats.lastReset) db.stats.lastReset = Date.now();
+  }
+  try{
     const db = await loadDB();
+    ensureDB(db);
+    if(req.method !== 'POST'){
+      return res.status(405).json({ ok:false, message:'Method not allowed' });
+    }
+    const body = req.body || {};
+    const ownerId = String(body.owner_id || body.ownerId || '');
+    const action = body.action;
+    const invoice = body.invoice;
+    const password = body.password;
+    if(!ownerId || !isOwner(ownerId)){
+      return res.status(403).json({ ok:false, message:'Bukan owner' });
+    }
+    if(password !== OWNER_PASSWORD){
+      return res.status(403).json({ ok:false, message:'Password SUPER777 salah' });
+    }
+    if(action === 'reset_revenue'){
+      const old = db.stats.revenue || 0;
+      db.stats.revenueHistory.push({ date: new Date().toISOString(), amount: -old, invoice: 'RESET', userId: 'SYSTEM', note: 'Reset via webapp SUPER777' });
+      db.stats.revenue = 0;
+      db.stats.lastReset = Date.now();
+      await saveDB(db);
+      return res.json({ ok:true, message: `Revenue reset dari Rp ${old.toLocaleString('id-ID')} ke 0`, revenue: 0 });
+    }
+    if(!invoice){
+      return res.json({ ok:false, message:'Invoice kosong' });
+    }
     const pay = db.payments[invoice];
-    if (!pay) return res.status(404).json({ ok: false, message: 'Invoice tidak ditemukan' });
-
-    const bot = new TelegramBot(config.BOT_TOKEN);
-
-    if (action === 'approve') {
+    if(!pay){
+      return res.json({ ok:false, message:'Invoice tidak ditemukan' });
+    }
+    if(action === 'approve'){
+      if(pay.status === 'paid'){
+        return res.json({ ok:false, message:'Sudah approved sebelumnya' });
+      }
       pay.status = 'paid';
-      const uk = String(pay.userId);
-      if (!db.users[uk]) return res.status(404).json({ ok: false, message: 'User tidak ditemukan' });
-      db.users[uk].premiumUntil = Math.max(Date.now(), db.users[uk].premiumUntil || 0) + pay.days * 86400000;
-      db.users[uk].notifiedExp = false;
+      const k = String(pay.userId);
+      if(!db.users[k]){
+        db.users[k] = { id: pay.userId, first_name: 'User', totalFix:0, dailyFix:{ date: '', count:0 }, premiumUntil:0 };
+      }
+      const u = db.users[k];
+      u.premiumUntil = Math.max(Date.now(), u.premiumUntil || 0) + pay.days * 86400000;
+      u.pendingDeposit = null;
+      u.notifiedExp = false;
+      u.notifiedExp2 = false;
       db.stats.revenue = (db.stats.revenue || 0) + pay.amount;
+      db.stats.revenueHistory.push({ date: new Date().toISOString(), amount: pay.amount, invoice, userId: pay.userId, days: pay.days });
+      if(db.stats.revenueHistory.length > 300) db.stats.revenueHistory = db.stats.revenueHistory.slice(-300);
       await saveDB(db);
-      try {
-        await bot.sendMessage(pay.userId, `${UI.header('𝗣𝗘𝗠𝗕𝗔𝗬𝗔𝗥𝗔𝗡 𝗗𝗜𝗦𝗘𝗧𝗨𝗝𝗨𝗜', '✅')}\n🎉 Deposit <code>${invoice}</code> disetujui! VIP ${pay.days} hari aktif sampai ${new Date(db.users[uk].premiumUntil).toLocaleDateString('id-ID')}${UI.footer()}`, { parse_mode: 'HTML' });
-      } catch (e) {}
-      return res.json({ ok: true, message: `${invoice} approved` });
+      try{
+        const bot = new (require('node-telegram-bot-api'))(config.BOT_TOKEN);
+        const { UI } = require('../lib/utils');
+        await bot.sendMessage(pay.userId, `${UI.header('𝗣𝗘𝗠𝗕𝗔𝗬𝗔𝗥𝗔𝗡 𝗗𝗜𝗦𝗘𝗧𝗨𝗝𝗨𝗜', '✅')}\n🎉 Deposit <code>${invoice}</code> disetujui! VIP ${pay.days} hari aktif sampai ${new Date(u.premiumUntil).toLocaleDateString('id-ID')}${UI.footer()}`, { parse_mode:'HTML' });
+      }catch{}
+      return res.json({ ok:true, message: `${invoice} approved, revenue +Rp ${pay.amount.toLocaleString('id-ID')}` });
     }
-
-    if (action === 'reject') {
+    if(action === 'reject'){
       pay.status = 'rejected';
+      const u = db.users[String(pay.userId)];
+      if(u) u.pendingDeposit = null;
       await saveDB(db);
-      try {
-        await bot.sendMessage(pay.userId, `${UI.header('𝗗𝗜𝗧𝗢𝗟𝗔𝗞', '❌')}\nDeposit ${invoice} ditolak. Hubungi admin.${UI.footer()}`, { parse_mode: 'HTML' });
-      } catch (e) {}
-      return res.json({ ok: true, message: `${invoice} rejected` });
+      try{
+        const bot = new (require('node-telegram-bot-api'))(config.BOT_TOKEN);
+        const { UI } = require('../lib/utils');
+        await bot.sendMessage(pay.userId, `${UI.header('𝗗𝗜𝗧𝗢𝗟𝗔𝗞', '❌')}\nDeposit ${invoice} ditolak. Hubungi admin.${UI.footer()}`, { parse_mode:'HTML' });
+      }catch{}
+      return res.json({ ok:true, message: `${invoice} rejected` });
     }
-
-    return res.status(400).json({ ok: false, message: 'action tidak valid' });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
+    return res.json({ ok:false, message:'Action tidak dikenal' });
+  }catch(e){
+    return res.status(500).json({ ok:false, message:e.message });
   }
 };
