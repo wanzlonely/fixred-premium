@@ -24,6 +24,10 @@
       "destination": "/api/api"
     },
     {
+      "source": "/api/verify_owner",
+      "destination": "/api/api"
+    },
+    {
       "source": "/api/deposit",
       "destination": "/api/api"
     },
