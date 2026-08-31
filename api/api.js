@@ -178,29 +178,47 @@ module.exports = async (req, res) => {
         return res.json({ ok: false, message: 'Anda telah memutar Spin Harian hari ini!' });
       }
 
-      user.lastSpin = getTodayString();
-      const prizes = [
-        { type: 'points', value: 30, label: '+30 Poin Vault' },
-        { type: 'points', value: 50, label: '+50 Poin Vault' },
-        { type: 'points', value: 100, label: '+100 Poin Vault' },
-        { type: 'fix', value: 3, label: '+3 Kuota Fast-Track' },
-        { type: 'vip', value: 1, label: '+1 Hari Akses VIP Premium' }
+      const prizePool = [
+        { index: 0, type: 'zonk', value: 0, label: 'ZONK ❌ (Coba Lagi)', weight: 40 },
+        { index: 1, type: 'points', value: 30, label: '+30 Poin Vault 🪙', weight: 30 },
+        { index: 2, type: 'points', value: 50, label: '+50 Poin Vault 🪙', weight: 15 },
+        { index: 3, type: 'points', value: 100, label: '+100 Poin Vault 🪙', weight: 8 },
+        { index: 4, type: 'fix', value: 3, label: '+3 Fast-Track ⚡', weight: 5 },
+        { index: 5, type: 'vip', value: 1, label: '+1 Hari Akses VIP 💎', weight: 2 }
       ];
 
-      const prize = prizes[Math.floor(Math.random() * prizes.length)];
+      const totalWeight = prizePool.reduce((acc, item) => acc + item.weight, 0);
+      let randomNum = Math.random() * totalWeight;
+      let selectedPrize = prizePool[0];
 
-      if (prize.type === 'vip') {
-        user.premiumUntil = Math.max(Date.now(), user.premiumUntil || 0) + (prize.value * 86400000);
-      } else if (prize.type === 'points') {
-        user.points = (user.points || 0) + prize.value;
-      } else if (prize.type === 'fix') {
-        user.dailyFix.count = Math.max(0, (user.dailyFix.count || 0) - prize.value);
+      for (let item of prizePool) {
+        if (randomNum < item.weight) {
+          selectedPrize = item;
+          break;
+        }
+        randomNum -= item.weight;
+      }
+
+      user.lastSpin = getTodayString();
+
+      if (selectedPrize.type === 'vip') {
+        user.premiumUntil = Math.max(Date.now(), user.premiumUntil || 0) + (selectedPrize.value * 86400000);
+      } else if (selectedPrize.type === 'points') {
+        user.points = (user.points || 0) + selectedPrize.value;
+      } else if (selectedPrize.type === 'fix') {
+        user.dailyFix.count = Math.max(0, (user.dailyFix.count || 0) - selectedPrize.value);
       }
 
       await saveDB(db);
       clearCache();
 
-      return res.json({ ok: true, message: `Selamat! Hadiah Diklaim: ${prize.label}`, prize, points: user.points });
+      return res.json({
+        ok: true,
+        message: selectedPrize.type === 'zonk' ? 'Apes! Anda mendapatkan Zonk ❌. Coba keberuntungan besok!' : `Selamat! Anda mendapatkan ${selectedPrize.label}`,
+        prizeIndex: selectedPrize.index,
+        prize: selectedPrize,
+        points: user.points
+      });
     }
 
     if (pathOnly.endsWith('/api/checkin')) {
@@ -274,6 +292,14 @@ module.exports = async (req, res) => {
       }
 
       let user = ensureUserInDB(db, userId);
+
+      const userInvoices = Object.values(db.payments).filter(p => String(p.userId) === String(userId));
+      const hasActive = userInvoices.some(p => p.status === 'pending' || p.status === 'waiting_approval' || p.status === 'waiting_payment');
+
+      if (hasActive) {
+        return res.json({ ok: false, message: 'Anda masih memiliki transaksi invoice yang aktif! Batalkan atau selesaikan terlebih dahulu.' });
+      }
+
       const prices = { 3: 7000, 5: 10000, 7: 15000, 14: 25000, 30: 45000 };
       const amount = Number(body.amount || query.amount) || prices[days] || days * 2500;
 
