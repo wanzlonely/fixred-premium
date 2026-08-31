@@ -190,7 +190,8 @@ module.exports = async (req, res) => {
           canCheckin,
           rank: rankInfo,
           pendingDeposit: user.pendingDeposit || null,
-          referralLink: `https://t.me/${config.BOT_USERNAME || 'walzystore_bot'}?start=ref_${user.id}`
+          referralLink: `https://t.me/${config.BOT_USERNAME || 'walzystore_bot'}?start=ref_${user.id}`,
+          isOwner: isOwner(userId)
         },
         currentInvoice: activeInvoice,
         invoices: userInvoices.slice(0, 20)
@@ -317,6 +318,7 @@ module.exports = async (req, res) => {
         amount,
         amountFormatted: 'Rp ' + amount.toLocaleString('id-ID'),
         status: 'pending',
+        proofImage: null,
         createdAt: Date.now()
       };
 
@@ -328,9 +330,46 @@ module.exports = async (req, res) => {
 
       return res.json({
         ok: true,
-        message: 'Pesanan Invoice Dibuat',
+        message: 'Pesanan Invoice Berhasil Dibuat',
         invoice: payData
       });
+    }
+
+    if (pathOnly.endsWith('/api/cancel_order')) {
+      const userId = body.user_id || query.user_id;
+      const invoiceId = body.invoice || query.invoice;
+
+      if (!userId || !invoiceId) return res.status(400).json({ ok: false, message: 'Parameter Tidak Lengkap' });
+
+      let user = ensureUserInDB(db, userId);
+      const pay = db.payments[invoiceId];
+
+      if (pay) pay.status = 'cancelled';
+      user.pendingDeposit = null;
+
+      await saveDB(db);
+      clearCache();
+
+      return res.json({ ok: true, message: 'Pembelian invoice berhasil dibatalkan.' });
+    }
+
+    if (pathOnly.endsWith('/api/upload_proof')) {
+      const userId = body.user_id || query.user_id;
+      const invoiceId = body.invoice || query.invoice;
+      const imageData = body.image_data;
+
+      if (!userId || !invoiceId || !imageData) return res.status(400).json({ ok: false, message: 'Bukti Foto Tidak Ditemukan' });
+
+      const pay = db.payments[invoiceId];
+      if (!pay) return res.status(404).json({ ok: false, message: 'Invoice Tidak Ditemukan' });
+
+      pay.proofImage = imageData;
+      pay.status = 'waiting_approval';
+
+      await saveDB(db);
+      clearCache();
+
+      return res.json({ ok: true, message: 'Bukti pembayaran berhasil diupload! Menunggu konfirmasi owner.' });
     }
 
     if (pathOnly.endsWith('/api/redeem')) {
@@ -419,7 +458,7 @@ module.exports = async (req, res) => {
         try {
           const TelegramBot = require('node-telegram-bot-api');
           const bot = new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `⚡ <b>VERIFIKASI TRANSAKSI LUNAS</b>\n<code>━━━━━━━━━━━━━━━━━━━━━━</code>\n\n<b>ID Invoice:</b> <code>${invoice}</code>\n<b>Status:</b> 🟢 <b>APPROVED</b>\n<b>Paket:</b> VIP +${pay.days} Hari Berhasil Diaktifkan!\n\n<code>━━━━━━━━━━━━━━━━━━━━━━</code>\n🚀 <i>Terima kasih telah menggunakan layanan Walzy Store.</i>`, { parse_mode: 'HTML' });
+          await bot.sendMessage(pay.userId, `<blockquote>⚡ <b>VERIFIKASI TRANSAKSI LUNAS</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n<b>ID Invoice:</b> <code>${invoice}</code>\n<b>Status:</b> 🟢 <b>APPROVED</b>\n<b>Paket:</b> VIP +${pay.days} Hari Berhasil Diaktifkan!\n\n🚀 <i>Terima kasih telah berlangganan di Walzy Store.</i></blockquote>`, { parse_mode: 'HTML' });
         } catch (e) {}
 
         return res.json({ ok: true, message: `Invoice ${invoice} Berhasil Disetujui` });
@@ -434,7 +473,7 @@ module.exports = async (req, res) => {
         try {
           const TelegramBot = require('node-telegram-bot-api');
           const bot = new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `❌ <b>VERIFIKASI DITOLAK</b>\n<code>━━━━━━━━━━━━━━━━━━━━━━</code>\n\nInvoice <code>${invoice}</code> telah ditolak oleh Admin Operator. Silakan hubungi Customer Support jika ada kendala.`, { parse_mode: 'HTML' });
+          await bot.sendMessage(pay.userId, `<blockquote>❌ <b>VERIFIKASI DITOLAK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nInvoice <code>${invoice}</code> telah ditolak oleh Admin Operator. Silakan hubungi Customer Support jika ada kendala.</blockquote>`, { parse_mode: 'HTML' });
         } catch (e) {}
 
         return res.json({ ok: true, message: `Invoice ${invoice} Ditolak` });
@@ -494,7 +533,7 @@ module.exports = async (req, res) => {
         const bot = new TelegramBot(config.BOT_TOKEN);
         for (let u of validUsers) {
           try {
-            await bot.sendMessage(u.id, `📢 <b>WALZY ANNOUNCEMENT</b>\n<code>━━━━━━━━━━━━━━━━━━━━━━</code>\n\n${text}\n\n<code>━━━━━━━━━━━━━━━━━━━━━━</code>\n⚡ <i>Walzy Store Central Broadcast System</i>`, { parse_mode: 'HTML' });
+            await bot.sendMessage(u.id, `<blockquote>📢 <b>WALZY ANNOUNCEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n${text}\n\n⚡ <i>Walzy Store Central Broadcast System</i></blockquote>`, { parse_mode: 'HTML' });
             sent++;
           } catch (e) {
             failed++;
