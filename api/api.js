@@ -459,7 +459,7 @@ module.exports = async (req, res) => {
         invalidateCache();
         try{
           const bot = new (require('node-telegram-bot-api'))(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `❌ <b>Pembayaran Ditolak</b>\nDeposit ${invoice} ditolak\nSilakan hubungi owner\n\n🚀 walzy`, {parse_mode:'HTML'});
+          await bot.sendMessage(pay.userId, `❌ <b>Pembayaran Ditolak</b>\nDeposit ${invoice} ditolak\nSilakan hubungi owner\n\n🚀 𝗪𝗔𝗟𝗭𝗬`, {parse_mode:'HTML'});
         }catch(e){}
         return res.json({ok:true,message:`${invoice} ditolak`});
       }else{
