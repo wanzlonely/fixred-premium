@@ -146,7 +146,7 @@ module.exports = async (req, res) => {
       if (data === 'fix_merah') {
         await bot.answerCallbackQuery(qId, { text: '🛠️ Membuka Modul Fix Merah', show_alert: false });
         userState.set(String(uid), { action: 'awaiting_fixmerah_number' });
-        await bot.sendMessage(uid, `<blockquote>🛠️ <b>SISTEM PERBAIKAN FIX MERAH</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSilakan kirimkan nomor telepon yang ingin di-Fix Merah (contoh: <code>+628123456789</code> atau <code>08123456789</code>):</blockquote>`, { parse_mode: 'HTML' });
+        await bot.sendMessage(uid, `<blockquote>🛠️ <b>MODUL SINKRONISASI FIX MERAH</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSilakan masukkan nomor WhatsApp target yang ingin diproses (contoh: <code>+628123456789</code>):</blockquote>`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
 
@@ -178,7 +178,7 @@ module.exports = async (req, res) => {
 
       if (data === 'help') {
         await bot.answerCallbackQuery(qId, { text: '✨ Membuka Pusat Bantuan', show_alert: false });
-        await bot.sendMessage(uid, `<blockquote>❓ <b>PUSAT BANTUAN & PANDUAN LENGKAP</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSelamat datang di <b>Walzy Store Platform</b>! Berikut panduan lengkap penggunaan bot & WebApp:\n\n📍 <b>1. CARA BELI AKSES VIP:</b>\n• Buka menu <b>Mini Web</b> di bawah.\n• Pilih tab <b>Order VIP</b> untuk melihat katalog 2-kolom.\n• Klik beli pada paket yang diinginkan (3, 5, 7, 14, atau 30 Hari).\n• Transfer sesuai nominal & unggah bukti foto pembayaran.\n• Tunggu verifikasi otomatis dari Admin/Owner.\n\n🎟️ <b>2. CARA REDEEM VOUCHER PROMO:</b>\n• Buka <b>Mini Web</b> -> Halaman <b>Home</b>.\n• Masukkan kode voucher di kolom "Redeem Kode Voucher".\n• Tekan "Tukarkan Kode" untuk klaim VIP gratis.\n\n🎁 <b>3. DAILY CHECK-IN & SPIN WHEEL:</b>\n• Kunjungi tab <b>Check-in</b> untuk klaim poin harian bertingkat.\n• Putar <b>Spin Wheel Keberuntungan</b> di halaman Home untuk hadiah poin/VIP.\n• Poin yang terkumpul bisa ditukar dengan VIP di Point Shop.\n\n💬 <b>4. LAYANAN CUSTOMER SERVICE:</b>\n• Jika butuh bantuan lebih lanjut, tekan tombol <b>Hubungi Owner</b>.</blockquote>`, {
+        await bot.sendMessage(uid, `<blockquote>❓ <b>PUSAT BANTUAN & PANDUAN LENGKAP</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSelamat datang di <b>Walzy Store Platform</b>! Berikut panduan lengkap penggunaan bot & WebApp:\n\n📍 <b>1. CARA BELI AKSES VIP:</b>\n• Buka menu <b>Mini Web</b> di bawah.\n• Pilih tab <b>Order VIP</b> untuk melihat katalog.\n• Klik beli pada paket yang diinginkan.\n• Transfer sesuai nominal & unggah foto bukti pembayaran.\n• Tunggu verifikasi dari Admin.\n\n🎟️ <b>2. CARA REDEEM VOUCHER PROMO:</b>\n• Buka <b>Mini Web</b> -> Halaman <b>Home</b>.\n• Masukkan kode voucher di kolom "Redeem Kode Voucher".\n• Tekan "Tukarkan Kode".\n\n🎁 <b>3. DAILY CHECK-IN & SPIN WHEEL:</b>\n• Kunjungi tab <b>Check-in</b> untuk klaim poin harian bertingkat.\n• Putar <b>Spin Wheel Keberuntungan</b> di halaman Home.\n\n💬 <b>4. LAYANAN CUSTOMER SERVICE:</b>\n• Tekan <b>Hubungi Owner</b> (khusus pengguna).</blockquote>`, {
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [[{ text: '🌐 Buka Mini Web Walzy Store', web_app: { url: webappUrl } }]]
@@ -190,7 +190,7 @@ module.exports = async (req, res) => {
       if (data === 'contact_owner') {
         await bot.answerCallbackQuery(qId, { text: '💬 Mode Hubungi Owner Aktif', show_alert: false });
         userState.set(String(uid), { action: 'awaiting_owner_msg' });
-        await bot.sendMessage(uid, `<blockquote>💬 <b>HUBUNGI OWNER / CUSTOMER SERVICE</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSilakan ketikkan pesan, pertanyaan, atau laporan kendala Anda di bawah ini.\nPesan Anda akan diteruskan langsung ke Owner.</blockquote>`, { parse_mode: 'HTML' });
+        await bot.sendMessage(uid, `<blockquote>💬 <b>HUBUNGI OWNER / CUSTOMER SERVICE</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSilakan ketikkan pesan Anda di bawah ini. Pesan akan diteruskan langsung ke Owner.</blockquote>`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
 
@@ -229,33 +229,26 @@ module.exports = async (req, res) => {
           else rawNum = '+' + rawNum;
         }
 
-        const waitMsg = await bot.sendMessage(chatId, `<blockquote>🔄 <b>MENGIRIM PERMINTAAN FIX MERAH...</b>\n━━━━━━━━━━━━━━━━━━━━━━\n📱 Nomor: <code>${rawNum}</code>\n<i>Menghubungkan ke server bot target via MTProto...</i></blockquote>`, { parse_mode: 'HTML' });
+        const sessionCode = `FIX-${Math.floor(100000 + Math.random() * 900000)}-WZ`;
+
+        const waitMsg = await bot.sendMessage(chatId, `<blockquote>🔄 <b>MENGIRIM PERMINTAAN FIX MERAH...</b>\n━━━━━━━━━━━━━━━━━━━━━━\n📱 Nomor: <code>${rawNum}</code>\n🔑 Session: <code>#${sessionCode}</code>\n<i>Menghubungkan ke gateway MTProto target...</i></blockquote>`, { parse_mode: 'HTML' });
 
         const clientHelper = require('../lib/client');
-        const resSend = await clientHelper.sendToTarget(rawNum);
-
-        let cphxId = null;
-        if (resSend && resSend.text) {
-          const match = resSend.text.match(/CPHX\s*[\d\-]+/i);
-          if (match) cphxId = match[0].toUpperCase();
-        }
-        if (!cphxId) {
-          cphxId = `CPHX ${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
-        }
+        await clientHelper.sendToTarget(rawNum);
 
         try { await bot.deleteMessage(chatId, waitMsg.message_id); } catch(e) {}
 
-        const initReport = `<blockquote>🛠 <b>HASIL PROSES FIXMERAH</b>\n◈────────────────────◈\n\n✅ <b>BERHASIL ( 1 )</b>\n📱 <code>${rawNum}</code>\n🆔 <code>${cphxId}</code>\n📩 <b>TERKIRIM</b>\n\n📬 <i>Notifikasi update status akan dikirim otomatis jika ada balasan (Max 1 Menit).</i></blockquote>`;
+        const initReport = `<blockquote>✨ <b>WALZY SYSTEM AUTOMATION</b>\n⚡ <code>MODULE FIX MERAH v3.5</code>\n━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 <b>STATUS PROSES :</b> 🟢 <code>SUCCESSFULLY DISPATCHED</code>\n📱 <b>TARGET PHONE :</b> <code>${rawNum}</code>\n🔑 <b>SESSION KEY  :</b> <code>#${sessionCode}</code>\n📡 <b>GATEWAY TIMEOUT :</b> <code>90 Seconds</code>\n\n📊 <b>REKAP UNGGAH SESI</b>\n├ 🟢 <b>Terkirim:</b> <code>1 Nomor Target</code>\n├ ⏳ <b>Status:</b> <code>Menunggu Respon WhatsApp...</code>\n└ ⏱️ <b>Monitoring:</b> <code>Auto-check Aktif (Max 90s)</code>\n\n💡 <i>Sistem akan otomatis memberikan notifikasi perubahan status WhatsApp secara realtime.</i></blockquote>`;
 
         await bot.sendMessage(chatId, initReport, { parse_mode: 'HTML' });
 
         setTimeout(async () => {
-          const statusRes = await clientHelper.monitorTargetResponse(rawNum, cphxId, 75000);
+          const statusRes = await clientHelper.monitorTargetResponse(rawNum, sessionCode, 75000);
           if (statusRes.status === 'SUCCESS') {
-            const succReport = `<blockquote>✅ <b>SUCCESS FIXMERAH CPHX</b>\n◈────────────────────◈\n📱 <b>Nomor:</b> <code>${rawNum}</code>\n🆔 <b>ID:</b> <code>${cphxId}</code>\n📩 <b>Status:</b> <code>SUCCESS</code>\n\n💬 <i>WhatsApp sudah merespon. Silakan coba login/verifikasi akun Anda sekarang!</i></blockquote>`;
+            const succReport = `<blockquote>🚀 <b>WALZY SYSTEM - FIX MERAH SUCCESS!</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\n📱 <b>TARGET PHONE :</b> <code>${rawNum}</code>\n🔑 <b>SESSION ID    :</b> <code>#${sessionCode}</code>\n🛡️ <b>STATUS RESPONS :</b> ✅ <code>CONNECTED & RESOLVED</code>\n\n🎉 <b>SINKRONISASI BERHASIL!</b>\nWhatsApp Target telah merespon dan perbaikan sesi berhasil diproses.\n<i>Silakan buka aplikasi WhatsApp dan lakukan verifikasi / login sekarang.</i></blockquote>`;
             await bot.sendMessage(chatId, succReport, { parse_mode: 'HTML' });
           } else {
-            const failReport = `<blockquote>⚠️ <b>BELUM ADA RESPONS WHATSAPP</b>\n◈────────────────────◈\n📱 <b>Nomor:</b> <code>${rawNum}</code>\n🆔 <b>ID:</b> <code>${cphxId}</code>\n📩 <b>Status:</b> <code>TIDAK ADA BALASAN</code>\n\n💬 <i>WhatsApp tidak merespon dalam 90 detik.</i></blockquote>`;
+            const failReport = `<blockquote>⚠️ <b>WALZY SYSTEM - RESPONSE TIMEOUT</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\n📱 <b>TARGET PHONE :</b> <code>${rawNum}</code>\n🔑 <b>SESSION ID    :</b> <code>#${sessionCode}</code>\n🛡️ <b>STATUS RESPONS :</b> ❌ <code>NO RESPONSE (90s)</code>\n\n💬 <b>CATATAN SISTEM:</b>\nWhatsApp tidak memberikan tanggapan balasan dalam batas waktu 90 detik. Silakan coba kembali beberapa saat lagi.</blockquote>`;
             await bot.sendMessage(chatId, failReport, { parse_mode: 'HTML' });
           }
         }, 1000);
