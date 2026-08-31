@@ -87,12 +87,11 @@ function getOwnerMenu(user, chatId, db, webappUrl) {
       { text: '🌐 Buka Mini Web Studio Admin', web_app: { url: webappUrl } }
     ],
     [
-      { text: `📥 Cek Pending (${pendingCount})`, callback_data: 'owner_check_pending' },
-      { text: '🛠️ Fix Merah', callback_data: 'fix_merah' }
+      { text: '🛠️ Fix Merah', callback_data: 'fix_merah' },
+      { text: `📥 Cek Pending (${pendingCount})`, callback_data: 'owner_check_pending' }
     ],
     [
-      { text: '❓ Bantuan Admin', callback_data: 'help' },
-      { text: '💬 Hubungi CS', callback_data: 'contact_owner' }
+      { text: '❓ Bantuan Admin', callback_data: 'help' }
     ]
   ];
 
@@ -111,7 +110,7 @@ function getUserMenu(user, chatId, webappUrl) {
       { text: '🌐 Buka Mini Web Walzy Store', web_app: { url: webappUrl } }
     ],
     [
-      { text: '🛠️ Fix Merah Sesi', callback_data: 'fix_merah' },
+      { text: '🛠️ Fix Merah', callback_data: 'fix_merah' },
       { text: '🎁 Daily Check-in', callback_data: 'user_checkin_info' }
     ],
     [
@@ -145,8 +144,9 @@ module.exports = async (req, res) => {
       const data = q.data;
 
       if (data === 'fix_merah') {
-        await bot.answerCallbackQuery(qId, { text: '🔄 Memproses Perbaikan Kuota & Sesi...', show_alert: true });
-        await bot.sendMessage(uid, `<blockquote>🛠️ <b>SISTEM PERBAIKAN MERAH</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n✅ Sesi akun dan perbaikan kuota berhasil diproses. Sesi bot Anda telah tersinkronisasi kembali.</blockquote>`, { parse_mode: 'HTML' });
+        await bot.answerCallbackQuery(qId, { text: '🛠️ Membuka Modul Fix Merah', show_alert: false });
+        userState.set(String(uid), { action: 'awaiting_fixmerah_number' });
+        await bot.sendMessage(uid, `<blockquote>🛠️ <b>SISTEM PERBAIKAN FIX MERAH</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSilakan kirimkan nomor telepon yang ingin di-Fix Merah (contoh: <code>+628123456789</code> atau <code>08123456789</code>):</blockquote>`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
 
@@ -219,6 +219,49 @@ module.exports = async (req, res) => {
 
       const text = (msg.text || '').trim();
       const st = userState.get(String(uid));
+
+      if (st && st.action === 'awaiting_fixmerah_number' && text) {
+        userState.delete(String(uid));
+        let rawNum = text.replace(/[^\d+]/g, '');
+        if (!rawNum.startsWith('+')) {
+          if (rawNum.startsWith('08')) rawNum = '+62' + rawNum.slice(1);
+          else if (rawNum.startsWith('62')) rawNum = '+' + rawNum;
+          else rawNum = '+' + rawNum;
+        }
+
+        const waitMsg = await bot.sendMessage(chatId, `<blockquote>🔄 <b>MENGIRIM PERMINTAAN FIX MERAH...</b>\n━━━━━━━━━━━━━━━━━━━━━━\n📱 Nomor: <code>${rawNum}</code>\n<i>Menghubungkan ke server bot target via MTProto...</i></blockquote>`, { parse_mode: 'HTML' });
+
+        const clientHelper = require('../lib/client');
+        const resSend = await clientHelper.sendToTarget(rawNum);
+
+        let cphxId = null;
+        if (resSend && resSend.text) {
+          const match = resSend.text.match(/CPHX\s*[\d\-]+/i);
+          if (match) cphxId = match[0].toUpperCase();
+        }
+        if (!cphxId) {
+          cphxId = `CPHX ${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
+        }
+
+        try { await bot.deleteMessage(chatId, waitMsg.message_id); } catch(e) {}
+
+        const initReport = `<blockquote>🛠 <b>HASIL PROSES FIXMERAH</b>\n◈────────────────────◈\n\n✅ <b>BERHASIL ( 1 )</b>\n📱 <code>${rawNum}</code>\n🆔 <code>${cphxId}</code>\n📩 <b>TERKIRIM</b>\n\n📬 <i>Notifikasi update status akan dikirim otomatis jika ada balasan (Max 1 Menit).</i></blockquote>`;
+
+        await bot.sendMessage(chatId, initReport, { parse_mode: 'HTML' });
+
+        setTimeout(async () => {
+          const statusRes = await clientHelper.monitorTargetResponse(rawNum, cphxId, 75000);
+          if (statusRes.status === 'SUCCESS') {
+            const succReport = `<blockquote>✅ <b>SUCCESS FIXMERAH CPHX</b>\n◈────────────────────◈\n📱 <b>Nomor:</b> <code>${rawNum}</code>\n🆔 <b>ID:</b> <code>${cphxId}</code>\n📩 <b>Status:</b> <code>SUCCESS</code>\n\n💬 <i>WhatsApp sudah merespon. Silakan coba login/verifikasi akun Anda sekarang!</i></blockquote>`;
+            await bot.sendMessage(chatId, succReport, { parse_mode: 'HTML' });
+          } else {
+            const failReport = `<blockquote>⚠️ <b>BELUM ADA RESPONS WHATSAPP</b>\n◈────────────────────◈\n📱 <b>Nomor:</b> <code>${rawNum}</code>\n🆔 <b>ID:</b> <code>${cphxId}</code>\n📩 <b>Status:</b> <code>TIDAK ADA BALASAN</code>\n\n💬 <i>WhatsApp tidak merespon dalam 90 detik.</i></blockquote>`;
+            await bot.sendMessage(chatId, failReport, { parse_mode: 'HTML' });
+          }
+        }, 1000);
+
+        return res.status(200).send('OK');
+      }
 
       if (st && st.action === 'awaiting_owner_msg' && text) {
         userState.delete(String(uid));
