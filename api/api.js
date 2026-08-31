@@ -1,70 +1,19 @@
 const { loadDB, saveDB } = require('../lib/utils');
 const { getTodayString, genInvoiceID } = require('../lib/utils');
 const config = require('../config');
-
 const OWNER_PASSWORD = 'SUPER777';
 const rateCache = new Map();
 let dbCache = null;
 let dbCacheTime = 0;
 const CACHE_TTL = 3000;
-
-async function getDB(){
-const now=Date.now();
-if(dbCache && (now-dbCacheTime)<CACHE_TTL) return dbCache;
-const db=await loadDB();
-dbCache=db;
-dbCacheTime=now;
-return db;
-}
+async function getDB(){ const now=Date.now(); if(dbCache && (now-dbCacheTime)<CACHE_TTL) return dbCache; const db=await loadDB(); dbCache=db; dbCacheTime=now; return db; }
 function clearCache(){ dbCache=null; dbCacheTime=0; }
-function isOwner(id){
-try{
-if(config && config.OWNER_IDS) return config.OWNER_IDS.map(String).includes(String(id));
-}catch(e){}
-return false;
-}
-function isSuspiciousId(id){
-if(!id) return true;
-const s=String(id);
-const n=Number(id);
-if(!n||n<=0) return true;
-if(s.startsWith('-')) return true;
-if(s.length>20) return true;
-if(s.includes('.')) return true;
-return false;
-}
-function getUniqueUsers(usersObj){
-const map=new Map();
-for(let u of Object.values(usersObj||{})){
-if(!u || isSuspiciousId(u.id)) continue;
-const key=String(u.id);
-const name=(u.first_name||'').trim().toLowerCase();
-if(!name) continue;
-if(name.includes('exploit') && (u.totalFix||0)===0 && (u.referralCount||0)===0) continue;
-if(!map.has(key)) map.set(key,u);
-}
-return Array.from(map.values());
-}
+function isOwner(id){ try{ if(config && config.OWNER_IDS) return config.OWNER_IDS.map(String).includes(String(id)); }catch(e){} return false; }
+function isSuspiciousId(id){ if(!id) return true; const s=String(id); const n=Number(id); if(!n||n<=0) return true; if(s.startsWith('-')) return true; if(s.length>20) return true; if(s.includes('.')) return true; return false; }
+function getUniqueUsers(usersObj){ const map=new Map(); for(let u of Object.values(usersObj||{})){ if(!u || isSuspiciousId(u.id)) continue; const key=String(u.id); const name=(u.first_name||'').trim().toLowerCase(); if(!name) continue; if(name.includes('exploit') && (u.totalFix||0)===0 && (u.referralCount||0)===0) continue; if(!map.has(key)) map.set(key,u); } return Array.from(map.values()); }
 function isPremium(u){ return u && u.premiumUntil && u.premiumUntil>Date.now(); }
-function getRank(c){
-if(c>=100) return {name:'SULTAN',icon:'👑'};
-if(c>=50) return {name:'DIAMOND',icon:'💎'};
-if(c>=20) return {name:'GOLD',icon:'🥇'};
-if(c>=10) return {name:'SILVER',icon:'🥈'};
-if(c>=5) return {name:'BRONZE',icon:'🥉'};
-return {name:'BASIC',icon:'🌱'};
-}
-function checkRate(ip){
-const now=Date.now();
-const key=ip||'unknown';
-const entry=rateCache.get(key);
-if(!entry){ rateCache.set(key,{count:1,ts:now}); return true; }
-if(now-entry.ts>60000){ rateCache.set(key,{count:1,ts:now}); return true; }
-if(entry.count>60) return false;
-entry.count++;
-return true;
-}
-
+function getRank(c){ if(c>=100) return {name:'SULTAN',icon:'👑'}; if(c>=50) return {name:'DIAMOND',icon:'💎'}; if(c>=20) return {name:'GOLD',icon:'🥇'}; if(c>=10) return {name:'SILVER',icon:'🥈'}; if(c>=5) return {name:'BRONZE',icon:'🥉'}; return {name:'BASIC',icon:'🌱'}; }
+function checkRate(ip){ const now=Date.now(); const key=ip||'unknown'; const entry=rateCache.get(key); if(!entry){ rateCache.set(key,{count:1,ts:now}); return true; } if(now-entry.ts>60000){ rateCache.set(key,{count:1,ts:now}); return true; } if(entry.count>60) return false; entry.count++; return true; }
 module.exports = async (req, res) => {
 res.setHeader('Access-Control-Allow-Origin','*');
 res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
@@ -72,15 +21,12 @@ res.setHeader('Access-Control-Allow-Headers','Content-Type');
 res.setHeader('Content-Type','application/json; charset=utf-8');
 res.setHeader('Cache-Control','no-store, no-cache, must-revalidate');
 if(req.method==='OPTIONS') return res.status(200).json({ok:true});
-
 const clientIp=req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
 if(!checkRate(clientIp)) return res.status(429).json({ok:false,message:'Terlalu banyak request, tunggu 1 menit'});
-
 const fullUrl=req.url||'';
 const pathOnly=fullUrl.split('?')[0];
 const query=req.query||{};
 const body=req.body||{};
-
 try{
 const db=await getDB();
 if(!db.users) db.users={};
@@ -88,12 +34,10 @@ if(!db.payments) db.payments={};
 if(!db.codes) db.codes={};
 if(!db.stats) db.stats={ totalFix:0, totalSuccess:0, totalFailed:0, revenue:0, revenueHistory:[], lastReset:Date.now() };
 if(!db.history) db.history={};
-
 if(Date.now()-dbCacheTime<100){
 for(let k of Object.keys(db.users)){ if(isSuspiciousId(k)) delete db.users[k]; }
 for(let k of Object.keys(db.payments)){ const p=db.payments[k]; if(p && isSuspiciousId(p.userId)) delete db.payments[k]; }
 }
-
 if(pathOnly.endsWith('/api/user')){
 const userId=query.user_id || body.user_id;
 if(!userId) return res.status(400).json({ok:false,message:'user_id diperlukan'});
@@ -119,15 +63,12 @@ const rank=getRank(user.referralCount||0);
 const userData={ id:user.id, first_name:user.first_name, username:user.username, joinedAt:user.joinedAt, referralCount:user.referralCount||0, totalFix:user.totalFix||0, dailyFix:{ used:user.dailyFix.count, remaining: isPremiumUser ? 999 : Math.max(0,3-user.dailyFix.count), date:user.dailyFix.date, count:user.dailyFix.count }, isPremium:isPremiumUser, premiumLeft, rank, canSpin, lastSpin:user.lastSpin||null, history:(db.history[String(userId)]||[]).slice(0,20) };
 return res.json({ok:true,user:userData,global,currentInvoice,hasProof: currentInvoice && currentInvoice.status==='waiting_approval',invoices:userInvoices.slice(0,20),pendingInvoice:currentInvoice,ts:Date.now()});
 }
-
 if(pathOnly.endsWith('/api/stats')){
 const userId=query.user_id || body.user_id;
 if(!userId) return res.status(400).json({ok:false,message:'user_id required'});
 let ownerCheck=isOwner(userId);
 if(!ownerCheck){
-try{
-if(db.users[String(userId)] && db.users[String(userId)].isOwner) ownerCheck=true;
-}catch(e){}
+try{ if(db.users[String(userId)] && db.users[String(userId)].isOwner) ownerCheck=true; }catch(e){}
 }
 const unique=getUniqueUsers(db.users);
 const premiumCount=unique.filter(u=>isPremium(u)).length;
@@ -149,7 +90,6 @@ else codesList.push({code:k,days:v.days||0,quota:v.quota||0,used:v.used||0,creat
 }
 return res.json({ok:true,isOwner:ownerCheck,users:Object.keys(db.users).length,usersValid:unique.length,premium:premiumCount,totalFix:db.stats.totalFix||0,totalSuccess:db.stats.totalSuccess||0,totalFailed:db.stats.totalFailed||0,todayOrders,paidToday:paid.filter(p=>{ const d=new Date(p.createdAt); return d.getDate()===now.getDate() && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear(); }).length,pendingPayments:pending.slice(-30).reverse(),paidPayments:ownerCheck ? paid.slice(-30).reverse() : [],recentUsers:ownerCheck ? unique.slice(-30).reverse() : [],codes:ownerCheck ? codesList.slice(-40) : [],revenue:ownerCheck ? db.stats.revenue||0 : undefined,timestamp:Date.now()});
 }
-
 if(pathOnly.endsWith('/api/deposit')){
 const userId=query.user_id || body.user_id;
 const days=parseInt(query.days || body.days);
@@ -170,7 +110,6 @@ await saveDB(db);
 clearCache();
 return res.json({ok:true,message:'Invoice dibuat',invoice});
 }
-
 if(pathOnly.endsWith('/api/upload_proof')){
 const userId=body.user_id;
 const invoiceId=body.invoice;
@@ -192,13 +131,12 @@ setImmediate(async ()=>{
 try{
 const bot=new (require('node-telegram-bot-api'))(config.BOT_TOKEN);
 for(let ownerId of config.OWNER_IDS){
-try{ await bot.sendMessage(ownerId, `📤 <b>Bukti Baru</b>\nInvoice: <code>${invoiceId}</code>\nUser: <code>${userId}</code>\nPaket: ${pay.days}H • Rp ${pay.amount}\n\nCek WebApp Owner`, {parse_mode:'HTML'}); }catch(e){}
+try{ await bot.sendMessage(ownerId, `📤 <b>Bukti Baru</b>\nInvoice: <code>${invoiceId}</code>\nUser: <code>${userId}</code>\nPaket: ${pay.days}H • Rp ${pay.amount}\nDANA ${config.DANA_NUMBER}`, {parse_mode:'HTML'}); }catch(e){}
 }
 }catch(e){}
 });
 return res.json({ok:true,message:'Bukti terkirim, menunggu ACC'});
 }
-
 if(pathOnly.endsWith('/api/spin')){
 const userId=query.user_id || body.user_id;
 if(!userId) return res.status(400).json({ok:false,message:'user_id required'});
@@ -218,7 +156,6 @@ await saveDB(db);
 clearCache();
 return res.json({ok:true,message:'Spin berhasil',reward});
 }
-
 if(pathOnly.endsWith('/api/redeem')){
 const userId=query.user_id || body.user_id;
 const code=(query.code || body.code || '').toUpperCase().trim();
@@ -240,7 +177,6 @@ await saveDB(db);
 clearCache();
 return res.json({ok:true,message:'VIP '+days+' Hari aktif sampai '+new Date(user.premiumUntil).toLocaleDateString('id-ID')});
 }
-
 if(pathOnly.endsWith('/api/create_code')){
 const ownerId=String(body.owner_id||'');
 const password=body.password;
@@ -260,7 +196,6 @@ await saveDB(db);
 clearCache();
 return res.json({ok:true,message:'Voucher '+code+' dibuat'});
 }
-
 if(pathOnly.endsWith('/api/delete_code')){
 const ownerId=String(body.owner_id||'');
 const password=body.password;
@@ -274,7 +209,6 @@ await saveDB(db);
 clearCache();
 return res.json({ok:true,message:'Voucher '+code+' dihapus'});
 }
-
 if(pathOnly.endsWith('/api/broadcast')){
 const ownerId=String(body.owner_id||'');
 const password=body.password;
@@ -306,7 +240,6 @@ await bot2.sendMessage(ownerId, `✅ Broadcast selesai\nTotal: ${unique.length}\
 });
 return;
 }
-
 if(pathOnly.endsWith('/api/owner_action')){
 const ownerId=String(body.owner_id||'');
 const password=body.password;
@@ -332,7 +265,7 @@ await saveDB(db);
 clearCache();
 try{
 const bot=new (require('node-telegram-bot-api'))(config.BOT_TOKEN);
-await bot.sendMessage(pay.userId, `✅ <b>LUNAS!</b>\nInvoice ${invoice} disetujui\nPaket ${pay.days} Hari sampai ${new Date(u.premiumUntil).toLocaleDateString('id-ID')}\n\n🚀 walzy`, {parse_mode:'HTML'});
+await bot.sendMessage(pay.userId, `✅ <b>LUNAS</b>\nInvoice ${invoice} disetujui\nPaket ${pay.days}H sampai ${new Date(u.premiumUntil).toLocaleDateString('id-ID')}\n\n🚀 walzy`, {parse_mode:'HTML'});
 }catch(e){}
 return res.json({ok:true,message:invoice+' disetujui'});
 }else if(action==='reject'){
@@ -348,11 +281,9 @@ await bot.sendMessage(pay.userId, `❌ <b>Ditolak</b>\nInvoice ${invoice} ditola
 return res.json({ok:true,message:invoice+' ditolak'});
 }else return res.json({ok:false,message:'Action approve/reject'});
 }
-
 if(pathOnly.endsWith('/api/health')){
 return res.json({ok:true,message:'Walzy API Active',ts:Date.now()});
 }
-
 return res.status(404).json({ok:false,message:'Endpoint tidak ditemukan: '+pathOnly});
 }catch(e){
 console.error(e);
