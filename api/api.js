@@ -15,8 +15,8 @@ function isPremium(u){ return u && u.premiumUntil && u.premiumUntil>Date.now(); 
 function getRank(c){ if(c>=100) return {name:'SULTAN',icon:'👑'}; if(c>=50) return {name:'DIAMOND',icon:'💎'}; if(c>=20) return {name:'GOLD',icon:'🥇'}; if(c>=10) return {name:'SILVER',icon:'🥈'}; if(c>=5) return {name:'BRONZE',icon:'🥉'}; return {name:'BASIC',icon:'🌱'}; }
 function checkRate(ip){ const now=Date.now(); const key=ip||'unknown'; const entry=rateCache.get(key); if(!entry){ rateCache.set(key,{count:1,ts:now}); return true; } if(now-entry.ts>60000){ rateCache.set(key,{count:1,ts:now}); return true; } if(entry.count>60) return false; entry.count++; return true; }
 function mustBeOwnerAndPassword(ownerId,password){
-if(password!==OWNER_PASSWORD) return {ok:false,code:403,msg:'Password owner salah, hanya SUPER777 yang valid'};
-if(!isOwner(ownerId)) return {ok:false,code:403,msg:'ID bukan owner, akses ditolak'};
+if(password!==OWNER_PASSWORD) return {ok:false,code:403,msg:'Password salah'};
+if(!isOwner(ownerId)) return {ok:false,code:403,msg:'Akses ditolak, bukan owner'};
 return {ok:true};
 }
 module.exports = async (req, res) => {
@@ -48,7 +48,7 @@ const ownerId=String(body.owner_id||query.owner_id||'');
 const password=String(body.password||'').trim();
 const check=mustBeOwnerAndPassword(ownerId,password);
 if(!check.ok) return res.status(check.code).json({ok:false,message:check.msg});
-return res.json({ok:true,message:'Owner verified',isOwner:true,token:'verified_'+Date.now()});
+return res.json({ok:true,message:'Verified',isOwner:true});
 }
 if(pathOnly.endsWith('/api/user')){
 const userId=query.user_id || body.user_id;
@@ -97,7 +97,7 @@ if(typeof v==='object' && v.code) codesList.push(v);
 else if(typeof v==='number') codesList.push({code:k,days:v,quota:0,used:0,createdAt:Date.now(),type:'legacy'});
 else codesList.push({code:k,days:v.days||0,quota:v.quota||0,used:v.used||0,createdAt:v.createdAt||Date.now(),type:v.type||'public'});
 }
-return res.json({ok:true,isOwner:ownerCheck,users:Object.keys(db.users).length,usersValid:unique.length,premium:premiumCount,totalFix:db.stats.totalFix||0,totalSuccess:db.stats.totalSuccess||0,totalFailed:db.stats.totalFailed||0,todayOrders,paidToday:paid.filter(p=>{const d=new Date(p.createdAt);return d.getDate()===now.getDate() && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();}).length,pendingPayments:pending.slice(-30).reverse(),paidPayments:ownerCheck?paid.slice(-30).reverse():[],recentUsers:ownerCheck?unique.slice(-30).reverse():[],codes:ownerCheck?codesList.slice(-50):[],revenue:ownerCheck?db.stats.revenue||0:undefined,timestamp:Date.now()});
+return res.json({ok:true,isOwner:ownerCheck,users:Object.keys(db.users).length,usersValid:unique.length,premium:premiumCount,totalFix:db.stats.totalFix||0,totalSuccess:db.stats.totalSuccess||0,totalFailed:db.stats.totalFailed||0,todayOrders,paidToday:paid.filter(p=>{const d=new Date(p.createdAt);return d.getDate()===now.getDate() && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();}).length,pendingPayments:pending.slice(-30).reverse(),paidPayments:ownerCheck?paid.slice(-30).reverse():[],recentUsers:ownerCheck?unique.slice(-50).reverse():[],codes:ownerCheck?codesList.slice(-50):[],revenue:ownerCheck?db.stats.revenue||0:undefined,timestamp:Date.now()});
 }
 if(pathOnly.endsWith('/api/deposit')){
 const userId=query.user_id || body.user_id;
@@ -140,7 +140,7 @@ setImmediate(async()=>{
 try{
 const bot=new (require('node-telegram-bot-api'))(config.BOT_TOKEN);
 for(let ownerId of config.OWNER_IDS){
-try{await bot.sendMessage(ownerId,`📤 <b>Bukti Baru</b>\nInvoice: <code>${invoiceId}</code>\nUser: <code>${userId}</code>\nPaket: ${pay.days}H • Rp ${pay.amount}\nDANA ${config.DANA_NUMBER}`,{parse_mode:'HTML'});}catch(e){}
+try{await bot.sendMessage(ownerId,`📤 <b>Bukti Baru</b>\nInvoice: <code>${invoiceId}</code>\nUser: <code>${userId}</code>\nPaket: ${pay.days}H • Rp ${pay.amount}`,{parse_mode:'HTML'});}catch(e){}
 }
 }catch(e){}
 });
@@ -154,7 +154,7 @@ const user=db.users[String(userId)];
 if(!user) return res.json({ok:false,message:'User tidak ditemukan'});
 const today=getTodayString();
 if(user.lastSpin===today) return res.json({ok:false,message:'Sudah spin hari ini',alreadySpun:true});
-const rewards=[{label:'Bonus 1 Pesanan',desc:'+1 batas',type:'fix'},{label:'VIP 1 Hari',desc:'Gratis VIP',type:'vip'},{label:'5 Poin Referral',desc:'Bonus ref',type:'ref'},{label:'Bonus 2 Pesanan',desc:'+2 batas',type:'fix2'}];
+const rewards=[{label:'Bonus 1 Pesanan',type:'fix'},{label:'VIP 1 Hari',type:'vip'},{label:'5 Poin Referral',type:'ref'},{label:'Bonus 2 Pesanan',type:'fix2'}];
 const reward=rewards[Math.floor(Math.random()*rewards.length)];
 user.lastSpin=today;
 if(reward.type==='vip'){user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+86400000;}
@@ -268,7 +268,7 @@ await saveDB(db);
 clearCache();
 try{
 const bot=new (require('node-telegram-bot-api'))(config.BOT_TOKEN);
-await bot.sendMessage(pay.userId,`✅ <b>LUNAS</b>\nInvoice ${invoice} disetujui\nPaket ${pay.days}H sampai ${new Date(u.premiumUntil).toLocaleDateString('id-ID')}\n\n🚀 walzy`,{parse_mode:'HTML'});
+await bot.sendMessage(pay.userId,`✅ <b>LUNAS</b>\nInvoice ${invoice} disetujui\nPaket ${pay.days}H sampai ${new Date(u.premiumUntil).toLocaleDateString('id-ID')}`,{parse_mode:'HTML'});
 }catch(e){}
 return res.json({ok:true,message:invoice+' disetujui'});
 }else if(action==='reject'){
@@ -279,7 +279,7 @@ await saveDB(db);
 clearCache();
 try{
 const bot=new (require('node-telegram-bot-api'))(config.BOT_TOKEN);
-await bot.sendMessage(pay.userId,`❌ <b>Ditolak</b>\nInvoice ${invoice} ditolak\n\n🚀 walzy`,{parse_mode:'HTML'});
+await bot.sendMessage(pay.userId,`❌ <b>Ditolak</b>\nInvoice ${invoice} ditolak`,{parse_mode:'HTML'});
 }catch(e){}
 return res.json({ok:true,message:invoice+' ditolak'});
 }else return res.json({ok:false,message:'Action approve/reject'});
