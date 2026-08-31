@@ -14,6 +14,50 @@
     {
       "source": "/webapp",
       "destination": "/api/webapp"
+    },
+    {
+      "source": "/api/user",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/stats",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/deposit",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/upload_proof",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/spin",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/redeem",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/create_code",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/delete_code",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/broadcast",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/owner_action",
+      "destination": "/api/api"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/api"
     }
   ]
 }
