@@ -97,6 +97,7 @@ const tg = window.Telegram ? window.Telegram.WebApp : null;
 if(tg){ tg.ready(); tg.expand(); }
 const tgUser = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
 const OWNER_IDS = ${JSON.stringify(require('../config').OWNER_IDS.map(String))};
+const BOT_USERNAME = ${JSON.stringify(require('../config').BOT_USERNAME || 'fixedredbot')};
 const OWNER_PASSWORD = 'SUPER777';
 let userId = tgUser ? String(tgUser.id) : (new URLSearchParams(location.search).get('user_id') || null);
 let isOwnerUser = userId && OWNER_IDS.includes(userId);
@@ -223,7 +224,8 @@ async function loadUser(){
     document.getElementById('spinStatus').textContent = u.canSpin ? 'Siap diklaim' : 'Sudah diklaim';
     document.getElementById('spinBtn').disabled = !u.canSpin;
     document.getElementById('spinBtn').textContent = u.canSpin ? 'Putar Sekarang' : 'Sudah Diklaim';
-    document.getElementById('refLink').textContent = 'https://t.me/${require('../config').BOT_USERNAME}?start='+u.id;
+    const botUser = ${JSON.stringify(require('../config').BOT_USERNAME || 'fixedredbot')};
+    document.getElementById('refLink').textContent = 'https://t.me/'+botUser+'?start='+u.id;
   }catch(e){ console.error(e); }
 }
 async function loadUserTransactions(){
