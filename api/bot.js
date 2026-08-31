@@ -1,4 +1,3 @@
-const TelegramBot = require('node-telegram-bot-api');
 const { loadDB, saveDB } = require('../lib/utils');
 const { getTodayString, genID, genInvoiceID, esc, getRank, isValidNumber } = require('../lib/utils');
 const { sendToTarget } = require('../lib/client');
@@ -17,7 +16,6 @@ function ensureDB(db){
   if(!db.history) db.history={};
   if(!db.pending) db.pending={};
   if(!db.supportMap) db.supportMap={};
-  if(!db.securityLog) db.securityLog=[];
 }
 function cleanDB(db){
   for(let k of Object.keys(db.users)){ if(isSuspiciousId(k)) delete db.users[k]; }
@@ -45,7 +43,7 @@ function getUser(db,id){
   const k=String(id);
   if(isSuspiciousId(k)) return null;
   if(!db.users[k]){
-    db.users[k]={ id:Number(id)||id, first_name:'', username:'', joinedAt:Date.now(), referralCount:0, referrals:[], referredBy:null, totalFix:0, dailyFix:{date:getTodayString(),count:0}, premiumUntil:0, lastSpin:null, notifiedExp:false, awaitingNumber:false, awaitingBroadcast:false, awaitingSupport:false, pendingDeposit:null, securityFlags:0 };
+    db.users[k]={ id:Number(id)||id, first_name:'', username:'', joinedAt:Date.now(), referralCount:0, referrals:[], referredBy:null, totalFix:0, dailyFix:{date:getTodayString(),count:0}, premiumUntil:0, lastSpin:null, awaitingNumber:false, awaitingBroadcast:false, awaitingSupport:false, pendingDeposit:null };
   }
   if(!db.users[k].dailyFix || db.users[k].dailyFix.date!==getTodayString()) db.users[k].dailyFix={date:getTodayString(),count:0};
   if(db.users[k].totalFix===undefined) db.users[k].totalFix=0;
@@ -75,8 +73,6 @@ async function checkJoin(bot,uid){
   return {joined:notJoined.length===0,notJoined};
 }
 function bq(t){ return `<blockquote>${t}</blockquote>`; }
-function hdr(title, icon){ return `${icon} <b>${title}</b>\n━━━━━━━━━━━━━━━━━━━━━━━`; }
-function ftr(){ return `━━━━━━━━━━━━━━━━━━━━━━━\n🚀 <b>walzy</b> • ${new Date().toLocaleTimeString('id-ID',{timeZone:'Asia/Jakarta'})} WIB`; }
 
 function getOwnerMenu(chatId, db, user){
   const validUsers=getUniqueUsers(db.users);
@@ -87,7 +83,7 @@ function getOwnerMenu(chatId, db, user){
     return d.getDate()===now.getDate() && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
   }).length;
   const successRate=db.stats.totalFix ? Math.round((db.stats.totalSuccess/db.stats.totalFix)*100) : 0;
-  const text=`${hdr('WALZY OWNER STUDIO','⚡️')}\n🎨 <i>Super Keren Hidup - Beda 360° dari User</i>\n${bq(`👑 Owner: <b>${esc(user.first_name)}</b>\n🛡️ Mode: <code>DARK PRO</code>\n\n📊 <b>STATISTIK REAL</b>\n• Pengguna: <code>${validUsers.length}</code>\n• VIP: <code>${premiumCount}</code>\n• Total Order: <code>${db.stats.totalFix||0}</code>\n• Hari Ini: <code>${todayOrders}</code> ✨\n• Sukses: <code>${db.stats.totalSuccess||0}</code> | Rasio: <code>${successRate}%</code>\n\n🔧 Fix Merah: Jualan akses scraping bot target`)} \n${ftr()}`;
+  const text=`⚡️ <b>WALZY OWNER STUDIO</b>\n🎨 <i>Super Keren Hidup - Beda 360° dari User</i>\n━━━━━━━━━━━━━━━━━━━━━━━\n${bq(`👑 Owner: <b>${esc(user.first_name)}</b>\n🛡️ Mode: <code>DARK PRO</code>\n\n📊 <b>STATISTIK REAL</b>\n• Pengguna: <code>${validUsers.length}</code>\n• VIP: <code>${premiumCount}</code>\n• Total Order: <code>${db.stats.totalFix||0}</code>\n• Hari Ini: <code>${todayOrders}</code> ✨\n• Sukses: <code>${db.stats.totalSuccess||0}</code> | Rasio: <code>${successRate}%</code>\n\n🔧 Fix Merah: Jualan akses scraping bot target`)} \n━━━━━━━━━━━━━━━━━━━━━━━\n🚀 <b>walzy</b> • ${new Date().toLocaleTimeString('id-ID',{timeZone:'Asia/Jakarta'})} WIB`;
   return {
     text,
     opts:{
@@ -108,7 +104,7 @@ function getUserMenu(chatId, db, user){
   const rnk=getRank(user.referralCount||0);
   const can=canUseFix(db,user);
   const status=isPremium(user) ? `💎 VIP ${getPremiumLeft(user)} Hari` : `🎫 Gratis ${can.remaining}/3`;
-  const text=`${hdr('WALZY STORE - Toko Resmi','✨')}\n🎨 <i>Desain Hidup Super Keren</i>\n${bq(`Halo <b>${esc(user.first_name)}</b>! 👋\n\n🆔 ID: <code>${chatId}</code>\n⭐ ${status}\n🏅 Level: ${rnk.icon} ${rnk.name}\n👥 Referral: <code>${user.referralCount||0}</code>\n📦 Pesanan: <code>${user.totalFix||0}</code>\n\n🔧 Fix Merah Ready - Bot jualan akses scraping`)} \n${ftr()}`;
+  const text=`✨ <b>WALZY STORE</b> - <i>Toko Resmi</i>\n🎨 <i>Desain Hidup Super Keren</i>\n━━━━━━━━━━━━━━━━━━━━━━━\n${bq(`Halo <b>${esc(user.first_name)}</b>! 👋\n\n🆔 ID: <code>${chatId}</code>\n⭐ ${status}\n🏅 Level: ${rnk.icon} ${rnk.name}\n👥 Referral: <code>${user.referralCount||0}</code>\n📦 Pesanan: <code>${user.totalFix||0}</code>\n\n🔧 Fix Merah Ready - Bot jualan akses scraping`)} \n━━━━━━━━━━━━━━━━━━━━━━━\n🚀 <b>walzy</b> • ${new Date().toLocaleTimeString('id-ID',{timeZone:'Asia/Jakarta'})} WIB`;
   return {
     text,
     opts:{
@@ -152,7 +148,7 @@ async function handleMessage(bot,db,msg){
       pay.status='waiting_approval';
       db.users[String(chatId)].pendingDeposit=null;
       await saveDB(db);
-      await bot.sendMessage(chatId, `${hdr('Bukti Diterima','✅')}\n${bq(`Invoice <code>${inv}</code>\nMenunggu ACC 24 jam\nNotifikasi persegi muncul`)} \n${ftr()}`, {parse_mode:'HTML'});
+      await bot.sendMessage(chatId, `✅ <b>Bukti Diterima</b>\n${bq(`Invoice <code>${inv}</code>\nMenunggu ACC 24 jam\nNotifikasi persegi muncul`)} \n🚀 walzy`, {parse_mode:'HTML'});
       for(let oid of config.OWNER_IDS){
         try{
           await bot.sendPhoto(oid,fileId,{
@@ -170,7 +166,7 @@ async function handleMessage(bot,db,msg){
     const targetUid=db.supportMap && db.supportMap[String(msg.reply_to_message.message_id)];
     if(targetUid && !isSuspiciousId(targetUid)){
       try{
-        await bot.sendMessage(targetUid, `${hdr('Balasan Admin','💬')}\n${bq(esc(text))}\n${ftr()}`, {parse_mode:'HTML'});
+        await bot.sendMessage(targetUid, `💬 <b>Balasan Admin</b>\n${bq(esc(text))}\n🚀 walzy`, {parse_mode:'HTML'});
         await bot.sendMessage(chatId, `Balasan terkirim ke ${targetUid}`);
       }catch(e){ await bot.sendMessage(chatId, `Gagal: ${e.message}`); }
       return;
@@ -179,16 +175,16 @@ async function handleMessage(bot,db,msg){
 
   if(!isOwner(chatId) && db.users[String(chatId)] && db.users[String(chatId)].awaitingSupport && text){
     if(!checkSupportRate(chatId)){
-      return bot.sendMessage(chatId, `${hdr('Tunggu','⏳')}\n${bq('Tunggu 1 menit')}\n${ftr()}`, {parse_mode:'HTML'});
+      return bot.sendMessage(chatId, `⏳ <b>Tunggu</b>\n${bq('Tunggu 1 menit')}\n🚀 walzy`, {parse_mode:'HTML'});
     }
-    if(text.length>500) return bot.sendMessage(chatId, `${hdr('Panjang','⚠️')}\n${bq('Maks 500')}\n${ftr()}`, {parse_mode:'HTML'});
+    if(text.length>500) return bot.sendMessage(chatId, `⚠️ <b>Panjang</b>\n${bq('Maks 500')}\n🚀 walzy`, {parse_mode:'HTML'});
     db.users[String(chatId)].awaitingSupport=false;
     await saveDB(db);
-    await bot.sendMessage(chatId, `${hdr('Terkirim','✅')}\n${bq(`Keluhan diteruskan ID: <code>${genID()}</code>`)} \n${ftr()}`, {parse_mode:'HTML'});
+    await bot.sendMessage(chatId, `✅ <b>Terkirim</b>\n${bq(`Keluhan diteruskan ID: <code>${genID()}</code>`)} \n🚀 walzy`, {parse_mode:'HTML'});
     if(!db.supportMap) db.supportMap={};
     for(let oid of config.OWNER_IDS){
       try{
-        const sent=await bot.sendMessage(oid, `${hdr('Tiket Baru','🎧')}\n${bq(`👤 ${chatId} @${msg.from.username||'-'}\n\n${esc(text)}`)} \n${ftr()}`, {parse_mode:'HTML'});
+        const sent=await bot.sendMessage(oid, `🎧 <b>Tiket Baru</b>\n${bq(`👤 ${chatId} @${msg.from.username||'-'}\n\n${esc(text)}`)} \n🚀 walzy`, {parse_mode:'HTML'});
         db.supportMap[String(sent.message_id)]=String(chatId);
       }catch(e){}
     }
@@ -201,30 +197,30 @@ async function handleMessage(bot,db,msg){
   if(text.startsWith('/gen ')){
     if(!isOwner(chatId)) return;
     const parts=text.split(' ').filter(Boolean);
-    if(parts.length<3) return bot.sendMessage(chatId, `${hdr('Salah','❌')}\n${bq('/gen KODE HARI')}\n${ftr()}`, {parse_mode:'HTML'});
+    if(parts.length<3) return bot.sendMessage(chatId, `❌ <b>Salah</b>\n${bq('/gen KODE HARI')}\n🚀 walzy`, {parse_mode:'HTML'});
     const code=parts[1].toUpperCase(); const days=parseInt(parts[2]);
     db.codes[code]={code,days,quota:0,used:0,createdAt:Date.now(),type:'legacy'};
     await saveDB(db);
-    return bot.sendMessage(chatId, `${hdr('Voucher Dibuat','✅')}\n${bq(`Kode: <code>${code}</code>\n${days} Hari`)}\n${ftr()}`, {parse_mode:'HTML'});
+    return bot.sendMessage(chatId, `✅ <b>Voucher Dibuat</b>\n${bq(`Kode: <code>${code}</code>\n${days} Hari`)}\n🚀 walzy`, {parse_mode:'HTML'});
   }
 
   if(text.startsWith('/redeem ')){
     const parts=text.split(' ').filter(Boolean);
-    if(parts.length<2) return bot.sendMessage(chatId, `${hdr('Gagal','❌')}\n${bq('/redeem KODE')}\n${ftr()}`, {parse_mode:'HTML'});
+    if(parts.length<2) return bot.sendMessage(chatId, `❌ <b>Gagal</b>\n${bq('/redeem KODE')}\n🚀 walzy`, {parse_mode:'HTML'});
     const code=parts[1].toUpperCase();
     const c=db.codes[code];
     if(c){
       const days=typeof c==='object' ? c.days : c;
       const quota=typeof c==='object' ? (c.quota||0) : 0;
       const used=typeof c==='object' ? (c.used||0) : 0;
-      if(quota>0 && used>=quota) return bot.sendMessage(chatId, `${hdr('Habis','❌')}\n${bq(`Kode ${code} habis ${used}/${quota}`)}\n${ftr()}`, {parse_mode:'HTML'});
+      if(quota>0 && used>=quota) return bot.sendMessage(chatId, `❌ <b>Habis</b>\n${bq(`Kode ${code} habis ${used}/${quota}`)}\n🚀 walzy`, {parse_mode:'HTML'});
       user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+days*86400000;
       if(typeof c==='object'){ c.used=(c.used||0)+1; if(c.type==='private' && quota===1) delete db.codes[code]; }
       else delete db.codes[code];
       await saveDB(db);
-      return bot.sendMessage(chatId, `${hdr('Berhasil','🎉')}\n${bq(`VIP ${days} Hari aktif`)} \n${ftr()}`, {parse_mode:'HTML'});
+      return bot.sendMessage(chatId, `🎉 <b>Berhasil</b>\n${bq(`VIP ${days} Hari aktif`)} \n🚀 walzy`, {parse_mode:'HTML'});
     }else{
-      return bot.sendMessage(chatId, `${hdr('Gagal','❌')}\n${bq('Kode tidak valid')}\n${ftr()}`, {parse_mode:'HTML'});
+      return bot.sendMessage(chatId, `❌ <b>Gagal</b>\n${bq('Kode tidak valid')}\n🚀 walzy`, {parse_mode:'HTML'});
     }
   }
 
@@ -238,7 +234,7 @@ async function handleMessage(bot,db,msg){
     await saveDB(db);
     const jc=await checkJoin(bot,chatId);
     if(!jc.joined){
-      const txt=`${hdr('Akses Terkunci','🔒')}\n${bq(`Gabung saluran resmi:\n${jc.notJoined.map(c=>`• ${c.id}`).join('\n')}`)}\n${ftr()}`;
+      const txt=`🔒 <b>Akses Terkunci</b>\n${bq(`Gabung saluran resmi:\n${jc.notJoined.map(c=>`• ${c.id}`).join('\n')}`)}\n🚀 walzy`;
       const btns=jc.notJoined.map(c=>[{text:`Gabung ${c.name}`,url:c.link}]);
       btns.push([{text:'Verifikasi',callback_data:'verify_join'}]);
       return bot.sendMessage(chatId,txt,{parse_mode:'HTML',reply_markup:{inline_keyboard:btns}});
@@ -257,10 +253,10 @@ async function handleMessage(bot,db,msg){
     const rawLines=text.split('\n').map(x=>x.trim()).filter(Boolean);
     let lines=rawLines.map(x=>x.replace(/[^0-9+]/g,'')).filter(x=>isValidNumber(x));
     if(lines.length===0){
-      return bot.sendMessage(chatId, `${hdr('Salah','❌')}\n${bq('Masukkan angka valid')}\n${ftr()}`, {parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'Batal',callback_data:'cancel_action'}]]}});
+      return bot.sendMessage(chatId, `❌ <b>Salah</b>\n${bq('Masukkan angka valid')}\n🚀 walzy`, {parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'Batal',callback_data:'cancel_action'}]]}});
     }
     if(lines.length>1 && !isPremium(user) && !isOwner(chatId)){
-      return bot.sendMessage(chatId, `${hdr('Ditolak','⚠️')}\n${bq('Multi-baris khusus VIP')}\n${ftr()}`, {parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'Upgrade',callback_data:'menu_order'}]]}});
+      return bot.sendMessage(chatId, `⚠️ <b>Ditolak</b>\n${bq('Multi-baris khusus VIP')}\n🚀 walzy`, {parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'Upgrade',callback_data:'menu_order'}]]}});
     }
     if(lines.length>5) lines=lines.slice(0,5);
     const batchId=genID();
@@ -270,11 +266,11 @@ async function handleMessage(bot,db,msg){
     db.pending[pendingId]={chatId,batchId,originalNumbers:lines,timestamp:Date.now(),handled:false};
     db.users[String(chatId)].awaitingNumber=false;
     await saveDB(db);
-    await bot.sendMessage(chatId, `${hdr('Memproses Fix Merah','⚡')}\n${bq(`Batch: <code>${batchId}</code>\nJumlah: ${lines.length}\nScraping bot target...`)} \n${ftr()}`, {parse_mode:'HTML'});
+    await bot.sendMessage(chatId, `⚡ <b>Memproses Fix Merah</b>\n${bq(`Batch: <code>${batchId}</code>\nJumlah: ${lines.length}\nScraping bot target...`)} \n🚀 walzy`, {parse_mode:'HTML'});
     const joinedNumbers=lines.join('\n');
     const resTarget=await sendToTarget(joinedNumbers);
     if(!resTarget.ok){
-      await bot.sendMessage(chatId, `${hdr('Error','⚠️')}\n${bq(`Gagal: ${resTarget.error}`)}\n${ftr()}`, {parse_mode:'HTML'});
+      await bot.sendMessage(chatId, `⚠️ <b>Error</b>\n${bq(`Gagal: ${resTarget.error}`)}\n🚀 walzy`, {parse_mode:'HTML'});
     }
     return;
   }
@@ -288,15 +284,15 @@ async function handleMessage(bot,db,msg){
     const validUsers=getUniqueUsers(db.users);
     const uids=validUsers.map(u=>String(u.id));
     let s=0,f=0;
-    await bot.sendMessage(chatId, `${hdr('Mengirim Siaran','⏳')}\n${bq(`Ke ${uids.length} pengguna valid`)}\n${ftr()}`, {parse_mode:'HTML'});
+    await bot.sendMessage(chatId, `⏳ <b>Mengirim Siaran</b>\n${bq(`Ke ${uids.length} pengguna valid`)}\n🚀 walzy`, {parse_mode:'HTML'});
     for(let uid of uids){
       if(isSuspiciousId(uid)) continue;
-      try{ await bot.sendMessage(uid, `${hdr('Siaran Walzy','📢')}\n${bq(esc(text))}\n${ftr()}`, {parse_mode:'HTML'}); s++; }catch{ f++; }
+      try{ await bot.sendMessage(uid, `📢 <b>Siaran Walzy</b>\n${bq(esc(text))}\n🚀 walzy`, {parse_mode:'HTML'}); s++; }catch{ f++; }
       await new Promise(r=>setTimeout(r,80));
     }
     db.users[String(chatId)].awaitingBroadcast=false;
     await saveDB(db);
-    return bot.sendMessage(chatId, `${hdr('Selesai','✅')}\n${bq(`Sukses: ${s}\nGagal: ${f}`)}\n${ftr()}`, {parse_mode:'HTML'});
+    return bot.sendMessage(chatId, `✅ <b>Selesai</b>\n${bq(`Sukses: ${s}\nGagal: ${f}`)}\n🚀 walzy`, {parse_mode:'HTML'});
   }
 }
 
@@ -335,21 +331,21 @@ async function handleCallback(bot,db,query){
   if(data==='menu_fix'){
     const c=canUseFix(db,user);
     if(!c.allowed){
-      return bot.editMessageText(`${hdr('Batas Habis','🚫')}\n${bq('Batas harian habis - Buka toko untuk upgrade\n\n🔧 Fix Merah - Jualan akses scraping bot target')}\n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'🛍️ Buka Toko',web_app:{url:`${process.env.PUBLIC_URL || ''}/webapp`}}],[{text:'◁ Kembali',callback_data:'menu_main'}]]}});
+      return bot.editMessageText(`🚫 <b>Batas Habis</b>\n${bq('Batas harian habis - Buka toko untuk upgrade\n\n🔧 Fix Merah - Jualan akses scraping bot target')}\n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'🛍️ Buka Toko',web_app:{url:`${process.env.PUBLIC_URL || ''}/webapp`}}],[{text:'◁ Kembali',callback_data:'menu_main'}]]}});
     }
     db.users[String(chatId)].awaitingNumber=true;
     await saveDB(db);
-    return bot.editMessageText(`${hdr('FIX MERAH - SCRAPING BOT TARGET','🔧')}\n${bq(`Bot jualan akses fix merah - Fitur utama\n\nSisa: ${c.isPremium ? 'Tak terbatas' : c.remaining}\nFormat: <code>628xxxxxxxxxx</code>\nPisah baris untuk multi`)} \n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'◁ Kembali',callback_data:'menu_main'}]]}});
+    return bot.editMessageText(`🔧 <b>FIX MERAH - SCRAPING BOT TARGET</b>\n${bq(`Bot jualan akses fix merah - Fitur utama\n\nSisa: ${c.isPremium ? 'Tak terbatas' : c.remaining}\nFormat: <code>628xxxxxxxxxx</code>\nPisah baris untuk multi`)} \n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'◁ Kembali',callback_data:'menu_main'}]]}});
   }
 
   if(data==='menu_order'){
-    return bot.editMessageText(`${hdr('ORDER PAKET PREMIUM','📦')}\n${bq(`Jualan akses fix merah & bot store\n\n1 Hari 2k - Trial\n5 Hari 5k - Populer\n10 Hari 10k - Terbaik\n30 Hari 60k - Sultan\n\nTransfer: ${config.DANA_NAME} ${config.DANA_NUMBER}\n\nBuka toko untuk proses rapih - Halaman Order`)} \n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'🛍️ Buka Halaman Order',web_app:{url:`${process.env.PUBLIC_URL || ''}/webapp`}}],[{text:'◁ Kembali',callback_data:'menu_main'}]]}});
+    return bot.editMessageText(`📦 <b>ORDER PAKET PREMIUM</b>\n${bq(`Jualan akses fix merah & bot store\n\n1 Hari 2k - Trial\n5 Hari 5k - Populer\n10 Hari 10k - Terbaik\n30 Hari 60k - Sultan\n\nTransfer: ${config.DANA_NAME} ${config.DANA_NUMBER}\n\nBuka toko untuk proses rapih - Halaman Order`)} \n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'🛍️ Buka Halaman Order',web_app:{url:`${process.env.PUBLIC_URL || ''}/webapp`}}],[{text:'◁ Kembali',callback_data:'menu_main'}]]}});
   }
 
   if(data==='menu_profile'){
     const rnk=getRank(user.referralCount||0);
     const can=canUseFix(db,user);
-    const txt=`${hdr('PROFIL SAYA','👤')}\n${bq(`Nama: <b>${esc(user.first_name)}</b>\nID: <code>${chatId}</code>\nStatus: ${isPremium(user) ? `VIP ${getPremiumLeft(user)} Hari` : `Gratis ${can.remaining}/3`}\nLevel: ${rnk.icon} ${rnk.name}\nReferral: ${user.referralCount||0}\nPesanan: ${user.totalFix||0}`)} \n${ftr()}`;
+    const txt=`👤 <b>PROFIL SAYA</b>\n${bq(`Nama: <b>${esc(user.first_name)}</b>\nID: <code>${chatId}</code>\nStatus: ${isPremium(user) ? `VIP ${getPremiumLeft(user)} Hari` : `Gratis ${can.remaining}/3`}\nLevel: ${rnk.icon} ${rnk.name}\nReferral: ${user.referralCount||0}\nPesanan: ${user.totalFix||0}`)} \n🚀 walzy`;
     return bot.editMessageText(txt,{chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'◁ Kembali',callback_data:'menu_main'}]]}});
   }
 
@@ -360,7 +356,7 @@ async function handleCallback(bot,db,query){
     const inv=genInvoiceID();
     db.payments[inv]={userId:chatId,days,amount,status:'waiting_payment',createdAt:Date.now(),proofFileId:null};
     await saveDB(db);
-    return bot.editMessageText(`${hdr('INVOICE','🧾')}\n${bq(`ID: <code>${inv}</code>\nPaket: ${days} Hari\nTotal: Rp ${amount.toLocaleString()}\nTransfer: ${config.DANA_NAME} ${config.DANA_NUMBER}\n\nLangkah ACC rapih di halaman Order`)} \n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'✅ Sudah Transfer',callback_data:`confirm_${inv}`}],[{text:'◁ Kembali',callback_data:'menu_order'}]]}});
+    return bot.editMessageText(`🧾 <b>INVOICE</b>\n${bq(`ID: <code>${inv}</code>\nPaket: ${days} Hari\nTotal: Rp ${amount.toLocaleString()}\nTransfer: ${config.DANA_NAME} ${config.DANA_NUMBER}\n\nLangkah ACC rapih di halaman Order`)} \n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'✅ Sudah Transfer',callback_data:`confirm_${inv}`}],[{text:'◁ Kembali',callback_data:'menu_order'}]]}});
   }
 
   if(data.startsWith('confirm_')){
@@ -370,7 +366,7 @@ async function handleCallback(bot,db,query){
     pay.status='waiting_proof';
     db.users[String(chatId)].pendingDeposit=inv;
     await saveDB(db);
-    return bot.editMessageText(`${hdr('KONFIRMASI','📤')}\n${bq(`Invoice <code>${inv}</code>\nKirim foto bukti transfer sekarang`)} \n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML'});
+    return bot.editMessageText(`📤 <b>KONFIRMASI</b>\n${bq(`Invoice <code>${inv}</code>\nKirim foto bukti transfer sekarang`)} \n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML'});
   }
 
   if(data.startsWith('approve_')){
@@ -378,8 +374,8 @@ async function handleCallback(bot,db,query){
     const inv=data.split('approve_')[1];
     const pay=db.payments[inv];
     if(!pay) return bot.answerCallbackQuery(query.id,{text:'Tidak ditemukan'});
-    if(pay.status==='paid') return bot.editMessageText(`${hdr('Sudah Disetujui','✅')}\n${bq(`${inv} sudah disetujui`)} \n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML'});
-    if(isSuspiciousId(pay.userId)) return bot.editMessageText(`${hdr('Tidak Valid','⚠️')}\n${bq(`${inv} pengguna tidak valid`)} \n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML'});
+    if(pay.status==='paid') return bot.editMessageText(`✅ <b>Sudah Disetujui</b>\n${bq(`${inv} sudah disetujui`)} \n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML'});
+    if(isSuspiciousId(pay.userId)) return bot.editMessageText(`⚠️ <b>Tidak Valid</b>\n${bq(`${inv} pengguna tidak valid`)} \n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML'});
     pay.status='paid';
     const u=getUser(db,pay.userId);
     if(!u) return;
@@ -389,8 +385,8 @@ async function handleCallback(bot,db,query){
     if(!Array.isArray(db.stats.revenueHistory)) db.stats.revenueHistory=[];
     db.stats.revenueHistory.push({date:new Date().toISOString(),amount:pay.amount,invoice:inv,userId:pay.userId});
     await saveDB(db);
-    await bot.editMessageText(`${hdr('Disetujui','✅')}\n${bq(`${inv} untuk ${pay.userId}\nNotifikasi persegi terkirim`)} \n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML'});
-    try{ await bot.sendMessage(pay.userId, `${hdr('Disetujui','✅')}\n${bq(`Deposit ${inv} disetujui\nPaket ${pay.days} Hari sampai ${new Date(u.premiumUntil).toLocaleDateString('id-ID')}`)} \n${ftr()}`, {parse_mode:'HTML'}); }catch{}
+    await bot.editMessageText(`✅ <b>Disetujui</b>\n${bq(`${inv} untuk ${pay.userId}\nNotifikasi persegi terkirim`)} \n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML'});
+    try{ await bot.sendMessage(pay.userId, `✅ <b>Disetujui</b>\n${bq(`Deposit ${inv} disetujui\nPaket ${pay.days} Hari sampai ${new Date(u.premiumUntil).toLocaleDateString('id-ID')}`)} \n🚀 walzy`, {parse_mode:'HTML'}); }catch{}
     return;
   }
 
@@ -403,25 +399,25 @@ async function handleCallback(bot,db,query){
     const u=getUser(db,pay.userId);
     if(u) u.pendingDeposit=null;
     await saveDB(db);
-    await bot.editMessageText(`${hdr('Ditolak','❌')}\n${bq(`${inv} ditolak`)} \n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML'});
-    try{ await bot.sendMessage(pay.userId, `${hdr('Ditolak','❌')}\n${bq(`Deposit ${inv} ditolak`)} \n${ftr()}`, {parse_mode:'HTML'}); }catch{}
+    await bot.editMessageText(`❌ <b>Ditolak</b>\n${bq(`${inv} ditolak`)} \n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML'});
+    try{ await bot.sendMessage(pay.userId, `❌ <b>Ditolak</b>\n${bq(`Deposit ${inv} ditolak`)} \n🚀 walzy`, {parse_mode:'HTML'}); }catch{}
     return;
   }
 
   if(data==='owner_users' && isOwner(chatId)){
     const unique=getUniqueUsers(db.users);
-    let t=`${hdr('PENGGUNA - REAL-TIME','👥')}\n${bq(`Total valid: ${unique.length} - Anti double - Bukan gimmick`)} \n`;
+    let t=`👥 <b>PENGGUNA - REAL-TIME</b>\n${bq(`Total valid: ${unique.length} - Anti double - Bukan gimmick`)} \n`;
     unique.slice(-10).reverse().forEach(u=>{
       const icn=isPremium(u) ? '💎' : '🎫';
       t+=`${bq(`${icn} <code>${u.id}</code> | ${esc((u.first_name||'User').substring(0,12))} | ${u.totalFix||0} pesanan`)}\n`;
     });
-    t+=`\n${ftr()}`;
+    t+=`\n🚀 walzy`;
     return bot.editMessageText(t,{chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'◁ Kembali',callback_data:'menu_main'}]]}});
   }
 
   if(data==='owner_voucher' && isOwner(chatId)){
     const codes=Object.values(db.codes||{}).slice(-10);
-    let t=`${hdr('VOUCHER - BUAT KODE REDEEM','🎟️')}\n${bq(`Buat kode dengan hari & kuota berapa orang - Fitur lengkap owner\n\nFormat: /gen KODE HARI\nAtau via webapp - Buat dengan kuota`)} \n`;
+    let t=`🎟️ <b>VOUCHER - BUAT KODE REDEEM</b>\n${bq(`Buat kode dengan hari & kuota berapa orang - Fitur lengkap owner\n\nFormat: /gen KODE HARI\nAtau via webapp - Buat dengan kuota`)} \n`;
     if(codes.length>0){
       codes.forEach(c=>{
         const code=typeof c==='object' ? c.code : 'CODE';
@@ -431,7 +427,7 @@ async function handleCallback(bot,db,query){
         t+=`${bq(`🎫 ${code} - ${days}H | Kuota ${quota||'∞'} | Pakai ${used}`)}\n`;
       });
     }
-    t+=`\n${ftr()}`;
+    t+=`\n🚀 walzy`;
     return bot.editMessageText(t,{chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'🎨 Buka Studio Voucher',web_app:{url:`${process.env.PUBLIC_URL || ''}/webapp`}}],[{text:'◁ Kembali',callback_data:'menu_main'}]]}});
   }
 
@@ -442,20 +438,20 @@ async function handleCallback(bot,db,query){
       const d=new Date(p.createdAt); const now=new Date();
       return d.getDate()===now.getDate() && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
     }).length;
-    const txt=`${hdr('STATISTIK SUPER','📊')}\n${bq(`Pengguna Valid: <code>${validUsers.length}</code>\nPesanan: <code>${db.stats.totalFix||0}</code>\nHari Ini: <code>${todayOrders}</code> - Lebih bermanfaat\nSukses: <code>${db.stats.totalSuccess||0}</code>\nRasio: <code>${db.stats.totalFix ? Math.round((db.stats.totalSuccess/db.stats.totalFix)*100) : 0}%</code>\n\nReal-time bukan gimmick`)} \n${ftr()}`;
+    const txt=`📊 <b>STATISTIK SUPER</b>\n${bq(`Pengguna Valid: <code>${validUsers.length}</code>\nPesanan: <code>${db.stats.totalFix||0}</code>\nHari Ini: <code>${todayOrders}</code> - Lebih bermanfaat\nSukses: <code>${db.stats.totalSuccess||0}</code>\nRasio: <code>${db.stats.totalFix ? Math.round((db.stats.totalSuccess/db.stats.totalFix)*100) : 0}%</code>\n\nReal-time bukan gimmick`)} \n🚀 walzy`;
     return bot.editMessageText(txt,{chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'🎨 Buka Studio',web_app:{url:`${process.env.PUBLIC_URL || ''}/webapp`}}],[{text:'◁ Kembali',callback_data:'menu_main'}]]}});
   }
 
   if(data==='menu_broadcast' && isOwner(chatId)){
     db.users[String(chatId)].awaitingBroadcast=true;
     await saveDB(db);
-    return bot.editMessageText(`${hdr('SIARAN','📢')}\n${bq('Kirim teks untuk siaran ke semua pengguna valid - Real bukan gimmick')}\n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'Batal',callback_data:'cancel_action'}]]}});
+    return bot.editMessageText(`📢 <b>SIARAN</b>\n${bq('Kirim teks untuk siaran ke semua pengguna valid - Real bukan gimmick')}\n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'Batal',callback_data:'cancel_action'}]]}});
   }
 
   if(data==='user_contact_owner'){
     db.users[String(chatId)].awaitingSupport=true;
     await saveDB(db);
-    return bot.editMessageText(`${hdr('BANTUAN','💬')}\n${bq('Ketik keluhan - Maks 500 karakter')}\n${ftr()}`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'Batal',callback_data:'cancel_action'}]]}});
+    return bot.editMessageText(`💬 <b>BANTUAN</b>\n${bq('Ketik keluhan - Maks 500 karakter')}\n🚀 walzy`, {chat_id:chatId,message_id:msgId,parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:'Batal',callback_data:'cancel_action'}]]}});
   }
 }
 
