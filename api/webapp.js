@@ -1,8 +1,8 @@
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 
-  res.send(`<!DOCTYPE html>
+  const htmlContent = `<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -532,17 +532,17 @@ module.exports = async (req, res) => {
 <input type="file" id="proofFileInput" accept="image/*" style="display:none" onchange="submitProofFile(event)">
 
 <script>
-  let tg = window.Telegram ? window.Telegram.WebApp : null;
+  var tg = window.Telegram ? window.Telegram.WebApp : null;
   if (tg) { tg.ready(); tg.expand(); }
 
-  let currentUserId = null;
-  let activeInvoiceId = null;
-  let isUserOwner = false;
-  let toastTimeout = null;
-  let isSpinning = false;
-  let currentWheelRotation = 0;
+  var currentUserId = null;
+  var activeInvoiceId = null;
+  var isUserOwner = false;
+  var toastTimeout = null;
+  var isSpinning = false;
+  var currentWheelRotation = 0;
 
-  const wheelPrizes = [
+  var wheelPrizes = [
     { label: "ZONK ❌", color: "#f43f5e" },
     { label: "+30 PTS 🪙", color: "#3b82f6" },
     { label: "+50 PTS 🪙", color: "#8b5cf6" },
@@ -552,19 +552,19 @@ module.exports = async (req, res) => {
   ];
 
   function drawWheel() {
-    const canvas = document.getElementById('spinCanvas');
+    var canvas = document.getElementById('spinCanvas');
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const numSlices = wheelPrizes.length;
-    const sliceAngle = (2 * Math.PI) / numSlices;
+    var ctx = canvas.getContext('2d');
+    var numSlices = wheelPrizes.length;
+    var sliceAngle = (2 * Math.PI) / numSlices;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    const radius = cx - 10;
+    var cx = canvas.width / 2;
+    var cy = canvas.height / 2;
+    var radius = cx - 10;
 
-    for (let i = 0; i < numSlices; i++) {
-      const angle = i * sliceAngle;
+    for (var i = 0; i < numSlices; i++) {
+      var angle = i * sliceAngle;
       ctx.beginPath();
       ctx.fillStyle = wheelPrizes[i].color;
       ctx.moveTo(cx, cy);
@@ -590,7 +590,7 @@ module.exports = async (req, res) => {
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
       currentUserId = tg.initDataUnsafe.user.id;
     } else {
-      let sp = new URLSearchParams(window.location.search);
+      var sp = new URLSearchParams(window.location.search);
       currentUserId = sp.get('user_id') || sp.get('userId');
     }
 
@@ -605,11 +605,11 @@ module.exports = async (req, res) => {
 
   async function loadUserData() {
     try {
-      let res = await fetch('/api/user?user_id=' + currentUserId);
-      let data = await res.json();
+      var res = await fetch('/api/user?user_id=' + currentUserId);
+      var data = await res.json();
 
       if (data.ok) {
-        let u = data.user;
+        var u = data.user;
         isUserOwner = u.isOwner;
 
         document.getElementById('uName').textContent = u.first_name;
@@ -622,14 +622,14 @@ module.exports = async (req, res) => {
         document.getElementById('checkinPointsVal').textContent = u.points + ' PTS';
         document.getElementById('refUrlInput').value = u.referralLink;
 
-        let spinBtn = document.getElementById('spinBtn');
+        var spinBtn = document.getElementById('spinBtn');
         spinBtn.disabled = !u.canSpin;
 
-        let chkBtn = document.getElementById('checkinBtn');
+        var chkBtn = document.getElementById('checkinBtn');
         chkBtn.disabled = !u.canCheckin;
 
-        for (let i = 1; i <= 7; i++) {
-          let el = document.getElementById('stDay' + i);
+        for (var i = 1; i <= 7; i++) {
+          var el = document.getElementById('stDay' + i);
           if (i <= u.checkinStreak) el.classList.add('active');
           else el.classList.remove('active');
         }
@@ -647,41 +647,39 @@ module.exports = async (req, res) => {
           document.getElementById('ownerNavBar').style.display = 'none';
         }
 
-        let invBox = document.getElementById('activeInvoiceBox');
-        let buyBtns = document.querySelectorAll('.btn-buy-pkg');
+        var invBox = document.getElementById('activeInvoiceBox');
+        var buyBtns = document.querySelectorAll('.btn-buy-pkg');
 
         if (data.currentInvoice) {
-          let inv = data.currentInvoice;
+          var inv = data.currentInvoice;
           activeInvoiceId = inv.id;
 
-          buyBtns.forEach(btn => btn.disabled = true);
+          buyBtns.forEach(function(btn) { btn.disabled = true; });
 
-          invBox.innerHTML = \`
-            <div class="glass-card" style="border-color:var(--accent-amber)">
-              <div style="font-weight:700;font-size:14px;color:var(--accent-amber)">Invoice Aktif: \${inv.id}</div>
-              <div style="font-size:12px;margin-top:4px">Paket \${inv.days} Hari - \${inv.amountFormatted || 'Rp ' + inv.amount}</div>
-              <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Status: <b>\${inv.status === 'waiting_approval' ? 'Menunggu Konfirmasi Owner' : 'Belum Dibayar / Upload Bukti'}</b></div>
-              
-              \${inv.proofImage ? \`
-                <div class="proof-preview-container">
-                  <img src="\${inv.proofImage}" class="proof-preview-img" onclick="openZoomModal('\${inv.proofImage}')">
-                  <div class="zoom-btn-overlay" onclick="openZoomModal('\${inv.proofImage}')">
-                    <svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                    Perbesar Foto Fullscreen
-                  </div>
-                </div>
-              \` : ''}
+          var proofHtml = inv.proofImage ? 
+            '<div class="proof-preview-container">' +
+              '<img src="' + inv.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\'' + inv.proofImage + '\')">' +
+              '<div class="zoom-btn-overlay" onclick="openZoomModal(\'' + inv.proofImage + '\')">' +
+                '<svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
+                'Perbesar Foto Fullscreen' +
+              '</div>' +
+            '</div>' : '';
 
-              <div style="display:flex;gap:8px;margin-top:12px">
-                <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="triggerUploadProof()">\${inv.proofImage ? 'Ganti Foto Bukti' : 'Upload Foto Bukti'}</button>
-                <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="cancelOrder('\${inv.id}', this)">Batalkan Pembelian</button>
-              </div>
-            </div>
-          \`;
+          invBox.innerHTML = 
+            '<div class="glass-card" style="border-color:var(--accent-amber)">' +
+              '<div style="font-weight:700;font-size:14px;color:var(--accent-amber)">Invoice Aktif: ' + inv.id + '</div>' +
+              '<div style="font-size:12px;margin-top:4px">Paket ' + inv.days + ' Hari - ' + (inv.amountFormatted || ('Rp ' + inv.amount)) + '</div>' +
+              '<div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Status: <b>' + (inv.status === 'waiting_approval' ? 'Menunggu Konfirmasi Owner' : 'Belum Dibayar / Upload Bukti') + '</b></div>' +
+              proofHtml +
+              '<div style="display:flex;gap:8px;margin-top:12px">' +
+                '<button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="triggerUploadProof()">' + (inv.proofImage ? 'Ganti Foto Bukti' : 'Upload Foto Bukti') + '</button>' +
+                '<button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="cancelOrder(\'' + inv.id + '\', this)">Batalkan Pembelian</button>' +
+              '</div>' +
+            '</div>';
         } else {
           activeInvoiceId = null;
           invBox.innerHTML = '';
-          buyBtns.forEach(btn => btn.disabled = false);
+          buyBtns.forEach(function(btn) { btn.disabled = false; });
         }
 
         document.getElementById('loader').style.display = 'none';
@@ -704,8 +702,8 @@ module.exports = async (req, res) => {
 
   function switchTab(tabName, event) {
     if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-    document.querySelectorAll('#viewUserArea .view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('#userNavBar .nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#viewUserArea .view').forEach(function(v) { v.classList.remove('active'); });
+    document.querySelectorAll('#userNavBar .nav-tab').forEach(function(t) { t.classList.remove('active'); });
 
     document.getElementById('view' + tabName).classList.add('active');
     if (event && event.currentTarget) event.currentTarget.classList.add('active');
@@ -713,25 +711,26 @@ module.exports = async (req, res) => {
 
   function switchOwnerTab(tabName, event) {
     if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-    document.querySelectorAll('#viewOwnerArea .view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('#ownerNavBar .nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#viewOwnerArea .view').forEach(function(v) { v.classList.remove('active'); });
+    document.querySelectorAll('#ownerNavBar .nav-tab').forEach(function(t) { t.classList.remove('active'); });
 
     document.getElementById('oTab' + tabName).classList.add('active');
     if (event && event.currentTarget) event.currentTarget.classList.add('active');
   }
 
-  function showToast(title, msg, type = 'info') {
-    let t = document.getElementById('toast');
-    let iconContainer = document.getElementById('toastIcon');
-    let progress = document.getElementById('toastProgress');
+  function showToast(title, msg, type) {
+    type = type || 'info';
+    var t = document.getElementById('toast');
+    var iconContainer = document.getElementById('toastIcon');
+    var progress = document.getElementById('toastProgress');
     
-    let colors = {
+    var colors = {
       success: 'var(--accent-emerald)',
       error: 'var(--accent-rose)',
       warning: 'var(--accent-amber)',
       info: 'var(--accent-blue)'
     };
-    let color = colors[type] || colors.info;
+    var color = colors[type] || colors.info;
 
     t.style.borderColor = color;
     iconContainer.style.color = color;
@@ -743,7 +742,7 @@ module.exports = async (req, res) => {
     if (progress) {
       progress.style.transition = 'none';
       progress.style.width = '100%';
-      setTimeout(() => {
+      setTimeout(function() {
         progress.style.transition = 'width 3.5s linear';
         progress.style.width = '0%';
       }, 50);
@@ -751,7 +750,7 @@ module.exports = async (req, res) => {
 
     t.classList.add('show');
     if (toastTimeout) clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => { t.classList.remove('show'); }, 3500);
+    toastTimeout = setTimeout(function() { t.classList.remove('show'); }, 3500);
   }
 
   async function triggerSpin(btn) {
@@ -760,24 +759,24 @@ module.exports = async (req, res) => {
     if (btn) btn.disabled = true;
 
     try {
-      let res = await fetch('/api/spin', {
+      var res = await fetch('/api/spin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId })
       });
-      let data = await res.json();
+      var data = await res.json();
 
       if (data.ok) {
-        const pIndex = data.prizeIndex !== undefined ? data.prizeIndex : 0;
-        const numSlices = wheelPrizes.length;
-        const sliceDeg = 360 / numSlices;
-        const targetDeg = 360 - (pIndex * sliceDeg + sliceDeg / 2) - 90;
+        var pIndex = data.prizeIndex !== undefined ? data.prizeIndex : 0;
+        var numSlices = wheelPrizes.length;
+        var sliceDeg = 360 / numSlices;
+        var targetDeg = 360 - (pIndex * sliceDeg + sliceDeg / 2) - 90;
 
         currentWheelRotation += (360 * 5) + (targetDeg - (currentWheelRotation % 360));
-        const canvas = document.getElementById('spinCanvas');
-        canvas.style.transform = `rotate(\${currentWheelRotation}deg)`;
+        var canvas = document.getElementById('spinCanvas');
+        canvas.style.transform = 'rotate(' + currentWheelRotation + 'deg)';
 
-        setTimeout(() => {
+        setTimeout(function() {
           showToast(data.prize.type === 'zonk' ? 'Informasi Spin' : 'Selamat!', data.message, data.prize.type === 'zonk' ? 'warning' : 'success');
           loadUserData();
           isSpinning = false;
@@ -794,15 +793,15 @@ module.exports = async (req, res) => {
   }
 
   async function triggerCheckin(btn) {
-    let orig = btn ? btn.innerHTML : '';
+    var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Proses Check-in...'; }
     try {
-      let res = await fetch('/api/checkin', {
+      var res = await fetch('/api/checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId })
       });
-      let data = await res.json();
+      var data = await res.json();
       showToast(data.ok ? 'Check-in Berhasil' : 'Informasi', data.message, data.ok ? 'success' : 'warning');
       if (data.ok) loadUserData();
     } catch (e) {
@@ -813,15 +812,15 @@ module.exports = async (req, res) => {
   }
 
   async function redeemPoints(option, btn) {
-    let orig = btn ? btn.innerHTML : '';
+    var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Proses...'; }
     try {
-      let res = await fetch('/api/redeem_points', {
+      var res = await fetch('/api/redeem_points', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: currentUserId, option })
+        body: JSON.stringify({ user_id: currentUserId, option: option })
       });
-      let data = await res.json();
+      var data = await res.json();
       showToast(data.ok ? 'Point Vault' : 'Gagal Transaksi', data.message, data.ok ? 'success' : 'error');
       if (data.ok) loadUserData();
     } catch (e) {
@@ -832,15 +831,15 @@ module.exports = async (req, res) => {
   }
 
   async function createOrder(days, amount, btn) {
-    let orig = btn ? btn.innerHTML : '';
+    var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
     try {
-      let res = await fetch('/api/order', {
+      var res = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: currentUserId, days, amount })
+        body: JSON.stringify({ user_id: currentUserId, days: days, amount: amount })
       });
-      let data = await res.json();
+      var data = await res.json();
       if (data.ok) {
         showToast('Invoice Dibuat', 'ID: ' + (data.invoice.invoice || data.invoice.id), 'success');
         loadUserData();
@@ -855,15 +854,15 @@ module.exports = async (req, res) => {
   }
 
   async function cancelOrder(invoiceId, btn) {
-    let orig = btn ? btn.innerHTML : '';
+    var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Membatalkan...'; }
     try {
-      let res = await fetch('/api/cancel_order', {
+      var res = await fetch('/api/cancel_order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId, invoice: invoiceId })
       });
-      let data = await res.json();
+      var data = await res.json();
       showToast(data.ok ? 'Dibatalkan' : 'Gagal', data.message, data.ok ? 'success' : 'error');
       if (data.ok) loadUserData();
     } catch (e) {
@@ -878,23 +877,23 @@ module.exports = async (req, res) => {
   }
 
   function submitProofFile(event) {
-    let file = event.target.files[0];
+    var file = event.target.files[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
       return showToast('Error Upload', 'Bukti pembayaran harus berupa file foto!', 'error');
     }
 
-    let reader = new FileReader();
+    var reader = new FileReader();
     reader.onload = async function(e) {
-      let base64 = e.target.result;
+      var base64 = e.target.result;
       try {
-        let res = await fetch('/api/upload_proof', {
+        var res = await fetch('/api/upload_proof', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: currentUserId, invoice: activeInvoiceId, image_data: base64 })
         });
-        let data = await res.json();
+        var data = await res.json();
         showToast(data.ok ? 'Sukses Upload' : 'Gagal Upload', data.message, data.ok ? 'success' : 'error');
         if (data.ok) loadUserData();
       } catch (err) {
@@ -905,19 +904,19 @@ module.exports = async (req, res) => {
   }
 
   async function claimVoucher(btn) {
-    let code = document.getElementById('vCodeInput').value.trim();
+    var code = document.getElementById('vCodeInput').value.trim();
     if (!code) return showToast('Peringatan', 'Masukkan kode voucher promo!', 'warning');
 
-    let orig = btn ? btn.innerHTML : '';
+    var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Mengklaim...'; }
 
     try {
-      let res = await fetch('/api/redeem', {
+      var res = await fetch('/api/redeem', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: currentUserId, code })
+        body: JSON.stringify({ user_id: currentUserId, code: code })
       });
-      let data = await res.json();
+      var data = await res.json();
       showToast(data.ok ? 'Sukses Klaim' : 'Gagal Klaim', data.message, data.ok ? 'success' : 'error');
       if (data.ok) {
         document.getElementById('vCodeInput').value = '';
@@ -931,7 +930,7 @@ module.exports = async (req, res) => {
   }
 
   function copyRefLink() {
-    let input = document.getElementById('refUrlInput');
+    var input = document.getElementById('refUrlInput');
     input.select();
     document.execCommand('copy');
     showToast('Berhasil Disalin', 'Link referral tersalin ke clipboard!', 'success');
@@ -939,8 +938,8 @@ module.exports = async (req, res) => {
 
   async function loadOwnerData() {
     try {
-      let res = await fetch('/api/stats?user_id=' + currentUserId);
-      let d = await res.json();
+      var res = await fetch('/api/stats?user_id=' + currentUserId);
+      var d = await res.json();
 
       if (d.ok) {
         document.getElementById('oRev').textContent = 'Rp ' + (d.revenue || 0).toLocaleString('id-ID');
@@ -948,59 +947,61 @@ module.exports = async (req, res) => {
         document.getElementById('oVip').textContent = d.premium || 0;
         document.getElementById('oFix').textContent = d.totalFix || 0;
 
-        let pendingList = document.getElementById('oPendingList');
+        var pendingList = document.getElementById('oPendingList');
         if (d.pendingPayments && d.pendingPayments.length > 0) {
-          pendingList.innerHTML = d.pendingPayments.map(p => \`
-            <div class="glass-card">
-              <div style="font-weight:700;font-size:13px">Invoice: \${p.id}</div>
-              <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">User: \${p.userId} | Paket: \${p.days} Hari (\${p.amountFormatted || 'Rp ' + p.amount})</div>
-              \${p.proofImage ? \`
-                <div class="proof-preview-container">
-                  <img src="\${p.proofImage}" class="proof-preview-img" onclick="openZoomModal('\${p.proofImage}')">
-                  <div class="zoom-btn-overlay" onclick="openZoomModal('\${p.proofImage}')">
-                    <svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                    Lihat Foto Fullscreen
-                  </div>
-                </div>
-              \` : '<div style="font-size:11px;color:var(--accent-rose);margin-top:4px">Belum upload foto bukti.</div>'}
-              <div style="display:flex;gap:8px;margin-top:10px">
-                <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="ownerAct('\${p.id}', 'approve', this)">Setujui Pembayaran</button>
-                <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="ownerAct('\${p.id}', 'reject', this)">Tolak</button>
-              </div>
-            </div>
-          \`).join('');
+          pendingList.innerHTML = d.pendingPayments.map(function(p) {
+            var imgHtml = p.proofImage ? 
+              '<div class="proof-preview-container">' +
+                '<img src="' + p.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
+                '<div class="zoom-btn-overlay" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
+                  '<svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
+                  'Lihat Foto Fullscreen' +
+                '</div>' +
+              '</div>' : '<div style="font-size:11px;color:var(--accent-rose);margin-top:4px">Belum upload foto bukti.</div>';
+
+            return '<div class="glass-card">' +
+              '<div style="font-weight:700;font-size:13px">Invoice: ' + p.id + '</div>' +
+              '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px">User: ' + p.userId + ' | Paket: ' + p.days + ' Hari (' + (p.amountFormatted || ('Rp ' + p.amount)) + ')</div>' +
+              imgHtml +
+              '<div style="display:flex;gap:8px;margin-top:10px">' +
+                '<button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="ownerAct(\'' + p.id + '\', \'approve\', this)">Setujui Pembayaran</button>' +
+                '<button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="ownerAct(\'' + p.id + '\', \'reject\', this)">Tolak</button>' +
+              '</div>' +
+            '</div>';
+          }).join('');
         } else {
           pendingList.innerHTML = '<div style="font-size:12px;color:var(--text-secondary)">Tidak ada pending deposit.</div>';
         }
 
-        let userList = document.getElementById('oUserList');
+        var userList = document.getElementById('oUserList');
         if (d.recentUsers && d.recentUsers.length > 0) {
-          userList.innerHTML = d.recentUsers.slice(0, 15).map(u => \`
-            <div class="glass-card" style="padding:12px">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <div>
-                  <div style="font-weight:700;font-size:13px">\${u.first_name || 'User'}</div>
-                  <div style="font-size:11px;color:var(--text-secondary)">ID: \${u.id} | Order: \${u.totalFix || 0}</div>
-                </div>
-                <span class="user-badge">\${u.premiumUntil && u.premiumUntil > Date.now() ? 'VIP' : 'Free'}</span>
-              </div>
-            </div>
-          \`).join('');
+          userList.innerHTML = d.recentUsers.slice(0, 15).map(function(u) {
+            var isVip = u.premiumUntil && u.premiumUntil > Date.now();
+            return '<div class="glass-card" style="padding:12px">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                '<div>' +
+                  '<div style="font-weight:700;font-size:13px">' + (u.first_name || 'User') + '</div>' +
+                  '<div style="font-size:11px;color:var(--text-secondary)">ID: ' + u.id + ' | Order: ' + (u.totalFix || 0) + '</div>' +
+                '</div>' +
+                '<span class="user-badge">' + (isVip ? 'VIP' : 'Free') + '</span>' +
+              '</div>' +
+            '</div>';
+          }).join('');
         }
 
-        let vList = document.getElementById('oVoucherList');
+        var vList = document.getElementById('oVoucherList');
         if (d.codes && d.codes.length > 0) {
-          vList.innerHTML = d.codes.map(c => \`
-            <div class="glass-card" style="padding:12px">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <div>
-                  <div style="font-weight:700;font-size:13px">\${c.code}</div>
-                  <div style="font-size:11px;color:var(--text-secondary)">\${c.days} Hari | Terpakai: \${c.used || 0}/\${c.quota || '∞'}</div>
-                </div>
-                <button class="btn-custom" style="width:auto;padding:6px 12px;font-size:11px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="deleteVoucher('\${c.code}', this)">Hapus</button>
-              </div>
-            </div>
-          \`).join('');
+          vList.innerHTML = d.codes.map(function(c) {
+            return '<div class="glass-card" style="padding:12px">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                '<div>' +
+                  '<div style="font-weight:700;font-size:13px">' + c.code + '</div>' +
+                  '<div style="font-size:11px;color:var(--text-secondary)">' + c.days + ' Hari | Terpakai: ' + (c.used || 0) + '/' + (c.quota || '∞') + '</div>' +
+                '</div>' +
+                '<button class="btn-custom" style="width:auto;padding:6px 12px;font-size:11px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="deleteVoucher(\'' + c.code + '\', this)">Hapus</button>' +
+              '</div>' +
+            '</div>';
+          }).join('');
         } else {
           vList.innerHTML = '<div style="font-size:12px;color:var(--text-secondary)">Belum ada voucher aktif.</div>';
         }
@@ -1011,12 +1012,12 @@ module.exports = async (req, res) => {
   async function ownerAct(invoice, action, btn) {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
     try {
-      let res = await fetch('/api/owner_action', {
+      var res = await fetch('/api/owner_action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id: currentUserId, invoice, action })
+        body: JSON.stringify({ owner_id: currentUserId, invoice: invoice, action: action })
       });
-      let data = await res.json();
+      var data = await res.json();
       showToast(data.ok ? 'Sukses' : 'Gagal', data.message, data.ok ? 'success' : 'error');
       if (data.ok) loadOwnerData();
     } catch (e) {
@@ -1025,20 +1026,20 @@ module.exports = async (req, res) => {
   }
 
   async function createVoucher(btn) {
-    let code = document.getElementById('vGenCode').value.trim();
-    let days = document.getElementById('vGenDays').value;
-    let quota = document.getElementById('vGenQuota').value;
+    var code = document.getElementById('vGenCode').value.trim();
+    var days = document.getElementById('vGenDays').value;
+    var quota = document.getElementById('vGenQuota').value;
 
     if (!code || !days) return showToast('Error', 'Lengkapi kode dan durasi hari!', 'warning');
     if (btn) { btn.disabled = true; btn.innerHTML = 'Membuat...'; }
 
     try {
-      let res = await fetch('/api/create_code', {
+      var res = await fetch('/api/create_code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id: currentUserId, code, days, quota })
+        body: JSON.stringify({ owner_id: currentUserId, code: code, days: days, quota: quota })
       });
-      let data = await res.json();
+      var data = await res.json();
       showToast(data.ok ? 'Voucher Dibuat' : 'Gagal', data.message, data.ok ? 'success' : 'error');
       if (data.ok) {
         document.getElementById('vGenCode').value = '';
@@ -1056,12 +1057,12 @@ module.exports = async (req, res) => {
   async function deleteVoucher(code, btn) {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Hapus...'; }
     try {
-      let res = await fetch('/api/delete_code', {
+      var res = await fetch('/api/delete_code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id: currentUserId, code })
+        body: JSON.stringify({ owner_id: currentUserId, code: code })
       });
-      let data = await res.json();
+      var data = await res.json();
       showToast(data.ok ? 'Voucher Dihapus' : 'Gagal', data.message, data.ok ? 'success' : 'error');
       if (data.ok) loadOwnerData();
     } catch (e) {
@@ -1070,17 +1071,17 @@ module.exports = async (req, res) => {
   }
 
   async function sendBroadcast(btn) {
-    let text = document.getElementById('bcTextInput').value.trim();
+    var text = document.getElementById('bcTextInput').value.trim();
     if (!text) return showToast('Error', 'Pesan broadcast tidak boleh kosong!', 'warning');
     if (btn) { btn.disabled = true; btn.innerHTML = 'Mengirim Broadcast...'; }
 
     try {
-      let res = await fetch('/api/broadcast', {
+      var res = await fetch('/api/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id: currentUserId, text })
+        body: JSON.stringify({ owner_id: currentUserId, text: text })
       });
-      let data = await res.json();
+      var data = await res.json();
 
       if (data.ok) {
         showToast('Broadcast Selesai', data.message, 'success');
@@ -1099,5 +1100,7 @@ module.exports = async (req, res) => {
   window.onload = initApp;
 </script>
 </body>
-</html>`);
+</html>`;
+
+  res.send(htmlContent);
 };
