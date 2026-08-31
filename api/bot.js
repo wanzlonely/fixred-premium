@@ -5,10 +5,12 @@ const rateLimitMap = new Map();
 const userState = new Map();
 
 function isOwner(id) {
+  if (!config.OWNER_IDS || !Array.isArray(config.OWNER_IDS)) return false;
   return config.OWNER_IDS.map(String).includes(String(id));
 }
 
 function isSuspiciousId(id) {
+  if (!id) return true;
   const s = String(id);
   const n = Number(id);
   if (!n || n <= 0 || s.startsWith('-')) return true;
@@ -63,40 +65,57 @@ function getPremiumLeft(u) {
   return Math.ceil((u.premiumUntil - Date.now()) / 86400000);
 }
 
-function getOwnerMenu(user) {
-  const webappUrl = process.env.PUBLIC_URL ? `${process.env.PUBLIC_URL}/webapp` : '';
+function getWebappUrl(req) {
+  if (config.PUBLIC_URL && config.PUBLIC_URL.startsWith('http')) {
+    return config.PUBLIC_URL.endsWith('/') ? `${config.PUBLIC_URL}webapp` : `${config.PUBLIC_URL}/webapp`;
+  }
+  const host = req.headers.host || req.headers['x-forwarded-host'] || 'localhost';
+  const proto = req.headers['x-forwarded-proto'] || 'https';
+  return `${proto}://${host}/webapp`;
+}
 
-  const text = `<blockquote>👑 <b>WALZY EXECUTIVE STUDIO ADMIN</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n🛡️ <b>OPERATOR SYSTEM STATUS</b>\n├ <b>Operator:</b> <b>${esc(user.first_name)}</b>\n├ <b>Access Tier:</b> <code>SUPER ADMINISTRATOR</code>\n└ <b>Server Link:</b> 🟢 <code>ONLINE & ENCRYPTED</code>\n\n📑 <b>STUDIO MANAGEMENT PORTAL</b>\nSeluruh manajemen transaksi, pengguna, pembuatan voucher, pengiriman broadcast massal, dan analitik pendapatan diakses langsung via WebApp.\n\n🕒 <i>Server Sync: ${new Date().toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</i></blockquote>`;
+function getOwnerMenu(user, chatId, db, webappUrl) {
+  const allPayments = Object.values(db.payments || {});
+  const pendingCount = allPayments.filter(p => p.status === 'waiting_approval' || p.status === 'pending').length;
+  const validUsersCount = Object.keys(db.users || {}).length;
+  const totalRev = (db.stats && db.stats.revenue) ? db.stats.revenue : 0;
+
+  const text = `<blockquote>👑 <b>WALZY EXECUTIVE STUDIO ADMIN</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n🛡️ <b>STATUS OPERATOR PANEL</b>\n├ <b>Operator Admin:</b> <b>${esc(user.first_name)}</b>\n├ <b>ID Akses:</b> <code>${chatId}</code>\n├ <b>Hak Akses:</b> <code>SUPER ADMINISTRATOR</code>\n└ <b>Status Server:</b> 🟢 <code>ONLINE & ENCRYPTED</code>\n\n📊 <b>RINGKASAN SISTEM TOKO</b>\n├ 🪙 <b>Total Revenue:</b> <code>Rp ${totalRev.toLocaleString('id-ID')}</code>\n├ 👥 <b>Total Pengguna:</b> <code>${validUsersCount} User</code>\n└ ⏳ <b>Pending Deposit:</b> <code>${pendingCount} Transaksi</code>\n\n📑 <b>PANDUAN ADMIN STUDIO</b>\nKelola pesanan masuk, verifikasi bukti pembayaran, generator kode voucher promo, serta broadcast pesan massal langsung dari Studio Mini Web.</blockquote>`;
 
   const keyboard = [
     [
-      { text: '🛠️ Fix Merah', callback_data: 'fix_merah' },
-      { text: '🌐 Mini Web', web_app: { url: webappUrl } }
+      { text: '🌐 Buka Mini Web Studio Admin', web_app: { url: webappUrl } }
     ],
     [
-      { text: '❓ Bantuan', callback_data: 'help' },
-      { text: '💬 Hubungi Owner', callback_data: 'contact_owner' }
+      { text: `📥 Cek Pending (${pendingCount})`, callback_data: 'owner_check_pending' },
+      { text: '🛠️ Fix Merah', callback_data: 'fix_merah' }
+    ],
+    [
+      { text: '❓ Bantuan Admin', callback_data: 'help' },
+      { text: '💬 Hubungi CS', callback_data: 'contact_owner' }
     ]
   ];
 
   return { text, opts: { parse_mode: 'HTML', reply_markup: { inline_keyboard: keyboard } } };
 }
 
-function getUserMenu(user, chatId) {
+function getUserMenu(user, chatId, webappUrl) {
   const rnk = getRank(user.referralCount || 0);
   const isPrem = isPremium(user);
   const statusBadge = isPrem ? `💎 <b>VIP MEMBER (${getPremiumLeft(user)} Hari)</b>` : `🎫 <b>FREE MEMBER</b>`;
-  const webappUrl = process.env.PUBLIC_URL ? `${process.env.PUBLIC_URL}/webapp` : '';
 
-  const text = `<blockquote>⚡ <b>WALZY PLATFORM NEXT-GEN</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n👤 <b>IDENTITAS AKUN</b>\n├ <b>Nama:</b> <b>${esc(user.first_name)}</b>\n├ <b>ID Akses:</b> <code>${chatId}</code>\n├ <b>Peringkat:</b> ${rnk.icon} <code>${rnk.name}</code>\n└ <b>Saldo Poin:</b> 🪙 <code>${user.points || 0} PTS</code>\n\n🛡️ <b>STATUS HAK AKSES</b>\n├ <b>Tier:</b> ${statusBadge}\n└ <b>Sistem:</b> 🟢 <code>ONLINE & SYNCED</code>\n\n💡 <i>Gunakan menu di bawah ini untuk transaksi dan memilih layanan toko.</i></blockquote>`;
+  const text = `<blockquote>⚡ <b>WALZY PLATFORM STORE</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n👤 <b>IDENTITAS AKUN</b>\n├ <b>Nama Pengguna:</b> <b>${esc(user.first_name)}</b>\n├ <b>ID Telegram:</b> <code>${chatId}</code>\n├ <b>Peringkat:</b> ${rnk.icon} <code>${rnk.name}</code>\n└ <b>Saldo Poin:</b> 🪙 <code>${user.points || 0} PTS</code>\n\n🛡️ <b>STATUS LAYANAN VIP</b>\n├ <b>Status Akun:</b> ${statusBadge}\n└ <b>Sistem Database:</b> 🟢 <code>ONLINE</code>\n\n💡 <i>Klik tombol <b>Mini Web Walzy Store</b> di bawah untuk membuka Katalog VIP, Daily Check-in, & Spin Wheel!</i></blockquote>`;
 
   const keyboard = [
     [
-      { text: '🛠️ Fix Merah', callback_data: 'fix_merah' },
-      { text: '🌐 Mini Web', web_app: { url: webappUrl } }
+      { text: '🌐 Buka Mini Web Walzy Store', web_app: { url: webappUrl } }
     ],
     [
-      { text: '❓ Bantuan', callback_data: 'help' },
+      { text: '🛠️ Fix Merah Sesi', callback_data: 'fix_merah' },
+      { text: '🎁 Daily Check-in', callback_data: 'user_checkin_info' }
+    ],
+    [
+      { text: '❓ Pusat Bantuan', callback_data: 'help' },
       { text: '💬 Hubungi Owner', callback_data: 'contact_owner' }
     ]
   ];
@@ -105,6 +124,8 @@ function getUserMenu(user, chatId) {
 }
 
 module.exports = async (req, res) => {
+  if (req.method !== 'POST') return res.status(200).send('Bot API Ready');
+
   const TelegramBot = require('node-telegram-bot-api');
   const bot = new TelegramBot(config.BOT_TOKEN);
 
@@ -112,123 +133,148 @@ module.exports = async (req, res) => {
     const db = await loadDB();
     ensureDB(db);
 
-    if (req.method === 'POST') {
-      const update = req.body;
-      if (!update) return res.status(200).send('OK');
+    const update = req.body;
+    if (!update) return res.status(200).send('OK');
 
-      if (update.callback_query) {
-        const q = update.callback_query;
-        const qId = q.id;
-        const uid = q.from.id;
-        const data = q.data;
-        const webappUrl = process.env.PUBLIC_URL ? `${process.env.PUBLIC_URL}/webapp` : '';
+    const webappUrl = getWebappUrl(req);
 
-        if (data === 'fix_merah') {
-          await bot.answerCallbackQuery(qId, { text: '🔄 Memproses Perbaikan Kuota & Sesi...', show_alert: true });
-          await bot.sendMessage(uid, `<blockquote>🛠️ <b>SISTEM PERBAIKAN MERAH</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n✅ Perbaikan kuota & sinkronisasi sesi berhasil diproses secara otomatis. Sesi akun Anda kini telah diperbarui.</blockquote>`, { parse_mode: 'HTML' });
-          return res.status(200).send('OK');
-        }
+    if (update.callback_query) {
+      const q = update.callback_query;
+      const qId = q.id;
+      const uid = q.from.id;
+      const data = q.data;
 
-        if (data === 'help') {
-          await bot.answerCallbackQuery(qId, { text: '✨ Membuka Pusat Bantuan', show_alert: false });
-          await bot.sendMessage(uid, `<blockquote>❓ <b>PUSAT BANTUAN & PANDUAN LENGKAP</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nWelcome to <b>Walzy Store Platform</b>! Berikut adalah panduan lengkap penggunaan bot & WebApp:\n\n📍 <b>1. CARA BELI AKSES VIP:</b>\n• Buka menu <b>Mini Web</b> di bawah.\n• Masuk ke tab <b>Order VIP</b>.\n• Pilih paket VIP yang Anda inginkan (3, 5, 7, 14, atau 30 Hari).\n• Selesaikan pembayaran sesuai nominal & upload foto bukti transfer.\n• Tunggu verifikasi otomatis dari Owner.\n\n🎟️ <b>2. CARA REDEEM VOUCHER PROMO:</b>\n• Buka <b>Mini Web</b> -> Halaman <b>Home</b>.\n• Masukkan kode voucher pada kolom "Redeem Kode Voucher".\n• Klik "Tukarkan Kode" untuk mengaktifkan VIP gratis/bonus.\n\n🎁 <b>3. DAILY CHECK-IN & SPIN WHEEL:</b>\n• Buka <b>Mini Web</b> -> Tab <b>Check-in</b> untuk klaim poin harian bertingkat.\n• Poin yang terkumpul bisa ditukarkan menjadi Durasi VIP Gratis di Point Shop!\n• Putar <b>Spin Wheel Hadiah</b> di halaman Home setiap hari.\n\n💬 <b>4. BANTUAN OPERATOR & CS:</b>\n• Jika ada kendala transaksi atau pertanyaan, tekan tombol <b>Hubungi Owner</b> di bot.\n\n<i>Klik tombol 🌐 <b>Buka Mini Web Walzy</b> di bawah ini untuk memulai!</i></blockquote>`, {
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [[{ text: '🌐 Buka Mini Web Walzy', web_app: { url: webappUrl } }]]
-            }
-          });
-          return res.status(200).send('OK');
-        }
-
-        if (data === 'contact_owner') {
-          await bot.answerCallbackQuery(qId, { text: '💬 Mode Hubungi Owner Aktif', show_alert: false });
-          userState.set(String(uid), { action: 'awaiting_owner_msg' });
-          await bot.sendMessage(uid, `<blockquote>💬 <b>HUBUNGI OWNER / CUSTOMER SERVICE</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSilakan ketikkan pesan, pertanyaan, atau laporan kendala Anda di bawah ini.\nPesan Anda akan dikirimkan langsung ke Owner.</blockquote>`, { parse_mode: 'HTML' });
-          return res.status(200).send('OK');
-        }
-
-        if (data.startsWith('reply_user_')) {
-          await bot.answerCallbackQuery(qId);
-          const targetUserId = data.replace('reply_user_', '');
-          userState.set(String(uid), { action: 'replying_to_user', targetId: targetUserId });
-          await bot.sendMessage(uid, `<blockquote>✏️ <b>BALAS PESAN USER (${targetUserId})</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSilakan ketik pesan balasan yang ingin dikirimkan ke pengguna.</blockquote>`, { parse_mode: 'HTML' });
-          return res.status(200).send('OK');
-        }
-      }
-
-      if (update.message) {
-        const msg = update.message;
-        const chatId = msg.chat.id;
-        const uid = msg.from.id;
-
-        if (isSuspiciousId(uid)) return res.status(200).send('OK');
-        if (!checkRateLimit(uid)) return res.status(200).send('OK');
-
-        const user = getUser(db, uid);
-        if (!user) return res.status(200).send('OK');
-
-        user.first_name = msg.from.first_name || 'User';
-        user.username = msg.from.username || '';
-
-        const text = (msg.text || '').trim();
-        const st = userState.get(String(uid));
-
-        if (st && st.action === 'awaiting_owner_msg' && text) {
-          userState.delete(String(uid));
-          for (let ownerId of config.OWNER_IDS) {
-            try {
-              await bot.sendMessage(ownerId, `<blockquote>📨 <b>PESAN MASUK USER</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n👤 <b>Pengirim:</b> <b>${esc(user.first_name)}</b>\n🆔 <b>User ID:</b> <code>${uid}</code>\n💬 <b>Pesan:</b>\n${esc(text)}</blockquote>`, {
-                parse_mode: 'HTML',
-                reply_markup: {
-                  inline_keyboard: [[{ text: `💬 Balas User (${uid})`, callback_data: `reply_user_${uid}` }]]
-                }
-              });
-            } catch (e) {}
-          }
-          await bot.sendMessage(chatId, `<blockquote>✅ <b>PESAN BERHASIL TERKIRIM!</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nPesan Anda telah diteruskan ke Owner. Silakan tunggu respon balasan.</blockquote>`, { parse_mode: 'HTML' });
-          return res.status(200).send('OK');
-        }
-
-        if (st && st.action === 'replying_to_user' && text && isOwner(uid)) {
-          userState.delete(String(uid));
-          try {
-            await bot.sendMessage(st.targetId, `<blockquote>💬 <b>BALASAN RESMI OWNER</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n${esc(text)}</blockquote>`, { parse_mode: 'HTML' });
-            await bot.sendMessage(chatId, `<blockquote>✅ Balasan berhasil dikirim ke user <code>${st.targetId}</code>!</blockquote>`, { parse_mode: 'HTML' });
-          } catch (e) {
-            await bot.sendMessage(chatId, `<blockquote>❌ Gagal mengirim balasan ke user.</blockquote>`, { parse_mode: 'HTML' });
-          }
-          return res.status(200).send('OK');
-        }
-
-        if (text.startsWith('/start')) {
-          const parts = text.split(' ');
-          if (parts[1] && parts[1].startsWith('ref_')) {
-            const refId = parts[1].replace('ref_', '');
-            if (refId !== String(uid) && !user.referredBy) {
-              const inviter = db.users[refId];
-              if (inviter) {
-                user.referredBy = refId;
-                inviter.referralCount = (inviter.referralCount || 0) + 1;
-                inviter.points = (inviter.points || 0) + 50;
-                if (!Array.isArray(inviter.referrals)) inviter.referrals = [];
-                inviter.referrals.push(uid);
-                try {
-                  await bot.sendMessage(refId, `<blockquote>🎉 <b>REFERRAL REWARD!</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n<b>${esc(user.first_name)}</b> telah bergabung menggunakan tautan undangan Anda!\nBonus Saldo: 🪙 <b>+50 PTS</b></blockquote>`, { parse_mode: 'HTML' });
-                } catch (e) {}
-              }
-            }
-          }
-          await saveDB(db);
-          const menu = isOwner(uid) ? getOwnerMenu(user) : getUserMenu(user, chatId);
-          await bot.sendMessage(chatId, menu.text, menu.opts);
-          return res.status(200).send('OK');
-        }
-
-        const menu = isOwner(uid) ? getOwnerMenu(user) : getUserMenu(user, chatId);
-        await bot.sendMessage(chatId, menu.text, menu.opts);
-        await saveDB(db);
+      if (data === 'fix_merah') {
+        await bot.answerCallbackQuery(qId, { text: '🔄 Memproses Perbaikan Kuota & Sesi...', show_alert: true });
+        await bot.sendMessage(uid, `<blockquote>🛠️ <b>SISTEM PERBAIKAN MERAH</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n✅ Sesi akun dan perbaikan kuota berhasil diproses. Sesi bot Anda telah tersinkronisasi kembali.</blockquote>`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
+
+      if (data === 'owner_check_pending') {
+        await bot.answerCallbackQuery(qId, { text: '📑 Membuka Daftar Pending...', show_alert: false });
+        const allPayments = Object.values(db.payments || {});
+        const pending = allPayments.filter(p => p.status === 'waiting_approval' || p.status === 'pending');
+
+        if (pending.length === 0) {
+          await bot.sendMessage(uid, `<blockquote>🟢 <b>TIDAK ADA PENDING DEPOSIT</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSaat ini belum ada transaksi pembeli yang menunggu verifikasi.</blockquote>`, { parse_mode: 'HTML' });
+        } else {
+          let listTxt = pending.slice(0, 5).map(p => `• <b>${p.id}</b> | User: <code>${p.userId}</code> | Paket: ${p.days} Hari (${p.amountFormatted})`).join('\n');
+          await bot.sendMessage(uid, `<blockquote>📥 <b>DAFTAR PENDING TRANSAKSI (${pending.length})</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n${listTxt}\n\n<i>Buka Mini Web Studio Admin untuk menyetujui / menolak pembayaran.</i></blockquote>`, {
+            parse_mode: 'HTML',
+            reply_markup: { inline_keyboard: [[{ text: '🌐 Buka Mini Web Admin', web_app: { url: webappUrl } }]] }
+          });
+        }
+        return res.status(200).send('OK');
+      }
+
+      if (data === 'user_checkin_info') {
+        await bot.answerCallbackQuery(qId, { text: '🎁 Info Check-in', show_alert: false });
+        await bot.sendMessage(uid, `<blockquote>🎁 <b>DAILY CHECK-IN & POINT STORE</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nKumpulkan poin harian gratis di Mini Web!\n• Hari 1: +30 PTS\n• Hari 2: +50 PTS\n• Hari 3: +75 PTS\n• Hari 4: +100 PTS\n• Hari 5: +150 PTS\n• Hari 6: +200 PTS\n• Hari 7: +350 PTS\n\n<i>Poin dapat ditukarkan dengan Akses VIP Gratis di Mini Web.</i></blockquote>`, {
+          parse_mode: 'HTML',
+          reply_markup: { inline_keyboard: [[{ text: '🌐 Masuk Mini Web Check-in', web_app: { url: webappUrl } }]] }
+        });
+        return res.status(200).send('OK');
+      }
+
+      if (data === 'help') {
+        await bot.answerCallbackQuery(qId, { text: '✨ Membuka Pusat Bantuan', show_alert: false });
+        await bot.sendMessage(uid, `<blockquote>❓ <b>PUSAT BANTUAN & PANDUAN LENGKAP</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSelamat datang di <b>Walzy Store Platform</b>! Berikut panduan lengkap penggunaan bot & WebApp:\n\n📍 <b>1. CARA BELI AKSES VIP:</b>\n• Buka menu <b>Mini Web</b> di bawah.\n• Pilih tab <b>Order VIP</b> untuk melihat katalog 2-kolom.\n• Klik beli pada paket yang diinginkan (3, 5, 7, 14, atau 30 Hari).\n• Transfer sesuai nominal & unggah bukti foto pembayaran.\n• Tunggu verifikasi otomatis dari Admin/Owner.\n\n🎟️ <b>2. CARA REDEEM VOUCHER PROMO:</b>\n• Buka <b>Mini Web</b> -> Halaman <b>Home</b>.\n• Masukkan kode voucher di kolom "Redeem Kode Voucher".\n• Tekan "Tukarkan Kode" untuk klaim VIP gratis.\n\n🎁 <b>3. DAILY CHECK-IN & SPIN WHEEL:</b>\n• Kunjungi tab <b>Check-in</b> untuk klaim poin harian bertingkat.\n• Putar <b>Spin Wheel Keberuntungan</b> di halaman Home untuk hadiah poin/VIP.\n• Poin yang terkumpul bisa ditukar dengan VIP di Point Shop.\n\n💬 <b>4. LAYANAN CUSTOMER SERVICE:</b>\n• Jika butuh bantuan lebih lanjut, tekan tombol <b>Hubungi Owner</b>.</blockquote>`, {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[{ text: '🌐 Buka Mini Web Walzy Store', web_app: { url: webappUrl } }]]
+          }
+        });
+        return res.status(200).send('OK');
+      }
+
+      if (data === 'contact_owner') {
+        await bot.answerCallbackQuery(qId, { text: '💬 Mode Hubungi Owner Aktif', show_alert: false });
+        userState.set(String(uid), { action: 'awaiting_owner_msg' });
+        await bot.sendMessage(uid, `<blockquote>💬 <b>HUBUNGI OWNER / CUSTOMER SERVICE</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSilakan ketikkan pesan, pertanyaan, atau laporan kendala Anda di bawah ini.\nPesan Anda akan diteruskan langsung ke Owner.</blockquote>`, { parse_mode: 'HTML' });
+        return res.status(200).send('OK');
+      }
+
+      if (data.startsWith('reply_user_')) {
+        await bot.answerCallbackQuery(qId);
+        const targetUserId = data.replace('reply_user_', '');
+        userState.set(String(uid), { action: 'replying_to_user', targetId: targetUserId });
+        await bot.sendMessage(uid, `<blockquote>✏️ <b>BALAS PESAN USER (${targetUserId})</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSilakan ketik pesan balasan yang ingin dikirimkan ke pengguna.</blockquote>`, { parse_mode: 'HTML' });
+        return res.status(200).send('OK');
+      }
+    }
+
+    if (update.message) {
+      const msg = update.message;
+      const chatId = msg.chat.id;
+      const uid = msg.from.id;
+
+      if (isSuspiciousId(uid)) return res.status(200).send('OK');
+      if (!checkRateLimit(uid)) return res.status(200).send('OK');
+
+      const user = getUser(db, uid);
+      if (!user) return res.status(200).send('OK');
+
+      user.first_name = msg.from.first_name || 'User';
+      user.username = msg.from.username || '';
+
+      const text = (msg.text || '').trim();
+      const st = userState.get(String(uid));
+
+      if (st && st.action === 'awaiting_owner_msg' && text) {
+        userState.delete(String(uid));
+        for (let ownerId of config.OWNER_IDS) {
+          try {
+            await bot.sendMessage(ownerId, `<blockquote>📨 <b>PESAN MASUK USER</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n👤 <b>Pengirim:</b> <b>${esc(user.first_name)}</b>\n🆔 <b>User ID:</b> <code>${uid}</code>\n💬 <b>Pesan:</b>\n${esc(text)}</blockquote>`, {
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [[{ text: `💬 Balas User (${uid})`, callback_data: `reply_user_${uid}` }]]
+              }
+            });
+          } catch (e) {}
+        }
+        await bot.sendMessage(chatId, `<blockquote>✅ <b>PESAN BERHASIL TERKIRIM!</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nPesan Anda telah diteruskan ke Owner. Silakan tunggu respon balasan.</blockquote>`, { parse_mode: 'HTML' });
+        return res.status(200).send('OK');
+      }
+
+      if (st && st.action === 'replying_to_user' && text && isOwner(uid)) {
+        userState.delete(String(uid));
+        try {
+          await bot.sendMessage(st.targetId, `<blockquote>💬 <b>BALASAN RESMI OWNER</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n${esc(text)}</blockquote>`, { parse_mode: 'HTML' });
+          await bot.sendMessage(chatId, `<blockquote>✅ Balasan berhasil dikirim ke user <code>${st.targetId}</code>!</blockquote>`, { parse_mode: 'HTML' });
+        } catch (e) {
+          await bot.sendMessage(chatId, `<blockquote>❌ Gagal mengirim balasan ke user.</blockquote>`, { parse_mode: 'HTML' });
+        }
+        return res.status(200).send('OK');
+      }
+
+      if (text.startsWith('/start')) {
+        const parts = text.split(' ');
+        if (parts[1] && parts[1].startsWith('ref_')) {
+          const refId = parts[1].replace('ref_', '');
+          if (refId !== String(uid) && !user.referredBy) {
+            const inviter = db.users[refId];
+            if (inviter) {
+              user.referredBy = refId;
+              inviter.referralCount = (inviter.referralCount || 0) + 1;
+              inviter.points = (inviter.points || 0) + 50;
+              if (!Array.isArray(inviter.referrals)) inviter.referrals = [];
+              inviter.referrals.push(uid);
+              try {
+                await bot.sendMessage(refId, `<blockquote>🎉 <b>REFERRAL REWARD!</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n<b>${esc(user.first_name)}</b> telah bergabung menggunakan tautan undangan Anda!\nBonus Saldo: 🪙 <b>+50 PTS</b></blockquote>`, { parse_mode: 'HTML' });
+              } catch (e) {}
+            }
+          }
+        }
+        await saveDB(db);
+        const menu = isOwner(uid) ? getOwnerMenu(user, chatId, db, webappUrl) : getUserMenu(user, chatId, webappUrl);
+        await bot.sendMessage(chatId, menu.text, menu.opts);
+        return res.status(200).send('OK');
+      }
+
+      const menu = isOwner(uid) ? getOwnerMenu(user, chatId, db, webappUrl) : getUserMenu(user, chatId, webappUrl);
+      await bot.sendMessage(chatId, menu.text, menu.opts);
+      await saveDB(db);
+      return res.status(200).send('OK');
     }
 
     res.status(200).send('OK');
