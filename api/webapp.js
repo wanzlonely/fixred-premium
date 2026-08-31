@@ -112,7 +112,7 @@ module.exports = async (req, res) => {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
     width: calc(100% - 32px); max-width: 480px; background: rgba(13, 18, 30, 0.92);
     backdrop-filter: blur(20px); border: 1px solid var(--border-card); border-radius: 24px;
-    display: flex; justify-content: space-around; padding: 6px; z-index: 80;
+    display: flex; justify-space-around; padding: 6px; z-index: 80;
     box-shadow: 0 12px 32px rgba(0,0,0,0.5);
   }
   .nav-tab {
@@ -164,6 +164,7 @@ module.exports = async (req, res) => {
   .loader-screen {
     position: fixed; inset: 0; background: var(--bg-main); z-index: 99;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    transition: opacity 0.4s ease;
   }
 
   .modal-overlay {
@@ -551,6 +552,14 @@ module.exports = async (req, res) => {
     { label: "VIP 1 HARI 💎", color: "#06b6d4" }
   ];
 
+  function hideLoader() {
+    var ldr = document.getElementById('loader');
+    if (ldr) {
+      ldr.style.opacity = '0';
+      setTimeout(function() { ldr.style.display = 'none'; }, 400);
+    }
+  }
+
   function drawWheel() {
     var canvas = document.getElementById('spinCanvas');
     if (!canvas) return;
@@ -587,6 +596,8 @@ module.exports = async (req, res) => {
   }
 
   function initApp() {
+    setTimeout(hideLoader, 1500);
+
     try {
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         currentUserId = tg.initDataUnsafe.user.id;
@@ -599,23 +610,19 @@ module.exports = async (req, res) => {
 
       if (!currentUserId) {
         document.getElementById('loadText').textContent = 'Silakan buka WebApp melalui Telegram Bot!';
-        setTimeout(function() {
-          var ldr = document.getElementById('loader');
-          if (ldr) ldr.style.display = 'none';
-        }, 1200);
+        hideLoader();
         return;
       }
 
       loadUserData();
     } catch (err) {
-      var ldr = document.getElementById('loader');
-      if (ldr) ldr.style.display = 'none';
+      hideLoader();
     }
   }
 
   async function loadUserData() {
     try {
-      var res = await fetch('/api/user?user_id=' + currentUserId);
+      var res = await fetch('/api/api?endpoint=user&user_id=' + currentUserId);
       var data = await res.json();
 
       if (data.ok) {
@@ -699,8 +706,7 @@ module.exports = async (req, res) => {
     } catch (e) {
       showToast('Error', 'Gagal memuat data dari server', 'error');
     } finally {
-      var ldr = document.getElementById('loader');
-      if (ldr) ldr.style.display = 'none';
+      hideLoader();
     }
   }
 
@@ -772,7 +778,7 @@ module.exports = async (req, res) => {
     if (btn) btn.disabled = true;
 
     try {
-      var res = await fetch('/api/spin', {
+      var res = await fetch('/api/api?endpoint=spin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId })
@@ -809,7 +815,7 @@ module.exports = async (req, res) => {
     var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Proses Check-in...'; }
     try {
-      var res = await fetch('/api/checkin', {
+      var res = await fetch('/api/api?endpoint=checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId })
@@ -828,7 +834,7 @@ module.exports = async (req, res) => {
     var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Proses...'; }
     try {
-      var res = await fetch('/api/redeem_points', {
+      var res = await fetch('/api/api?endpoint=redeem_points', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId, option: option })
@@ -847,7 +853,7 @@ module.exports = async (req, res) => {
     var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
     try {
-      var res = await fetch('/api/order', {
+      var res = await fetch('/api/api?endpoint=order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId, days: days, amount: amount })
@@ -870,7 +876,7 @@ module.exports = async (req, res) => {
     var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Membatalkan...'; }
     try {
-      var res = await fetch('/api/cancel_order', {
+      var res = await fetch('/api/api?endpoint=cancel_order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId, invoice: invoiceId })
@@ -901,7 +907,7 @@ module.exports = async (req, res) => {
     reader.onload = async function(e) {
       var base64 = e.target.result;
       try {
-        var res = await fetch('/api/upload_proof', {
+        var res = await fetch('/api/api?endpoint=upload_proof', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: currentUserId, invoice: activeInvoiceId, image_data: base64 })
@@ -924,7 +930,7 @@ module.exports = async (req, res) => {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Mengklaim...'; }
 
     try {
-      var res = await fetch('/api/redeem', {
+      var res = await fetch('/api/api?endpoint=redeem', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId, code: code })
@@ -951,7 +957,7 @@ module.exports = async (req, res) => {
 
   async function loadOwnerData() {
     try {
-      var res = await fetch('/api/stats?user_id=' + currentUserId);
+      var res = await fetch('/api/api?endpoint=stats&user_id=' + currentUserId);
       var d = await res.json();
 
       if (d.ok) {
@@ -1025,7 +1031,7 @@ module.exports = async (req, res) => {
   async function ownerAct(invoice, action, btn) {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
     try {
-      var res = await fetch('/api/owner_action', {
+      var res = await fetch('/api/api?endpoint=owner_action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id: currentUserId, invoice: invoice, action: action })
@@ -1047,7 +1053,7 @@ module.exports = async (req, res) => {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Membuat...'; }
 
     try {
-      var res = await fetch('/api/create_code', {
+      var res = await fetch('/api/api?endpoint=create_code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id: currentUserId, code: code, days: days, quota: quota })
@@ -1070,7 +1076,7 @@ module.exports = async (req, res) => {
   async function deleteVoucher(code, btn) {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Hapus...'; }
     try {
-      var res = await fetch('/api/delete_code', {
+      var res = await fetch('/api/api?endpoint=delete_code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id: currentUserId, code: code })
@@ -1089,7 +1095,7 @@ module.exports = async (req, res) => {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Mengirim Broadcast...'; }
 
     try {
-      var res = await fetch('/api/broadcast', {
+      var res = await fetch('/api/api?endpoint=broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id: currentUserId, text: text })
