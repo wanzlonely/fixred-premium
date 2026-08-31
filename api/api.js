@@ -42,7 +42,6 @@ function getUniqueUsers(usersObj) {
     const key = String(u.id);
     const name = (u.first_name || '').trim().toLowerCase();
     if (!name) continue;
-    if (name.includes('exploit') && (u.totalFix || 0) === 0 && (u.referralCount || 0) === 0) continue;
     if (!map.has(key)) map.set(key, u);
   }
   return Array.from(map.values());
@@ -115,6 +114,8 @@ module.exports = async (req, res) => {
     try { body = JSON.parse(body); } catch (e) { body = {}; }
   }
 
+  const endpoint = query.endpoint || body.endpoint || (pathOnly.includes('/api/') ? pathOnly.split('/api/')[1] : '');
+
   try {
     const db = await getDB();
     if (!db.users) db.users = {};
@@ -122,7 +123,7 @@ module.exports = async (req, res) => {
     if (!db.codes) db.codes = {};
     if (!db.stats) db.stats = { totalFix: 0, totalSuccess: 0, totalFailed: 0, revenue: 0, revenueHistory: [], lastReset: Date.now() };
 
-    if (pathOnly.endsWith('/api/user')) {
+    if (endpoint === 'user') {
       const userId = query.user_id || body.user_id;
       if (!userId) return res.status(400).json({ ok: false, message: 'Parameter user_id diperlukan' });
       if (isSuspiciousId(userId)) return res.json({ ok: false, message: 'User ID Tidak Valid' });
@@ -169,7 +170,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (pathOnly.endsWith('/api/spin')) {
+    if (endpoint === 'spin') {
       const userId = body.user_id || query.user_id;
       if (!userId || isSuspiciousId(userId)) return res.status(400).json({ ok: false, message: 'User ID tidak valid' });
 
@@ -221,7 +222,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (pathOnly.endsWith('/api/checkin')) {
+    if (endpoint === 'checkin') {
       const userId = body.user_id || query.user_id;
       if (!userId || isSuspiciousId(userId)) return res.status(400).json({ ok: false, message: 'User ID tidak valid' });
 
@@ -252,7 +253,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (pathOnly.endsWith('/api/redeem_points')) {
+    if (endpoint === 'redeem_points') {
       const userId = body.user_id || query.user_id;
       const option = Number(body.option || query.option);
 
@@ -283,7 +284,7 @@ module.exports = async (req, res) => {
       return res.json({ ok: true, message: `Penukaran Berhasil! Paket ${sel.label} Telah Aktif.`, points: user.points });
     }
 
-    if (pathOnly.endsWith('/api/order') || pathOnly.endsWith('/api/deposit')) {
+    if (endpoint === 'order' || endpoint === 'deposit') {
       const userId = body.user_id || query.user_id;
       const days = Number(body.days || query.days);
 
@@ -329,7 +330,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (pathOnly.endsWith('/api/cancel_order')) {
+    if (endpoint === 'cancel_order') {
       const userId = body.user_id || query.user_id;
       const invoiceId = body.invoice || query.invoice;
 
@@ -347,7 +348,7 @@ module.exports = async (req, res) => {
       return res.json({ ok: true, message: 'Pembelian Invoice Berhasil Dibatalkan' });
     }
 
-    if (pathOnly.endsWith('/api/upload_proof')) {
+    if (endpoint === 'upload_proof') {
       const userId = body.user_id || query.user_id;
       const invoiceId = body.invoice || query.invoice;
       const imageData = body.image_data;
@@ -366,7 +367,7 @@ module.exports = async (req, res) => {
       return res.json({ ok: true, message: 'Bukti pembayaran berhasil diunggah! Menunggu konfirmasi owner.' });
     }
 
-    if (pathOnly.endsWith('/api/redeem')) {
+    if (endpoint === 'redeem') {
       const userId = body.user_id || query.user_id;
       const code = String(body.code || query.code || '').trim().toUpperCase();
 
@@ -400,7 +401,7 @@ module.exports = async (req, res) => {
       return res.json({ ok: true, message: `Voucher Diklaim: +${days} Hari Akses VIP` });
     }
 
-    if (pathOnly.endsWith('/api/stats')) {
+    if (endpoint === 'stats') {
       const userId = query.user_id || body.user_id;
       const ownerCheck = userId ? isOwner(userId) : false;
       const validUsers = getUniqueUsers(db.users);
@@ -423,7 +424,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (pathOnly.endsWith('/api/owner_action')) {
+    if (endpoint === 'owner_action') {
       const ownerId = String(body.owner_id || query.owner_id || '');
       if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
@@ -469,7 +470,7 @@ module.exports = async (req, res) => {
       }
     }
 
-    if (pathOnly.endsWith('/api/create_code')) {
+    if (endpoint === 'create_code') {
       const ownerId = String(body.owner_id || query.owner_id || '');
       if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
@@ -486,7 +487,7 @@ module.exports = async (req, res) => {
       return res.json({ ok: true, message: `Voucher ${code} Berhasil Dibuat` });
     }
 
-    if (pathOnly.endsWith('/api/delete_code')) {
+    if (endpoint === 'delete_code') {
       const ownerId = String(body.owner_id || query.owner_id || '');
       if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
@@ -499,7 +500,7 @@ module.exports = async (req, res) => {
       return res.json({ ok: true, message: `Voucher ${code} Dihapus` });
     }
 
-    if (pathOnly.endsWith('/api/broadcast')) {
+    if (endpoint === 'broadcast') {
       const ownerId = String(body.owner_id || query.owner_id || '');
       if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
