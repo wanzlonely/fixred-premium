@@ -26,7 +26,6 @@ module.exports = async (req, res) => {
     if(lines.length===0) return res.json({ok:false,message:'Format nomor salah'});
     if(lines.length>1 && !isPremium(user) && !isOwner(userId)) return res.json({ok:false,message:'Multi-line khusus VIP'});
     if(lines.length>5) lines.splice(5);
-    // check daily limit
     if(!user.dailyFix || user.dailyFix.date!==getTodayString()) user.dailyFix={date:getTodayString(),count:0};
     if(!isOwner(userId) && !isPremium(user) && user.dailyFix.count>=3) return res.json({ok:false,message:'Limit harian habis'});
     user.dailyFix.count+=1;
