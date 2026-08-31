@@ -99,6 +99,7 @@ module.exports = async (req, res) => {
     color: #fff; box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
   }
   .btn-custom:active { transform: scale(0.97); }
+  .btn-custom:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .input-custom {
     width: 100%; padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.05);
@@ -133,10 +134,10 @@ module.exports = async (req, res) => {
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  .streak-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 12px 0; }
+  .streak-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 14px 0; }
   .streak-day {
     background: rgba(255,255,255,0.05); border: 1px solid var(--border-card); border-radius: 12px;
-    padding: 10px 4px; text-align: center; font-size: 10px; font-weight: 700; display: flex; flex-direction: column; gap: 4px; align-items: center;
+    padding: 10px 2px; text-align: center; font-size: 10px; font-weight: 700; display: flex; flex-direction: column; gap: 4px; align-items: center;
   }
   .streak-day.active { background: rgba(16, 185, 129, 0.2); border-color: var(--accent-emerald); color: var(--accent-emerald); }
 
@@ -144,10 +145,22 @@ module.exports = async (req, res) => {
   .sub-tab { padding: 8px 14px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-card); font-size: 12px; font-weight: 700; color: var(--text-secondary); cursor: pointer; white-space: nowrap; }
   .sub-tab.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
 
+  .product-shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .shop-item {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border-card); border-radius: 16px; padding: 14px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+  }
+
   .loader-screen {
     position: fixed; inset: 0; background: var(--bg-main); z-index: 99;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
   }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+    z-index: 90; display: none; place-items: center; padding: 16px;
+  }
+  .modal-overlay.active { display: grid; }
 </style>
 </head>
 <body>
@@ -167,6 +180,14 @@ module.exports = async (req, res) => {
   <div>
     <div id="toastTitle" style="font-weight:700;font-size:13px">Notifikasi</div>
     <div id="toastMsg" style="font-size:11px;color:var(--text-secondary)">Pesan deskripsi</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="invoiceModal">
+  <div class="glass-card" style="width:100%;max-width:400px;margin:0">
+    <div style="font-weight:800;font-size:16px;margin-bottom:8px">Detail Invoice Pembayaran</div>
+    <div id="modalInvoiceContent" style="font-size:12px;line-height:1.6;color:var(--text-secondary)"></div>
+    <button class="btn-custom" style="margin-top:14px" onclick="closeInvoiceModal()">Tutup Modal</button>
   </div>
 </div>
 
@@ -204,15 +225,15 @@ module.exports = async (req, res) => {
     <div class="grid3">
       <div class="stat-card">
         <div class="stat-val" id="sOrders">0</div>
-        <div class="stat-lbl">Total Pesanan</div>
+        <div class="stat-lbl">Total Order</div>
       </div>
       <div class="stat-card">
         <div class="stat-val" id="sRefs">0</div>
-        <div class="stat-lbl">Referral User</div>
+        <div class="stat-lbl">Referral</div>
       </div>
       <div class="stat-card">
         <div class="stat-val" style="color:var(--accent-amber)" id="sPoints">0</div>
-        <div class="stat-lbl">Poin Saya</div>
+        <div class="stat-lbl">Poin Store</div>
       </div>
     </div>
 
@@ -224,7 +245,6 @@ module.exports = async (req, res) => {
         </div>
       </div>
       <button class="btn-custom" id="spinBtn" onclick="triggerSpin()">
-        <svg class="icon-svg" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         Putar Spin Harian
       </button>
     </div>
@@ -234,18 +254,18 @@ module.exports = async (req, res) => {
         <svg class="icon-svg" style="color:var(--accent-emerald)" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Redeem Kode Voucher
       </div>
-      <input class="input-custom" id="vCodeInput" placeholder="Masukkan Kode Voucher (cth: VIPWALZY)">
+      <input class="input-custom" id="vCodeInput" placeholder="Masukkan Kode Voucher Promo">
       <button class="btn-custom" style="margin-top:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="claimVoucher()">
-        Tukarkan Voucher
+        Tukarkan Kode
       </button>
     </div>
 
     <div class="glass-card">
       <div style="font-weight:700;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px">
         <svg class="icon-svg" style="color:var(--accent-purple)" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Program Referral Undang Teman
+        Program Referral Undangan
       </div>
-      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px">Dapatkan +50 Poin setiap kali ada pengguna baru bergabung lewat link Anda.</div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px">Dapatkan +50 Poin setiap kali ada user baru yang mendaftar menggunakan link Anda.</div>
       <input class="input-custom" id="refUrlInput" readonly value="Memuat link...">
       <button class="btn-custom" style="margin-top:10px" onclick="copyRefLink()">
         Salin Link Referral
@@ -254,8 +274,10 @@ module.exports = async (req, res) => {
   </div>
 
   <div id="viewOrder" class="view">
-    <div style="font-weight:800;font-size:18px;margin-bottom:4px">Katalog Paket VIP</div>
-    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Akses tanpa batas seluruh fitur premium bot dan server</div>
+    <div style="font-weight:800;font-size:18px;margin-bottom:4px">Katalog VIP Store</div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Pilih paket langganan VIP dan nikmati seluruh akses bot tanpa batas!</div>
+
+    <div id="activeInvoiceBox"></div>
 
     <div class="glass-card">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -265,7 +287,7 @@ module.exports = async (req, res) => {
         </div>
         <div style="font-weight:800;font-size:16px;color:var(--accent-blue)">Rp 7.000</div>
       </div>
-      <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(3, 7000)">Beli Sekarang</button>
+      <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(3, 7000)">Beli VIP 3 Hari</button>
     </div>
 
     <div class="glass-card">
@@ -276,7 +298,7 @@ module.exports = async (req, res) => {
         </div>
         <div style="font-weight:800;font-size:16px;color:var(--accent-blue)">Rp 10.000</div>
       </div>
-      <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(5, 10000)">Beli Sekarang</button>
+      <button class="btn-custom" style="margin-top:12px;padding:10px" onclick="createOrder(5, 10000)">Beli VIP 5 Hari</button>
     </div>
 
     <div class="glass-card">
@@ -287,7 +309,7 @@ module.exports = async (req, res) => {
         </div>
         <div style="font-weight:800;font-size:16px;color:var(--accent-emerald)">Rp 15.000</div>
       </div>
-      <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="createOrder(7, 15000)">Beli Sekarang</button>
+      <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="createOrder(7, 15000)">Beli VIP 7 Hari</button>
     </div>
 
     <div class="glass-card">
@@ -298,29 +320,29 @@ module.exports = async (req, res) => {
         </div>
         <div style="font-weight:800;font-size:16px;color:var(--accent-purple)">Rp 25.000</div>
       </div>
-      <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="createOrder(14, 25000)">Beli Sekarang</button>
+      <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="createOrder(14, 25000)">Beli VIP 14 Hari</button>
     </div>
 
     <div class="glass-card" style="border-color:rgba(245, 158, 11, 0.4)">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-weight:700;font-size:15px">VIP Sultan 30 Hari</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 30 Hari Full Support & Priority</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">Akses VIP 30 Hari Priority Support</div>
         </div>
         <div style="font-weight:800;font-size:16px;color:var(--accent-amber)">Rp 45.000</div>
       </div>
-      <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="createOrder(30, 45000)">Beli Sekarang</button>
+      <button class="btn-custom" style="margin-top:12px;padding:10px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="createOrder(30, 45000)">Beli VIP 30 Hari</button>
     </div>
   </div>
 
   <div id="viewCheckin" class="view">
-    <div style="font-weight:800;font-size:18px;margin-bottom:4px">Daily Check-in Hadiah</div>
-    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Check-in setiap hari untuk mengumpulkan Poin & Akses VIP gratis!</div>
+    <div style="font-weight:800;font-size:18px;margin-bottom:4px">Daily Check-in Poin</div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Check-in harian untuk mendapatkan poin bertingkat setiap minggunya!</div>
 
     <div class="glass-card glow-box">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-size:11px;color:var(--text-secondary)">Poin Terkumpul</div>
+          <div style="font-size:11px;color:var(--text-secondary)">Poin Anda saat ini</div>
           <div style="font-size:24px;font-weight:800;color:var(--accent-amber)" id="checkinPointsVal">0 PTS</div>
         </div>
         <button class="btn-custom" id="checkinBtn" style="width:auto;padding:10px 18px" onclick="triggerCheckin()">
@@ -329,45 +351,59 @@ module.exports = async (req, res) => {
       </div>
 
       <div class="streak-grid">
-        <div class="streak-day" id="stDay1"><span>H1</span><b>+20</b></div>
-        <div class="streak-day" id="stDay2"><span>H2</span><b>+30</b></div>
-        <div class="streak-day" id="stDay3"><span>H3</span><b>+40</b></div>
-        <div class="streak-day" id="stDay4"><span>H4</span><b>+50</b></div>
-        <div class="streak-day" id="stDay5"><span>H5</span><b>+75</b></div>
-        <div class="streak-day" id="stDay6"><span>H6</span><b>+100</b></div>
-        <div class="streak-day" id="stDay7"><span>H7</span><b>+VIP</b></div>
+        <div class="streak-day" id="stDay1"><span>H1</span><b>+30</b></div>
+        <div class="streak-day" id="stDay2"><span>H2</span><b>+50</b></div>
+        <div class="streak-day" id="stDay3"><span>H3</span><b>+75</b></div>
+        <div class="streak-day" id="stDay4"><span>H4</span><b>+100</b></div>
+        <div class="streak-day" id="stDay5"><span>H5</span><b>+150</b></div>
+        <div class="streak-day" id="stDay6"><span>H6</span><b>+200</b></div>
+        <div class="streak-day" id="stDay7"><span>H7</span><b>+350</b></div>
       </div>
     </div>
 
-    <div style="font-weight:700;font-size:15px;margin:16px 0 10px">Tukarkan Poin Jadi VIP</div>
+    <div style="font-weight:800;font-size:16px;margin:18px 0 10px">Point Shop - Tukar Poin Jadi VIP</div>
 
-    <div class="glass-card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
+    <div class="product-shop-grid">
+      <div class="shop-item">
         <div>
           <div style="font-weight:700;font-size:14px">1 Hari VIP</div>
-          <div style="font-size:11px;color:var(--text-secondary)">Biaya: 100 Poin</div>
+          <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">100 PTS</div>
         </div>
-        <button class="btn-custom" style="width:auto;padding:8px 16px;font-size:12px" onclick="redeemPoints(1)">Tukar</button>
+        <button class="btn-custom" style="padding:8px;font-size:12px" onclick="redeemPoints(1)">Tukarkan</button>
       </div>
-    </div>
 
-    <div class="glass-card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="shop-item">
         <div>
           <div style="font-weight:700;font-size:14px">3 Hari VIP</div>
-          <div style="font-size:11px;color:var(--text-secondary)">Biaya: 250 Poin</div>
+          <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">250 PTS</div>
         </div>
-        <button class="btn-custom" style="width:auto;padding:8px 16px;font-size:12px" onclick="redeemPoints(2)">Tukar</button>
+        <button class="btn-custom" style="padding:8px;font-size:12px" onclick="redeemPoints(2)">Tukarkan</button>
       </div>
-    </div>
 
-    <div class="glass-card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="shop-item">
         <div>
           <div style="font-weight:700;font-size:14px">7 Hari VIP</div>
-          <div style="font-size:11px;color:var(--text-secondary)">Biaya: 500 Poin</div>
+          <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">500 PTS</div>
         </div>
-        <button class="btn-custom" style="width:auto;padding:8px 16px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="redeemPoints(3)">Tukar</button>
+        <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="redeemPoints(3)">Tukarkan</button>
+      </div>
+
+      <div class="shop-item">
+        <div>
+          <div style="font-weight:700;font-size:14px">14 Hari VIP</div>
+          <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">900 PTS</div>
+        </div>
+        <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #7c3aed)" onclick="redeemPoints(4)">Tukarkan</button>
+      </div>
+
+      <div class="shop-item" style="grid-column: span 2">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:14px">30 Hari VIP Sultan</div>
+            <div style="font-size:11px;color:var(--accent-amber);margin-top:2px">1.600 PTS</div>
+          </div>
+          <button class="btn-custom" style="width:auto;padding:8px 20px;font-size:12px;background:linear-gradient(135deg, var(--accent-amber), #d97706)" onclick="redeemPoints(5)">Tukarkan</button>
+        </div>
       </div>
     </div>
   </div>
@@ -376,7 +412,7 @@ module.exports = async (req, res) => {
     <div id="ownerLoginBox" class="glass-card">
       <div style="font-weight:800;font-size:16px;margin-bottom:12px;text-align:center">OWNER STUDIO AUTHENTICATION</div>
       <input type="password" class="input-custom" id="ownerPassInput" placeholder="Masukkan Password Owner">
-      <button class="btn-custom" style="margin-top:12px" onclick="verifyOwner()">Verifikasi Akses</button>
+      <button class="btn-custom" style="margin-top:12px" onclick="verifyOwner()">Verifikasi Akses Owner</button>
     </div>
 
     <div id="ownerContent" style="display:none">
@@ -396,21 +432,21 @@ module.exports = async (req, res) => {
           </div>
           <div class="stat-card">
             <div class="stat-val" id="oUsers">0</div>
-            <div class="stat-lbl">Total Users</div>
+            <div class="stat-lbl">Total User Valid</div>
           </div>
           <div class="stat-card">
             <div class="stat-val" id="oVip">0</div>
-            <div class="stat-lbl">Total VIP</div>
+            <div class="stat-lbl">Pengguna VIP</div>
           </div>
           <div class="stat-card">
             <div class="stat-val" id="oFix">0</div>
-            <div class="stat-lbl">Total Orders</div>
+            <div class="stat-lbl">Total Pesanan</div>
           </div>
         </div>
       </div>
 
       <div id="oTabOrders" style="display:none">
-        <div style="font-weight:700;font-size:14px;margin-bottom:10px">Pending Pembayaran & Deposit</div>
+        <div style="font-weight:700;font-size:14px;margin-bottom:10px">Pending Pembayaran Deposit</div>
         <div id="oPendingList"></div>
       </div>
 
@@ -421,7 +457,7 @@ module.exports = async (req, res) => {
 
       <div id="oTabVouchers" style="display:none">
         <div class="glass-card">
-          <div style="font-weight:700;font-size:14px;margin-bottom:10px">Generator Voucher Baru</div>
+          <div style="font-weight:700;font-size:14px;margin-bottom:10px">Generator Voucher Promo</div>
           <input class="input-custom" id="vGenCode" placeholder="Kode Voucher (cth: SULTAN100)" style="margin-bottom:8px">
           <div class="grid2" style="margin-bottom:8px">
             <input class="input-custom" id="vGenDays" type="number" placeholder="Durasi (Hari)">
@@ -435,9 +471,11 @@ module.exports = async (req, res) => {
 
       <div id="oTabBroadcast" style="display:none">
         <div class="glass-card">
-          <div style="font-weight:700;font-size:14px;margin-bottom:8px">Kirim Broadcast Pesan</div>
-          <textarea class="input-custom" id="bcTextInput" style="height:120px;resize:none;margin-bottom:10px" placeholder="Tuliskan pesan HTML yang akan dikirim ke seluruh pengguna..."></textarea>
-          <button class="btn-custom" onclick="sendBroadcast()">Kirim Massal</button>
+          <div style="font-weight:700;font-size:14px;margin-bottom:8px">Kirim Broadcast Pesan Massal</div>
+          <textarea class="input-custom" id="bcTextInput" style="height:120px;resize:none;margin-bottom:10px" placeholder="Tuliskan pesan HTML yang akan dikirimkan langsung ke seluruh user..."></textarea>
+          <button class="btn-custom" id="btnSendBc" onclick="sendBroadcast()">
+            Kirim Broadcast Sekarang
+          </button>
         </div>
       </div>
     </div>
@@ -506,16 +544,28 @@ module.exports = async (req, res) => {
 
         let spinBtn = document.getElementById('spinBtn');
         spinBtn.disabled = !u.canSpin;
-        spinBtn.style.opacity = u.canSpin ? '1' : '0.5';
 
         let chkBtn = document.getElementById('checkinBtn');
         chkBtn.disabled = !u.canCheckin;
-        chkBtn.style.opacity = u.canCheckin ? '1' : '0.5';
 
         for (let i = 1; i <= 7; i++) {
           let el = document.getElementById('stDay' + i);
           if (i <= u.checkinStreak) el.classList.add('active');
           else el.classList.remove('active');
+        }
+
+        let invBox = document.getElementById('activeInvoiceBox');
+        if (data.currentInvoice) {
+          let inv = data.currentInvoice;
+          invBox.innerHTML = \`
+            <div class="glass-card" style="border-color:var(--accent-amber)">
+              <div style="font-weight:700;font-size:14px;color:var(--accent-amber)">Invoice Aktif: \${inv.id}</div>
+              <div style="font-size:12px;margin-top:4px">Paket \${inv.days} Hari - \${inv.amountFormatted || 'Rp ' + inv.amount}</div>
+              <button class="btn-custom" style="margin-top:10px;padding:8px;font-size:12px" onclick="showInvoiceDetails('\${inv.id}', '\${inv.days}', '\${inv.amountFormatted || 'Rp ' + inv.amount}')">Lihat Detail Pembayaran</button>
+            </div>
+          \`;
+        } else {
+          invBox.innerHTML = '';
         }
 
         document.getElementById('loader').style.display = 'none';
@@ -525,6 +575,24 @@ module.exports = async (req, res) => {
     } catch (e) {
       showToast('Error', 'Gagal memuat data dari server');
     }
+  }
+
+  function showInvoiceDetails(invId, days, amount) {
+    let modalContent = document.getElementById('modalInvoiceContent');
+    modalContent.innerHTML = \`
+      <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:12px;margin-top:10px">
+        <b>ID Invoice:</b> \${invId}<br>
+        <b>Paket VIP:</b> \${days} Hari<br>
+        <b>Total Bayar:</b> \${amount}<br>
+        <b>Status:</b> Menunggu Konfirmasi/Persetujuan Admin
+      </div>
+      <div style="margin-top:10px;font-size:11px">Silakan selesaikan pembayaran dan notifikasi persetujuan akan otomatis dikirimkan via Bot & WebApp.</div>
+    \`;
+    document.getElementById('invoiceModal').classList.add('active');
+  }
+
+  function closeInvoiceModal() {
+    document.getElementById('invoiceModal').classList.remove('active');
   }
 
   function switchTab(tabName, event) {
@@ -552,7 +620,7 @@ module.exports = async (req, res) => {
     document.getElementById('toastTitle').textContent = title;
     document.getElementById('toastMsg').textContent = msg;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
+    setTimeout(() => t.classList.remove('show'), 3500);
   }
 
   async function triggerSpin() {
@@ -563,7 +631,7 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ user_id: currentUserId })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Selamat!' : 'Informasi', data.message);
+      showToast(data.ok ? 'Spin Berhasil' : 'Informasi', data.message);
       if (data.ok) loadUserData();
     } catch (e) {
       showToast('Error', 'Gagal memproses spin');
@@ -593,7 +661,7 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ user_id: currentUserId, option })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Sukses' : 'Gagal', data.message);
+      showToast(data.ok ? 'Point Store' : 'Gagal', data.message);
       if (data.ok) loadUserData();
     } catch (e) {
       showToast('Error', 'Gagal menukarkan poin');
@@ -609,9 +677,10 @@ module.exports = async (req, res) => {
       });
       let data = await res.json();
       if (data.ok) {
-        showToast('Invoice Dibuat', 'Invoice: ' + (data.invoice.invoice || data.invoice.id));
+        showToast('Invoice Berhasil Dibuat', 'Invoice: ' + (data.invoice.invoice || data.invoice.id));
+        loadUserData();
       } else {
-        showToast('Gagal', data.message);
+        showToast('Gagal Order', data.message);
       }
     } catch (e) {
       showToast('Error', 'Gagal membuat invoice');
@@ -689,7 +758,7 @@ module.exports = async (req, res) => {
               <div style="font-weight:700;font-size:13px">Invoice: \${p.id}</div>
               <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">User: \${p.userId} | Paket: \${p.days} Hari (\${p.amountFormatted || 'Rp ' + p.amount})</div>
               <div style="display:flex;gap:8px;margin-top:10px">
-                <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="ownerAct('\${p.id}', 'approve')">Setujui</button>
+                <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="ownerAct('\${p.id}', 'approve')">Setujui Pembayaran</button>
                 <button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="ownerAct('\${p.id}', 'reject')">Tolak</button>
               </div>
             </div>
@@ -793,6 +862,10 @@ module.exports = async (req, res) => {
     let text = document.getElementById('bcTextInput').value.trim();
     if (!text) return showToast('Error', 'Pesan broadcast tidak boleh kosong!');
 
+    let btn = document.getElementById('btnSendBc');
+    btn.disabled = true;
+    btn.textContent = 'Mengirim Broadcast...';
+
     try {
       let res = await fetch('/api/broadcast', {
         method: 'POST',
@@ -800,10 +873,19 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ owner_id: currentUserId, password: ownerPassword, text })
       });
       let data = await res.json();
-      showToast(data.ok ? 'Terproses' : 'Gagal', data.message);
-      if (data.ok) document.getElementById('bcTextInput').value = '';
+
+      if (data.ok) {
+        showToast('Broadcast Selesai', data.message);
+        document.getElementById('bcTextInput').value = '';
+        loadOwnerData();
+      } else {
+        showToast('Gagal Broadcast', data.message);
+      }
     } catch (e) {
       showToast('Error', 'Gagal mengirim broadcast');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Kirim Broadcast Sekarang';
     }
   }
 
