@@ -1,11 +1,10 @@
-const { loadDB, saveDB, getTodayString, genInvoiceID } = require('../lib/utils');
+const { loadDB, saveDB, getTodayString, genInvoiceID, getRank } = require('../lib/utils');
 const config = require('../config');
 
-const OWNER_PASSWORD = 'SUPER777';
 const rateCache = new Map();
 let dbCache = null;
 let dbCacheTime = 0;
-const CACHE_TTL = 3000;
+const CACHE_TTL = 2000;
 
 async function getDB() {
   const now = Date.now();
@@ -53,15 +52,6 @@ function isPremium(u) {
   return u && u.premiumUntil && u.premiumUntil > Date.now();
 }
 
-function getRank(c) {
-  if (c >= 100) return { name: 'EXECUTIVE SULTAN', icon: '👑', color: '#f59e0b' };
-  if (c >= 50) return { name: 'DIAMOND ELITE', icon: '💎', color: '#06b6d4' };
-  if (c >= 20) return { name: 'GOLD TIER', icon: '🥇', color: '#eab308' };
-  if (c >= 10) return { name: 'SILVER TIER', icon: '🥈', color: '#94a3b8' };
-  if (c >= 5) return { name: 'BRONZE TIER', icon: '🥉', color: '#d97706' };
-  return { name: 'BASIC ACCESS', icon: '🌱', color: '#10b981' };
-}
-
 function checkRate(ip) {
   const now = Date.now();
   const key = ip || 'unknown';
@@ -77,12 +67,6 @@ function checkRate(ip) {
   if (entry.count > 60) return false;
   entry.count++;
   return true;
-}
-
-function mustBeOwnerAndPassword(ownerId, password) {
-  if (password !== OWNER_PASSWORD) return { ok: false, code: 403, msg: 'Autentikasi Gagal: Password Salah' };
-  if (!isOwner(ownerId)) return { ok: false, code: 403, msg: 'Akses Ditolak: Hak Akses Khusus Admin' };
-  return { ok: true };
 }
 
 function ensureUserInDB(db, userId) {
@@ -137,26 +121,13 @@ module.exports = async (req, res) => {
     if (!db.payments) db.payments = {};
     if (!db.codes) db.codes = {};
     if (!db.stats) db.stats = { totalFix: 0, totalSuccess: 0, totalFailed: 0, revenue: 0, revenueHistory: [], lastReset: Date.now() };
-    if (!db.history) db.history = {};
-
-    for (let k of Object.keys(db.users)) { if (isSuspiciousId(k)) delete db.users[k]; }
-    for (let k of Object.keys(db.payments)) { const p = db.payments[k]; if (p && isSuspiciousId(p.userId)) delete db.payments[k]; }
-
-    if (pathOnly.endsWith('/api/verify_owner')) {
-      const ownerId = String(body.owner_id || query.owner_id || '');
-      const password = String(body.password || '').trim();
-      const check = mustBeOwnerAndPassword(ownerId, password);
-      if (!check.ok) return res.status(check.code).json({ ok: false, message: check.msg });
-      return res.json({ ok: true, message: 'Autentikasi Owner Berhasil', isOwner: true });
-    }
 
     if (pathOnly.endsWith('/api/user')) {
       const userId = query.user_id || body.user_id;
       if (!userId) return res.status(400).json({ ok: false, message: 'Parameter user_id diperlukan' });
-      if (isSuspiciousId(userId)) return res.json({ ok: false, message: 'Sistem Menolak: User ID Tidak Valid' });
+      if (isSuspiciousId(userId)) return res.json({ ok: false, message: 'User ID Tidak Valid' });
 
       let user = ensureUserInDB(db, userId);
-
       const isPrem = isPremium(user);
       const premiumLeft = isPrem ? Math.ceil((user.premiumUntil - Date.now()) / 86400000) : 0;
 
@@ -203,9 +174,8 @@ module.exports = async (req, res) => {
       if (!userId || isSuspiciousId(userId)) return res.status(400).json({ ok: false, message: 'User ID tidak valid' });
 
       let user = ensureUserInDB(db, userId);
-
       if (user.lastSpin === getTodayString()) {
-        return res.json({ ok: false, message: 'Anda telah mengklaim Spin Harian hari ini!' });
+        return res.json({ ok: false, message: 'Anda telah memutar Spin Harian hari ini!' });
       }
 
       user.lastSpin = getTodayString();
@@ -213,7 +183,7 @@ module.exports = async (req, res) => {
         { type: 'points', value: 30, label: '+30 Poin Vault' },
         { type: 'points', value: 50, label: '+50 Poin Vault' },
         { type: 'points', value: 100, label: '+100 Poin Vault' },
-        { type: 'fix', value: 3, label: '+3 Akses Fast-Track' },
+        { type: 'fix', value: 3, label: '+3 Kuota Fast-Track' },
         { type: 'vip', value: 1, label: '+1 Hari Akses VIP Premium' }
       ];
 
@@ -230,7 +200,7 @@ module.exports = async (req, res) => {
       await saveDB(db);
       clearCache();
 
-      return res.json({ ok: true, message: `Hadiah Diklaim: ${prize.label}`, prize, points: user.points });
+      return res.json({ ok: true, message: `Selamat! Hadiah Diklaim: ${prize.label}`, prize, points: user.points });
     }
 
     if (pathOnly.endsWith('/api/checkin')) {
@@ -241,7 +211,7 @@ module.exports = async (req, res) => {
       const today = getTodayString();
 
       if (user.lastCheckin === today) {
-        return res.json({ ok: false, message: 'Absensi Hari Ini Sudah Diklaim!' });
+        return res.json({ ok: false, message: 'Check-in Harian Sudah Diklaim Hari Ini!' });
       }
 
       user.lastCheckin = today;
@@ -271,17 +241,16 @@ module.exports = async (req, res) => {
       if (!userId || isSuspiciousId(userId) || !option) return res.status(400).json({ ok: false, message: 'Pilihan Item Tidak Valid' });
 
       let user = ensureUserInDB(db, userId);
-
       const options = {
-        1: { cost: 100, days: 1, label: '1 Hari Akses VIP' },
-        2: { cost: 250, days: 3, label: '3 Hari Akses VIP' },
-        3: { cost: 500, days: 7, label: '7 Hari Akses VIP' },
-        4: { cost: 900, days: 14, label: '14 Hari Akses VIP' },
-        5: { cost: 1600, days: 30, label: '30 Hari Akses VIP Sultan' }
+        1: { cost: 100, days: 1, label: '1 Hari VIP' },
+        2: { cost: 250, days: 3, label: '3 Hari VIP' },
+        3: { cost: 500, days: 7, label: '7 Hari VIP' },
+        4: { cost: 900, days: 14, label: '14 Hari VIP' },
+        5: { cost: 1600, days: 30, label: '30 Hari VIP Sultan' }
       };
 
       const sel = options[option];
-      if (!sel) return res.json({ ok: false, message: 'Item Point Vault Tidak Ditemukan' });
+      if (!sel) return res.json({ ok: false, message: 'Item Point Store Tidak Ditemukan' });
 
       if ((user.points || 0) < sel.cost) {
         return res.json({ ok: false, message: `Saldo Poin Kurang. Dibutuhkan ${sel.cost} PTS` });
@@ -293,7 +262,7 @@ module.exports = async (req, res) => {
       await saveDB(db);
       clearCache();
 
-      return res.json({ ok: true, message: `Transaksi Berhasil! ${sel.label} Aktif.`, points: user.points });
+      return res.json({ ok: true, message: `Penukaran Berhasil! Paket ${sel.label} Telah Aktif.`, points: user.points });
     }
 
     if (pathOnly.endsWith('/api/order') || pathOnly.endsWith('/api/deposit')) {
@@ -305,7 +274,6 @@ module.exports = async (req, res) => {
       }
 
       let user = ensureUserInDB(db, userId);
-
       const prices = { 3: 7000, 5: 10000, 7: 15000, 14: 25000, 30: 45000 };
       const amount = Number(body.amount || query.amount) || prices[days] || days * 2500;
 
@@ -330,7 +298,7 @@ module.exports = async (req, res) => {
 
       return res.json({
         ok: true,
-        message: 'Pesanan Invoice Berhasil Dibuat',
+        message: 'Invoice Pesanan Berhasil Dibuat',
         invoice: payData
       });
     }
@@ -350,7 +318,7 @@ module.exports = async (req, res) => {
       await saveDB(db);
       clearCache();
 
-      return res.json({ ok: true, message: 'Pembelian invoice berhasil dibatalkan.' });
+      return res.json({ ok: true, message: 'Pembelian Invoice Berhasil Dibatalkan' });
     }
 
     if (pathOnly.endsWith('/api/upload_proof')) {
@@ -369,7 +337,7 @@ module.exports = async (req, res) => {
       await saveDB(db);
       clearCache();
 
-      return res.json({ ok: true, message: 'Bukti pembayaran berhasil diupload! Menunggu konfirmasi owner.' });
+      return res.json({ ok: true, message: 'Bukti pembayaran berhasil diunggah! Menunggu konfirmasi owner.' });
     }
 
     if (pathOnly.endsWith('/api/redeem')) {
@@ -379,9 +347,9 @@ module.exports = async (req, res) => {
       if (!userId || !code) return res.status(400).json({ ok: false, message: 'Kode Voucher & User ID Wajib Diisi' });
 
       let user = ensureUserInDB(db, userId);
-
       const vCode = db.codes[code];
-      if (!vCode) return res.json({ ok: false, message: 'Kode Voucher Tidak Ditemukan' });
+
+      if (!vCode) return res.json({ ok: false, message: 'Kode Voucher Tidak Valid' });
 
       const days = typeof vCode === 'object' ? vCode.days : vCode;
       const quota = typeof vCode === 'object' ? (vCode.quota || 0) : 0;
@@ -421,7 +389,6 @@ module.exports = async (req, res) => {
         usersValid: validUsers.length,
         premium: premiumUsers,
         totalFix: db.stats.totalFix || 0,
-        totalSuccess: db.stats.totalSuccess || 0,
         pendingPayments: pending.slice(-30).reverse(),
         paidPayments: ownerCheck ? paid.slice(-30).reverse() : [],
         recentUsers: ownerCheck ? validUsers.slice(-50).reverse() : [],
@@ -430,11 +397,9 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (pathOnly.endsWith('/api/owner_action') || pathOnly.endsWith('/api/owner/approve_deposit')) {
-      const ownerId = String(body.owner_id || '');
-      const password = String(body.password || '').trim();
-      const check = mustBeOwnerAndPassword(ownerId, password);
-      if (!check.ok) return res.status(check.code).json({ ok: false, message: check.msg });
+    if (pathOnly.endsWith('/api/owner_action')) {
+      const ownerId = String(body.owner_id || query.owner_id || '');
+      if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
       const invoice = body.invoice;
       const action = body.action;
@@ -449,8 +414,6 @@ module.exports = async (req, res) => {
           u.pendingDeposit = null;
         }
         db.stats.revenue = (db.stats.revenue || 0) + pay.amount;
-        if (!Array.isArray(db.stats.revenueHistory)) db.stats.revenueHistory = [];
-        db.stats.revenueHistory.push({ date: new Date().toISOString(), amount: pay.amount, invoice, userId: pay.userId });
 
         await saveDB(db);
         clearCache();
@@ -461,7 +424,7 @@ module.exports = async (req, res) => {
           await bot.sendMessage(pay.userId, `<blockquote>⚡ <b>VERIFIKASI TRANSAKSI LUNAS</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n<b>ID Invoice:</b> <code>${invoice}</code>\n<b>Status:</b> 🟢 <b>APPROVED</b>\n<b>Paket:</b> VIP +${pay.days} Hari Berhasil Diaktifkan!\n\n🚀 <i>Terima kasih telah berlangganan di Walzy Store.</i></blockquote>`, { parse_mode: 'HTML' });
         } catch (e) {}
 
-        return res.json({ ok: true, message: `Invoice ${invoice} Berhasil Disetujui` });
+        return res.json({ ok: true, message: `Invoice ${invoice} Berhasil Disetujui!` });
       } else if (action === 'reject') {
         pay.status = 'rejected';
         const u = db.users[String(pay.userId)];
@@ -473,56 +436,49 @@ module.exports = async (req, res) => {
         try {
           const TelegramBot = require('node-telegram-bot-api');
           const bot = new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `<blockquote>❌ <b>VERIFIKASI DITOLAK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nInvoice <code>${invoice}</code> telah ditolak oleh Admin Operator. Silakan hubungi Customer Support jika ada kendala.</blockquote>`, { parse_mode: 'HTML' });
+          await bot.sendMessage(pay.userId, `<blockquote>❌ <b>VERIFIKASI DITOLAK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nInvoice <code>${invoice}</code> ditolak oleh Operator Admin. Hubungi Customer Support jika ada pertanyaan.</blockquote>`, { parse_mode: 'HTML' });
         } catch (e) {}
 
-        return res.json({ ok: true, message: `Invoice ${invoice} Ditolak` });
+        return res.json({ ok: true, message: `Invoice ${invoice} Ditolak!` });
       }
     }
 
     if (pathOnly.endsWith('/api/create_code')) {
-      const ownerId = String(body.owner_id || '');
-      const password = String(body.password || '').trim();
-      const check = mustBeOwnerAndPassword(ownerId, password);
-      if (!check.ok) return res.status(check.code).json({ ok: false, message: check.msg });
+      const ownerId = String(body.owner_id || query.owner_id || '');
+      if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
       const code = String(body.code || '').toUpperCase().trim();
       const days = parseInt(body.days);
       const quota = parseInt(body.quota) || 0;
-      const type = body.type || 'public';
 
-      if (!code || code.length < 3) return res.json({ ok: false, message: 'Kode Minimal 3 Karakter' });
-      if (!days || days <= 0) return res.json({ ok: false, message: 'Durasi Hari Tidak Valid' });
+      if (!code || code.length < 3) return res.json({ ok: false, message: 'Kode minimal 3 karakter' });
+      if (!days || days <= 0) return res.json({ ok: false, message: 'Durasi hari tidak valid' });
 
-      db.codes[code] = { code, days, quota, used: 0, createdAt: Date.now(), type, createdBy: ownerId };
+      db.codes[code] = { code, days, quota, used: 0, createdAt: Date.now() };
       await saveDB(db);
       clearCache();
-      return res.json({ ok: true, message: `Voucher Kode ${code} Dibuat` });
+      return res.json({ ok: true, message: `Voucher ${code} Berhasil Dibuat` });
     }
 
     if (pathOnly.endsWith('/api/delete_code')) {
-      const ownerId = String(body.owner_id || '');
-      const password = String(body.password || '').trim();
-      const check = mustBeOwnerAndPassword(ownerId, password);
-      if (!check.ok) return res.status(check.code).json({ ok: false, message: check.msg });
+      const ownerId = String(body.owner_id || query.owner_id || '');
+      if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
       const code = String(body.code || '').toUpperCase().trim();
-      if (!db.codes[code]) return res.json({ ok: false, message: 'Voucher Tidak Ada' });
+      if (!db.codes[code]) return res.json({ ok: false, message: 'Voucher Tidak Ditemukan' });
 
       delete db.codes[code];
       await saveDB(db);
       clearCache();
-      return res.json({ ok: true, message: `Voucher Kode ${code} Dihapus` });
+      return res.json({ ok: true, message: `Voucher ${code} Dihapus` });
     }
 
     if (pathOnly.endsWith('/api/broadcast')) {
-      const ownerId = String(body.owner_id || '');
-      const password = String(body.password || '').trim();
-      const check = mustBeOwnerAndPassword(ownerId, password);
-      if (!check.ok) return res.status(check.code).json({ ok: false, message: check.msg });
+      const ownerId = String(body.owner_id || query.owner_id || '');
+      if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
       const text = String(body.text || '').trim();
-      if (!text) return res.json({ ok: false, message: 'Teks Pesan Broadcast Kosong' });
+      if (!text) return res.json({ ok: false, message: 'Pesan Broadcast Kosong' });
 
       const validUsers = getUniqueUsers(db.users);
       let sent = 0;
@@ -533,7 +489,7 @@ module.exports = async (req, res) => {
         const bot = new TelegramBot(config.BOT_TOKEN);
         for (let u of validUsers) {
           try {
-            await bot.sendMessage(u.id, `<blockquote>📢 <b>WALZY ANNOUNCEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n${text}\n\n⚡ <i>Walzy Store Central Broadcast System</i></blockquote>`, { parse_mode: 'HTML' });
+            await bot.sendMessage(u.id, `<blockquote>📢 <b>WALZY ANNOUNCEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n${text}\n\n⚡ <i>Walzy Store Official Broadcast</i></blockquote>`, { parse_mode: 'HTML' });
             sent++;
           } catch (e) {
             failed++;
@@ -541,14 +497,10 @@ module.exports = async (req, res) => {
         }
       } catch (e) {}
 
-      return res.json({ ok: true, message: `Pengiriman Broadcast Selesai. Berhasil: ${sent}, Gagal: ${failed}`, sent, failed, total: validUsers.length });
+      return res.json({ ok: true, message: `Broadcast Selesai! Berhasil: ${sent}, Gagal: ${failed}`, sent, failed, total: validUsers.length });
     }
 
-    if (pathOnly.endsWith('/api/health')) {
-      return res.json({ ok: true, message: 'Walzy Executive Core Online', ts: Date.now() });
-    }
-
-    return res.status(404).json({ ok: false, message: 'Endpoint Tidak Ditemukan: ' + pathOnly });
+    return res.status(404).json({ ok: false, message: 'Endpoint Tidak Ditemukan' });
   } catch (err) {
     console.error('API Error:', err);
     return res.status(500).json({ ok: false, message: 'Internal Error Server', error: err.message });
