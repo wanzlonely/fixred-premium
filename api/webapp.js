@@ -232,7 +232,7 @@ module.exports = async (req, res) => {
             <svg class="icon-svg float" style="width:28px;height:28px" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
           <div>
-            <div id="uName" style="font-weight:800;font-size:16px">Memuat User...</div>
+            <div id="uName" style="font-weight:800;font-size:16px">User Walzy</div>
             <div style="font-size:11px;color:var(--text-secondary);margin-top:2px" id="uIdText">ID: --</div>
             <div style="display:flex;gap:6px;margin-top:6px">
               <span class="user-badge" id="uRankBadge">BASIC</span>
@@ -587,20 +587,30 @@ module.exports = async (req, res) => {
   }
 
   function initApp() {
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      currentUserId = tg.initDataUnsafe.user.id;
-    } else {
-      var sp = new URLSearchParams(window.location.search);
-      currentUserId = sp.get('user_id') || sp.get('userId');
-    }
+    try {
+      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        currentUserId = tg.initDataUnsafe.user.id;
+      } else {
+        var sp = new URLSearchParams(window.location.search);
+        currentUserId = sp.get('user_id') || sp.get('userId');
+      }
 
-    if (!currentUserId) {
-      document.getElementById('loadText').textContent = 'Silakan buka WebApp melalui Telegram Bot!';
-      return;
-    }
+      drawWheel();
 
-    drawWheel();
-    loadUserData();
+      if (!currentUserId) {
+        document.getElementById('loadText').textContent = 'Silakan buka WebApp melalui Telegram Bot!';
+        setTimeout(function() {
+          var ldr = document.getElementById('loader');
+          if (ldr) ldr.style.display = 'none';
+        }, 1200);
+        return;
+      }
+
+      loadUserData();
+    } catch (err) {
+      var ldr = document.getElementById('loader');
+      if (ldr) ldr.style.display = 'none';
+    }
   }
 
   async function loadUserData() {
@@ -612,26 +622,28 @@ module.exports = async (req, res) => {
         var u = data.user;
         isUserOwner = u.isOwner;
 
-        document.getElementById('uName').textContent = u.first_name;
+        document.getElementById('uName').textContent = u.first_name || 'User';
         document.getElementById('uIdText').textContent = 'ID: ' + u.id;
-        document.getElementById('uRankBadge').textContent = u.rank.name;
+        document.getElementById('uRankBadge').textContent = u.rank ? u.rank.name : 'BASIC';
         document.getElementById('uStatusBadge').textContent = u.isPremium ? 'VIP (' + u.premiumLeftDays + 'H)' : 'Gratis (' + u.dailyFixRemaining + '/3)';
-        document.getElementById('sOrders').textContent = u.totalFix;
-        document.getElementById('sRefs').textContent = u.referralCount;
-        document.getElementById('sPoints').textContent = u.points;
-        document.getElementById('checkinPointsVal').textContent = u.points + ' PTS';
-        document.getElementById('refUrlInput').value = u.referralLink;
+        document.getElementById('sOrders').textContent = u.totalFix || 0;
+        document.getElementById('sRefs').textContent = u.referralCount || 0;
+        document.getElementById('sPoints').textContent = u.points || 0;
+        document.getElementById('checkinPointsVal').textContent = (u.points || 0) + ' PTS';
+        document.getElementById('refUrlInput').value = u.referralLink || '';
 
         var spinBtn = document.getElementById('spinBtn');
-        spinBtn.disabled = !u.canSpin;
+        if (spinBtn) spinBtn.disabled = !u.canSpin;
 
         var chkBtn = document.getElementById('checkinBtn');
-        chkBtn.disabled = !u.canCheckin;
+        if (chkBtn) chkBtn.disabled = !u.canCheckin;
 
         for (var i = 1; i <= 7; i++) {
           var el = document.getElementById('stDay' + i);
-          if (i <= u.checkinStreak) el.classList.add('active');
-          else el.classList.remove('active');
+          if (el) {
+            if (i <= (u.checkinStreak || 0)) el.classList.add('active');
+            else el.classList.remove('active');
+          }
         }
 
         if (isUserOwner) {
@@ -681,13 +693,14 @@ module.exports = async (req, res) => {
           invBox.innerHTML = '';
           buyBtns.forEach(function(btn) { btn.disabled = false; });
         }
-
-        document.getElementById('loader').style.display = 'none';
       } else {
-        showToast('Error', data.message, 'error');
+        showToast('Error', data.message || 'Gagal memuat profil', 'error');
       }
     } catch (e) {
       showToast('Error', 'Gagal memuat data dari server', 'error');
+    } finally {
+      var ldr = document.getElementById('loader');
+      if (ldr) ldr.style.display = 'none';
     }
   }
 
