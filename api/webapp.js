@@ -158,6 +158,7 @@ module.exports = async (req, res) => {
   </div>
   <div style="font-family:var(--font-heading);font-weight:900;font-size:22px;letter-spacing:1px;color:var(--text-primary)">WALZY STORE HUB</div>
   <div style="font-size:12px;color:var(--text-secondary);font-weight:600" id="loadText">Memuat antarmuka realtime...</div>
+  <div id="debugErrorBox" style="margin-top:16px;padding:12px;background:#fee;border:1px solid #f88;border-radius:8px;font-size:11px;color:#900;font-family:monospace;max-width:90vw;word-break:break-all;display:none;text-align:left;"></div>
 </div>
 
 <div class="toast" id="toast">
@@ -471,6 +472,20 @@ module.exports = async (req, res) => {
 <input type="file" id="proofFileInput" accept="image/*" style="display:none" onchange="submitProofFile(event)">
 
 <script>
+  window.addEventListener('error', function(e) {
+    var box = document.getElementById('debugErrorBox');
+    if (box) {
+      box.style.display = 'block';
+      box.textContent = 'JS ERROR: ' + e.message + ' (line ' + e.lineno + ':' + e.colno + ')\n' + (e.error && e.error.stack ? e.error.stack : '');
+    }
+  });
+  window.addEventListener('unhandledrejection', function(e) {
+    var box = document.getElementById('debugErrorBox');
+    if (box) {
+      box.style.display = 'block';
+      box.textContent = 'PROMISE ERROR: ' + (e.reason && e.reason.message ? e.reason.message : JSON.stringify(e.reason));
+    }
+  });
   var tg = null;
   var currentUserId = null;
   var currentFirstName = '';
@@ -667,6 +682,11 @@ module.exports = async (req, res) => {
       }
     } catch (e) {
       if (!isSilent) showToast('Error', 'Gagal memuat data dari server', 'error');
+      var box = document.getElementById('debugErrorBox');
+      if (box) {
+        box.style.display = 'block';
+        box.textContent = 'FETCH ERROR: ' + e.message;
+      }
     } finally {
       if (!isSilent) hideLoader();
     }
