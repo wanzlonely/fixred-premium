@@ -94,7 +94,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).json({ ok: true });
 
   const clientIp = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
-  if (!checkRate(clientIp)) return res.status(429).json({ ok: false, message: 'Batas Permintaan Terlampaui' });
+  if (!checkRate(clientIp)) return res.status(200).json({ ok: false, message: 'Batas Permintaan Terlampaui' });
 
   const fullUrl = req.url || '';
   const queryString = fullUrl.includes('?') ? fullUrl.split('?').slice(1).join('?') : '';
@@ -122,8 +122,31 @@ module.exports = async (req, res) => {
       const firstName = query.first_name || body.first_name || null;
       const userName = query.username || body.username || null;
 
-      if (!userId) return res.status(200).json({ ok: false, message: 'Parameter user_id diperlukan' });
-      if (isSuspiciousId(userId)) return res.status(200).json({ ok: false, message: 'User ID Tidak Valid' });
+      if (!userId || isSuspiciousId(userId)) {
+        return res.status(200).json({
+          ok: true,
+          user: {
+            id: userId || 0,
+            first_name: firstName || 'User',
+            username: userName || '',
+            referralCount: 0,
+            totalFix: 0,
+            points: 0,
+            checkinStreak: 0,
+            dailyFixRemaining: '5/5',
+            isPremium: false,
+            premiumLeftDays: 0,
+            canSpin: true,
+            canCheckin: true,
+            rank: { name: 'Pemula', icon: '🌱' },
+            pendingDeposit: null,
+            referralLink: `https://t.me/${config.BOT_USERNAME || 'walzystore_bot'}`,
+            isOwner: false
+          },
+          currentInvoice: null,
+          invoices: []
+        });
+      }
 
       let user = ensureUserInDB(db, userId, firstName, userName);
       const isPrem = isPremium(user);
