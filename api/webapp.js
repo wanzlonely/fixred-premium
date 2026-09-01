@@ -162,9 +162,9 @@ module.exports = async (req, res) => {
   #spinCanvas { width: 260px; height: 260px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.1); box-shadow: 0 0 20px rgba(59,130,246,0.3); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
 
   .loader-screen {
-    position: fixed; inset: 0; background: var(--bg-main); z-index: 9999;
+    position: fixed; inset: 0; background: var(--bg-main); z-index: 99;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.4s ease;
   }
 
   .modal-overlay {
@@ -192,14 +192,6 @@ module.exports = async (req, res) => {
   <div style="font-weight:800;font-size:18px;letter-spacing:1px">WALZY STORE PRO</div>
   <div style="font-size:12px;color:var(--text-secondary)" id="loadText">Menghubungkan ke server...</div>
 </div>
-
-<script>
-  // Script darurat: Paksa hilangkan loader maksimal 1 detik setelah halaman dibuka
-  setTimeout(function() {
-    var el = document.getElementById('loader');
-    if (el) { el.style.display = 'none'; }
-  }, 1000);
-</script>
 
 <div class="toast" id="toast">
   <div id="toastIcon" style="color:var(--accent-blue);display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.05)">
@@ -542,9 +534,7 @@ module.exports = async (req, res) => {
 
 <script>
   var tg = window.Telegram ? window.Telegram.WebApp : null;
-  if (tg) { 
-    try { tg.ready(); tg.expand(); } catch(e) {}
-  }
+  if (tg) { tg.ready(); tg.expand(); }
 
   var currentUserId = null;
   var activeInvoiceId = null;
@@ -562,10 +552,11 @@ module.exports = async (req, res) => {
     { label: "VIP 1 HARI 💎", color: "#06b6d4" }
   ];
 
-  function dismissLoader() {
+  function hideLoader() {
     var ldr = document.getElementById('loader');
     if (ldr) {
-      ldr.style.display = 'none';
+      ldr.style.opacity = '0';
+      setTimeout(function() { ldr.style.display = 'none'; }, 400);
     }
   }
 
@@ -605,7 +596,7 @@ module.exports = async (req, res) => {
   }
 
   function initApp() {
-    dismissLoader();
+    setTimeout(hideLoader, 1500);
 
     try {
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -617,20 +608,24 @@ module.exports = async (req, res) => {
 
       drawWheel();
 
-      if (currentUserId) {
-        loadUserData();
+      if (!currentUserId) {
+        document.getElementById('loadText').textContent = 'Silakan buka WebApp melalui Telegram Bot!';
+        hideLoader();
+        return;
       }
+
+      loadUserData();
     } catch (err) {
-      dismissLoader();
+      hideLoader();
     }
   }
 
   async function loadUserData() {
     try {
-      var res = await fetch('/api/user?user_id=' + currentUserId);
+      var res = await fetch('/api/api?endpoint=user&user_id=' + currentUserId);
       var data = await res.json();
 
-      if (data && data.ok) {
+      if (data.ok) {
         var u = data.user;
         isUserOwner = u.isOwner;
 
@@ -705,10 +700,13 @@ module.exports = async (req, res) => {
           invBox.innerHTML = '';
           buyBtns.forEach(function(btn) { btn.disabled = false; });
         }
+      } else {
+        showToast('Error', data.message || 'Gagal memuat profil', 'error');
       }
     } catch (e) {
+      showToast('Error', 'Gagal memuat data dari server', 'error');
     } finally {
-      dismissLoader();
+      hideLoader();
     }
   }
 
@@ -780,7 +778,7 @@ module.exports = async (req, res) => {
     if (btn) btn.disabled = true;
 
     try {
-      var res = await fetch('/api/spin', {
+      var res = await fetch('/api/api?endpoint=spin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId })
@@ -817,7 +815,7 @@ module.exports = async (req, res) => {
     var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Proses Check-in...'; }
     try {
-      var res = await fetch('/api/checkin', {
+      var res = await fetch('/api/api?endpoint=checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId })
@@ -836,7 +834,7 @@ module.exports = async (req, res) => {
     var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Proses...'; }
     try {
-      var res = await fetch('/api/redeem_points', {
+      var res = await fetch('/api/api?endpoint=redeem_points', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId, option: option })
@@ -855,7 +853,7 @@ module.exports = async (req, res) => {
     var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
     try {
-      var res = await fetch('/api/order', {
+      var res = await fetch('/api/api?endpoint=order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId, days: days, amount: amount })
@@ -878,7 +876,7 @@ module.exports = async (req, res) => {
     var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Membatalkan...'; }
     try {
-      var res = await fetch('/api/cancel_order', {
+      var res = await fetch('/api/api?endpoint=cancel_order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId, invoice: invoiceId })
@@ -909,7 +907,7 @@ module.exports = async (req, res) => {
     reader.onload = async function(e) {
       var base64 = e.target.result;
       try {
-        var res = await fetch('/api/upload_proof', {
+        var res = await fetch('/api/api?endpoint=upload_proof', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: currentUserId, invoice: activeInvoiceId, image_data: base64 })
@@ -932,7 +930,7 @@ module.exports = async (req, res) => {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Mengklaim...'; }
 
     try {
-      var res = await fetch('/api/redeem', {
+      var res = await fetch('/api/api?endpoint=redeem', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUserId, code: code })
@@ -959,10 +957,10 @@ module.exports = async (req, res) => {
 
   async function loadOwnerData() {
     try {
-      var res = await fetch('/api/stats?user_id=' + currentUserId);
+      var res = await fetch('/api/api?endpoint=stats&user_id=' + currentUserId);
       var d = await res.json();
 
-      if (d && d.ok) {
+      if (d.ok) {
         document.getElementById('oRev').textContent = 'Rp ' + (d.revenue || 0).toLocaleString('id-ID');
         document.getElementById('oUsers').textContent = d.usersValid || 0;
         document.getElementById('oVip').textContent = d.premium || 0;
@@ -1033,7 +1031,7 @@ module.exports = async (req, res) => {
   async function ownerAct(invoice, action, btn) {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
     try {
-      var res = await fetch('/api/owner_action', {
+      var res = await fetch('/api/api?endpoint=owner_action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id: currentUserId, invoice: invoice, action: action })
@@ -1055,7 +1053,7 @@ module.exports = async (req, res) => {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Membuat...'; }
 
     try {
-      var res = await fetch('/api/create_code', {
+      var res = await fetch('/api/api?endpoint=create_code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id: currentUserId, code: code, days: days, quota: quota })
@@ -1078,7 +1076,7 @@ module.exports = async (req, res) => {
   async function deleteVoucher(code, btn) {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Hapus...'; }
     try {
-      var res = await fetch('/api/delete_code', {
+      var res = await fetch('/api/api?endpoint=delete_code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id: currentUserId, code: code })
@@ -1097,7 +1095,7 @@ module.exports = async (req, res) => {
     if (btn) { btn.disabled = true; btn.innerHTML = 'Mengirim Broadcast...'; }
 
     try {
-      var res = await fetch('/api/broadcast', {
+      var res = await fetch('/api/api?endpoint=broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id: currentUserId, text: text })
@@ -1118,12 +1116,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // Auto-run instant tanpa menunggu window.onload (Mencegah stuck di Telegram Webview)
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
-  } else {
-    initApp();
-  }
+  window.onload = initApp;
 </script>
 </body>
 </html>`;
