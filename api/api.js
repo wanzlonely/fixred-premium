@@ -97,7 +97,6 @@ module.exports = async (req, res) => {
   if (!checkRate(clientIp)) return res.status(429).json({ ok: false, message: 'Batas Permintaan Terlampaui' });
 
   const fullUrl = req.url || '';
-  const pathOnly = fullUrl.split('?')[0];
   const queryString = fullUrl.includes('?') ? fullUrl.split('?').slice(1).join('?') : '';
   const parsedParams = new URLSearchParams(queryString);
   const query = {};
@@ -141,7 +140,7 @@ module.exports = async (req, res) => {
       const userInvoices = Object.values(db.payments).filter(p => String(p.userId) === String(userId));
       const activeInvoice = userInvoices.find(p => p.status === 'pending' || p.status === 'waiting_approval' || p.status === 'waiting_payment') || null;
 
-      const remainingQuota = isPrem ? 'Unlimited' : `${Math.max(0, 5 - (user.dailyFix.count || 0))}/5`;
+      const remainingQuota = isPrem ? 'Unlimited ♾️' : `${Math.max(0, 5 - (user.dailyFix.count || 0))}/5`;
 
       await saveDB(db);
 
@@ -184,7 +183,7 @@ module.exports = async (req, res) => {
         { index: 1, type: 'points', value: 30, label: '+30 Poin Vault 🪙', weight: 30 },
         { index: 2, type: 'points', value: 50, label: '+50 Poin Vault 🪙', weight: 15 },
         { index: 3, type: 'points', value: 100, label: '+100 Poin Vault 🪙', weight: 8 },
-        { index: 4, type: 'fix', value: 3, label: '+3 Fast-Track ⚡', weight: 5 },
+        { index: 4, type: 'fix', value: 3, label: '+3 Kuota Fast-Track ⚡', weight: 5 },
         { index: 5, type: 'vip', value: 1, label: '+1 Hari Akses VIP 💎', weight: 2 }
       ];
 
@@ -452,7 +451,7 @@ module.exports = async (req, res) => {
 
         try {
           const bot = new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `❌ <b>VERIFIKASI DITOLAK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nInvoice <code>${invoice}</code> ditolak oleh Operator Admin. Hubungi Customer Support jika ada pertanyaan.`, { parse_mode: 'HTML' });
+          await bot.sendMessage(pay.userId, `❌ <b>VERIFIKASI DITOLAK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nInvoice <code>${invoice}</code> ditolak oleh Operator Admin. Hubungi Support jika ada pertanyaan.`, { parse_mode: 'HTML' });
         } catch (e) {}
 
         return res.json({ ok: true, message: `Invoice ${invoice} Ditolak!` });
