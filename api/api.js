@@ -44,7 +44,7 @@ function checkRate(ip){
     rateCache.set(key,{count:1,ts:now});
     return true;
   }
-  if(entry.count>120) return false;
+  if(entry.count>150) return false;
   entry.count++;
   return true;
 }
@@ -66,7 +66,8 @@ function ensureUserInDB(db, userId, nameData, usernameData){
       lastSpin:null,
       points:0,
       checkinStreak:0,
-      lastCheckin:null
+      lastCheckin:null,
+      weeklyStreak:0
     };
   }else{
     if(nameData && db.users[k].first_name!==nameData) db.users[k].first_name=nameData;
@@ -78,6 +79,19 @@ function ensureUserInDB(db, userId, nameData, usernameData){
   const paid=Object.values(db.payments||{}).filter(p=>String(p.userId)===k && (p.status==='paid' || p.status==='approved'));
   db.users[k].totalFix=paid.length;
   return db.users[k];
+}
+
+function getWeeklyPoints(){
+  return [
+    [10,15,20,25,30,50,100],
+    [15,20,25,30,40,60,120],
+    [20,25,30,40,50,70,140],
+    [25,30,40,50,60,80,160]
+  ];
+}
+
+function getWeekIndex(){
+  return Math.floor(Date.now()/(7*24*3600*1000))%4;
 }
 
 module.exports = async (req, res) => {
@@ -108,7 +122,7 @@ module.exports = async (req, res) => {
     if(!db.stats) db.stats={totalFix:0,totalSuccess:0,totalFailed:0,revenue:0,revenueHistory:[],lastReset:Date.now()};
 
     if(endpoint==='health'){
-      return res.status(200).json({ok:true,message:'WALZY API FINAL ONLINE',timestamp:Date.now(),users:Object.keys(db.users).length,codes:Object.keys(db.codes).length});
+      return res.status(200).json({ok:true,message:'WALZY API V5 FINAL ONLINE',timestamp:Date.now(),users:Object.keys(db.users).length,codes:Object.keys(db.codes).length});
     }
 
     if(endpoint==='user'){
@@ -134,10 +148,12 @@ module.exports = async (req, res) => {
             rank:{name:'Pemula',icon:'🌱'},
             pendingDeposit:null,
             referralLink:`https://t.me/${config.BOT_USERNAME||'walzystore_bot'}`,
-            isOwner:false
+            isOwner:false,
+            weekIndex:getWeekIndex()
           },
           currentInvoice:null,
-          invoices:[]
+          invoices:[],
+          dana:{number:config.DANA_NUMBER||'083124469855',name:config.DANA_NAME||'WALZY STORE'}
         });
       }
       let user=ensureUserInDB(db,userId,firstName,userName);
@@ -171,10 +187,13 @@ module.exports = async (req, res) => {
           rank:rankInfo,
           pendingDeposit:activeInvoice,
           referralLink:`https://t.me/${config.BOT_USERNAME||'walzystore_bot'}?start=ref_${user.id}`,
-          isOwner:isOwner(userId)
+          isOwner:isOwner(userId),
+          weekIndex:getWeekIndex()
         },
         currentInvoice:activeInvoice,
-        invoices:userInvoices
+        invoices:userInvoices,
+        dana:{number:config.DANA_NUMBER||'083124469855',name:config.DANA_NAME||'WALZY STORE'},
+        weeklyPoints:getWeeklyPoints()
       });
     }
 
@@ -188,12 +207,12 @@ module.exports = async (req, res) => {
       }
       if(dbUser.lastSpin===getTodayString()) return res.status(200).json({ok:false,message:'Spin harian sudah digunakan hari ini!'});
       const prizes=[
-        {label:'+50 PTS',type:'points',value:50,weight:30},
-        {label:'ZONK',type:'zonk',value:0,weight:15},
-        {label:'+25 PTS',type:'points',value:25,weight:25},
+        {label:'+50 PTS',type:'points',value:50,weight:28},
+        {label:'ZONK',type:'zonk',value:0,weight:12},
+        {label:'+25 PTS',type:'points',value:25,weight:24},
         {label:'+100 PTS',type:'points',value:100,weight:10},
-        {label:'+3 KUOTA',type:'quota',value:3,weight:15},
-        {label:'VIP 1 HARI',type:'vip',value:1,weight:5}
+        {label:'+3 KUOTA',type:'quota',value:3,weight:16},
+        {label:'VIP 1 HARI',type:'vip',value:1,weight:10}
       ];
       const totalWeight=prizes.reduce((a,b)=>a+b.weight,0);
       let r=Math.random()*totalWeight;
@@ -227,19 +246,21 @@ module.exports = async (req, res) => {
       }
       if(user.lastCheckin===getTodayString()) return res.status(200).json({ok:false,message:'Kamu sudah check-in hari ini!'});
       const today=getTodayString();
-      const yesterday=new Date(Date.now()-86400000).toLocaleString('en-US',{timeZone:'Asia/Jakarta'}).slice(0,10);
-      const isoYesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
-      if(user.lastCheckin===yesterday || user.lastCheckin===isoYesterday){
+      const yesterdayJakarta=new Date(Date.now()-86400000).toLocaleString('en-US',{timeZone:'Asia/Jakarta'}).slice(0,10);
+      const yesterdayISO=new Date(Date.now()-86400000).toISOString().slice(0,10);
+      if(user.lastCheckin===yesterdayJakarta || user.lastCheckin===yesterdayISO){
         user.checkinStreak=(user.checkinStreak||0)+1;
       }else{
         user.checkinStreak=1;
       }
       if(user.checkinStreak>7) user.checkinStreak=1;
       user.lastCheckin=today;
-      const bonus=10 + (user.checkinStreak*5);
+      const weekIdx=getWeekIndex();
+      const weekly=getWeeklyPoints();
+      const bonus=weekly[weekIdx][user.checkinStreak-1]||10;
       user.points=(user.points||0)+bonus;
       await saveDB(db);
-      return res.status(200).json({ok:true,message:`Check-in Day ${user.checkinStreak} berhasil! +${bonus} PTS`});
+      return res.status(200).json({ok:true,message:`Check-in Day ${user.checkinStreak} Minggu ${weekIdx+1} berhasil! +${bonus} PTS`,bonus:bonus,streak:user.checkinStreak,week:weekIdx+1});
     }
 
     if(endpoint==='redeem'){
@@ -248,19 +269,44 @@ module.exports = async (req, res) => {
       if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User tidak valid'});
       let user=db.users[userId];
       if(!user) user=ensureUserInDB(db,userId,null,null);
-      if(option==='quota'){
+      if(option==='quota1' || option==='quota'){
         if((user.points||0)<100) return res.status(200).json({ok:false,message:'Poin tidak cukup! Butuh 100 PTS'});
         user.points-=100;
         if(!user.dailyFix || user.dailyFix.date!==getTodayString()) user.dailyFix={date:getTodayString(),count:0};
         user.dailyFix.count=Math.max(0,(user.dailyFix.count||0)-1);
         await saveDB(db);
-        return res.status(200).json({ok:true,message:'Redeem berhasil! +1 Kuota Fix Merah'});
+        return res.status(200).json({ok:true,message:'Berhasil tukar +1 Kuota!'});
+      }else if(option==='quota3'){
+        if((user.points||0)<250) return res.status(200).json({ok:false,message:'Butuh 250 PTS untuk +3 Kuota'});
+        user.points-=250;
+        if(!user.dailyFix || user.dailyFix.date!==getTodayString()) user.dailyFix={date:getTodayString(),count:0};
+        user.dailyFix.count=Math.max(0,(user.dailyFix.count||0)-3);
+        await saveDB(db);
+        return res.status(200).json({ok:true,message:'Berhasil tukar +3 Kuota!'});
       }else if(option==='spin'){
-        if((user.points||0)<150) return res.status(200).json({ok:false,message:'Poin tidak cukup! Butuh 150 PTS'});
+        if((user.points||0)<150) return res.status(200).json({ok:false,message:'Butuh 150 PTS'});
         user.points-=150;
         user.lastSpin=null;
         await saveDB(db);
-        return res.status(200).json({ok:true,message:'Redeem berhasil! Spin direset!'});
+        return res.status(200).json({ok:true,message:'Spin direset! Silakan spin lagi.'});
+      }else if(option==='vip1'){
+        if((user.points||0)<500) return res.status(200).json({ok:false,message:'Butuh 500 PTS untuk VIP 1 Hari'});
+        user.points-=500;
+        user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+86400000*1;
+        await saveDB(db);
+        return res.status(200).json({ok:true,message:'VIP 1 Hari aktif!'});
+      }else if(option==='vip3'){
+        if((user.points||0)<1200) return res.status(200).json({ok:false,message:'Butuh 1200 PTS untuk VIP 3 Hari'});
+        user.points-=1200;
+        user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+86400000*3;
+        await saveDB(db);
+        return res.status(200).json({ok:true,message:'VIP 3 Hari aktif!'});
+      }else if(option==='bonus200'){
+        if((user.points||0)<300) return res.status(200).json({ok:false,message:'Butuh 300 PTS'});
+        user.points-=300;
+        user.points+=500;
+        await saveDB(db);
+        return res.status(200).json({ok:true,message:'Berhasil! 300 PTS ditukar jadi 500 PTS (+200 bonus)'});
       }
       return res.status(200).json({ok:false,message:'Opsi tidak valid'});
     }
@@ -273,8 +319,10 @@ module.exports = async (req, res) => {
       if(!days || days<=0) return res.status(200).json({ok:false,message:'Durasi tidak valid'});
       let user=db.users[userId];
       if(!user) user=ensureUserInDB(db,userId,null,null);
-      const existingPending=Object.values(db.payments).find(p=>String(p.userId)===userId && (p.status==='pending' || p.status==='waiting_approval'));
-      if(existingPending) return res.status(200).json({ok:false,message:'Masih ada invoice pending! Selesaikan dulu.'});
+      const existingPending=Object.values(db.payments||{}).find(p=>String(p.userId)===userId && (p.status==='pending' || p.status==='waiting_approval'));
+      if(existingPending){
+        return res.status(200).json({ok:false,message:'Masih ada invoice pending: '+existingPending.id+' - Batalkan dulu atau upload bukti'});
+      }
       const invoiceId=genInvoiceID();
       const invoice={
         id:invoiceId,
@@ -287,7 +335,10 @@ module.exports = async (req, res) => {
         createdAt:Date.now()
       };
       db.payments[invoiceId]=invoice;
-      await saveDB(db);
+      const saved=await saveDB(db);
+      if(!saved){
+        return res.status(200).json({ok:false,message:'Gagal simpan invoice, coba lagi'});
+      }
       return res.status(200).json({ok:true,message:'Invoice berhasil dibuat',invoice:invoice});
     }
 
@@ -298,10 +349,10 @@ module.exports = async (req, res) => {
       const pay=db.payments[invoiceId];
       if(!pay) return res.status(200).json({ok:false,message:'Invoice tidak ditemukan'});
       if(String(pay.userId)!==userId && !isOwner(userId)) return res.status(200).json({ok:false,message:'Akses ditolak'});
-      if(pay.status==='paid' || pay.status==='approved') return res.status(200).json({ok:false,message:'Invoice sudah lunas'});
+      if(pay.status==='paid' || pay.status==='approved') return res.status(200).json({ok:false,message:'Invoice sudah lunas tidak bisa batal'});
       delete db.payments[invoiceId];
       await saveDB(db);
-      return res.status(200).json({ok:true,message:'Invoice dibatalkan'});
+      return res.status(200).json({ok:true,message:'Invoice dibatalkan, silakan buat baru'});
     }
 
     if(endpoint==='upload_proof'){
@@ -314,16 +365,17 @@ module.exports = async (req, res) => {
       if(String(pay.userId)!==userId) return res.status(200).json({ok:false,message:'Akses ditolak'});
       pay.proofImage=imageData;
       pay.status='waiting_approval';
+      pay.proofAt=Date.now();
       await saveDB(db);
       try{
         const bot=new TelegramBot(config.BOT_TOKEN);
         for(let oid of (config.OWNER_IDS||[])){
           try{
-            await bot.sendMessage(oid, `📥 <b>BUKTI TRANSFER MASUK</b>\n\n🧾 Invoice: <code>${invoiceId}</code>\n👤 User: <code>${userId}</code>\n💰 Rp ${pay.amount} • ${pay.days}H`, {parse_mode:'HTML'});
+            await bot.sendMessage(oid, `📥 <b>BUKTI TRANSFER MASUK</b>\n\n🧾 Invoice: <code>${invoiceId}</code>\n👤 User: <code>${userId}</code>\n💰 Rp ${pay.amount} • ${pay.days}H\n\nCek di Web Control > Deposit`, {parse_mode:'HTML'});
           }catch(e){}
         }
       }catch(e){}
-      return res.status(200).json({ok:true,message:'Bukti berhasil diupload! Menunggu verifikasi admin.'});
+      return res.status(200).json({ok:true,message:'Bukti berhasil diupload! Menunggu verifikasi owner realtime.'});
     }
 
     if(endpoint==='claim_code'){
@@ -336,17 +388,21 @@ module.exports = async (req, res) => {
         user=ensureUserInDB(db,userId,null,null);
       }
       let vCode=db.codes[code];
+      let actualKey=code;
       if(!vCode){
         const foundKey=Object.keys(db.codes).find(k=>k.toUpperCase()===code);
-        if(foundKey) vCode=db.codes[foundKey];
+        if(foundKey){
+          vCode=db.codes[foundKey];
+          actualKey=foundKey;
+        }
       }
-      if(!vCode) return res.status(200).json({ok:false,message:'Kode Voucher Tidak Valid. Pastikan kode benar dari owner.'});
+      if(!vCode) return res.status(200).json({ok:false,message:'Kode Voucher Tidak Valid. Pastikan kode benar.'});
       const days=typeof vCode==='object' ? (vCode.days||0) : (typeof vCode==='number' ? vCode : 0);
       const quota=typeof vCode==='object' ? (vCode.quota||0) : 0;
       const used=typeof vCode==='object' ? (vCode.used||0) : 0;
       if(days<=0) return res.status(200).json({ok:false,message:'Voucher tidak valid (durasi 0)'});
       if(quota>0 && used>=quota){
-        return res.status(200).json({ok:false,message:'Kuota Voucher Telah Habis ('+used+'/'+quota+')'});
+        return res.status(200).json({ok:false,message:'Kuota Voucher Habis ('+used+'/'+quota+')'});
       }
       user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+(days*86400000);
       if(typeof vCode==='object'){
@@ -355,10 +411,10 @@ module.exports = async (req, res) => {
           vCode.expired=true;
         }
       }else{
-        delete db.codes[code];
+        delete db.codes[actualKey];
       }
       await saveDB(db);
-      return res.status(200).json({ok:true,message:`Voucher berhasil diklaim! +${days} Hari VIP Aktif`,days:days});
+      return res.status(200).json({ok:true,message:`Voucher berhasil! +${days} Hari VIP Aktif`,days:days});
     }
 
     if(endpoint==='stats'){
@@ -385,13 +441,14 @@ module.exports = async (req, res) => {
 
     if(endpoint==='owner_action'){
       const ownerId=String(body.owner_id||query.owner_id||'');
-      if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak: Bukan Owner'});
+      if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak'});
       const invoice=body.invoice;
       const action=body.action;
       const pay=db.payments[invoice];
       if(!pay) return res.status(200).json({ok:false,message:'Invoice Tidak Ditemukan'});
       if(action==='approve'){
         pay.status='paid';
+        pay.approvedAt=Date.now();
         const u=db.users[String(pay.userId)];
         if(u){
           u.premiumUntil=Math.max(Date.now(),u.premiumUntil||0)+(pay.days*86400000);
@@ -402,18 +459,19 @@ module.exports = async (req, res) => {
         await saveDB(db);
         try{
           const bot=new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `<b>✅ VERIFIKASI LUNAS</b>\n\nInvoice: <code>${invoice}</code>\nStatus: APPROVED\nPaket: VIP +${pay.days} Hari Aktif!`, {parse_mode:'HTML'});
+          await bot.sendMessage(pay.userId, `<b>✅ VERIFIKASI LUNAS</b>\n\nInvoice: <code>${invoice}</code>\nStatus: APPROVED\nPaket: VIP +${pay.days} Hari Aktif!\n\nTerima kasih!`, {parse_mode:'HTML'});
         }catch(e){}
-        return res.status(200).json({ok:true,message:`Invoice ${invoice} Disetujui!`});
+        return res.status(200).json({ok:true,message:`Invoice ${invoice} Disetujui! VIP aktif`});
       }else if(action==='reject'){
         pay.status='rejected';
+        pay.rejectedAt=Date.now();
         const u=db.users[String(pay.userId)];
         if(u) u.pendingDeposit=null;
         db.stats.totalFailed=(db.stats.totalFailed||0)+1;
         await saveDB(db);
         try{
           const bot=new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `❌ <b>VERIFIKASI DITOLAK</b>\n\nInvoice <code>${invoice}</code> ditolak Admin.`, {parse_mode:'HTML'});
+          await bot.sendMessage(pay.userId, `❌ <b>VERIFIKASI DITOLAK</b>\n\nInvoice <code>${invoice}</code> ditolak. Silakan buat invoice baru.`, {parse_mode:'HTML'});
         }catch(e){}
         return res.status(200).json({ok:true,message:`Invoice ${invoice} Ditolak!`});
       }
@@ -427,18 +485,18 @@ module.exports = async (req, res) => {
       const days=parseInt(body.days);
       const quota=parseInt(body.quota)||0;
       if(!code || code.length<3) return res.status(200).json({ok:false,message:'Kode minimal 3 karakter'});
-      if(!days || days<=0) return res.status(200).json({ok:false,message:'Durasi hari tidak valid'});
+      if(!days || days<=0) return res.status(200).json({ok:false,message:'Durasi tidak valid'});
       if(db.codes[code] && !body.force){
         const existing=db.codes[code];
         const used=typeof existing==='object' ? (existing.used||0) : 0;
         const q=typeof existing==='object' ? (existing.quota||0) : 0;
         if(q===0 || used<q){
-          return res.status(200).json({ok:false,message:'Kode sudah ada dan masih aktif. Gunakan kode lain atau hapus dulu.'});
+          return res.status(200).json({ok:false,message:'Kode sudah ada dan masih aktif ('+used+'/'+(q||'∞')+'). Hapus dulu atau pakai kode lain.'});
         }
       }
       db.codes[code]={code:code,days:days,quota:quota,used:0,createdAt:Date.now(),createdBy:ownerId};
       await saveDB(db);
-      return res.status(200).json({ok:true,message:`Voucher ${code} berhasil dibuat! ${days} Hari, Kuota: ${quota>0 ? quota : 'Unlimited'}`});
+      return res.status(200).json({ok:true,message:`Voucher ${code} dibuat! ${days} Hari, Kuota: ${quota>0 ? quota : 'Unlimited'}`});
     }
 
     if(endpoint==='delete_code'){
@@ -461,7 +519,7 @@ module.exports = async (req, res) => {
       const ownerId=String(body.owner_id||query.owner_id||'');
       if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak'});
       const text=String(body.text||'').trim();
-      if(!text) return res.status(200).json({ok:false,message:'Pesan Broadcast Kosong'});
+      if(!text) return res.status(200).json({ok:false,message:'Pesan kosong'});
       const validUsers=getUniqueUsers(db.users);
       let sent=0;
       let failed=0;
@@ -481,6 +539,6 @@ module.exports = async (req, res) => {
     return res.status(200).json({ok:false,message:'Endpoint Tidak Ditemukan'});
   }catch(err){
     console.error('API Error:',err);
-    return res.status(200).json({ok:false,message:'Internal Error Server',error:err.message});
+    return res.status(200).json({ok:false,message:'Internal Error',error:err.message});
   }
 };
