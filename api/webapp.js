@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>WALZY STORE PRO</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -595,7 +595,10 @@ module.exports = async (req, res) => {
     }
   }
 
+  var appInitialized = false;
   function initApp() {
+    if (appInitialized) return;
+    appInitialized = true;
     setTimeout(hideLoader, 1500);
 
     try {
@@ -1116,7 +1119,12 @@ module.exports = async (req, res) => {
     }
   }
 
-  window.onload = initApp;
+  if (document.readyState === 'complete') {
+    initApp();
+  } else {
+    window.addEventListener('load', initApp);
+    setTimeout(initApp, 3000);
+  }
 </script>
 </body>
 </html>`;
