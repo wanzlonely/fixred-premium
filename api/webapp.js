@@ -547,16 +547,11 @@ module.exports = async (req, res) => {
     }
   }
 
-  var appInitialized = false;
-  // Hard failsafe: no matter what happens below (network hang, DB down,
-  // Telegram script not loaded, unexpected exception, etc.) the loader
-  // MUST disappear within 4 seconds so the UI never gets stuck.
-  setTimeout(hideLoader, 1500);
+  var initAttempts = 0;
+  setTimeout(hideLoader, 3000);
 
   function initApp() {
-    if (appInitialized) return;
-    appInitialized = true;
-    setTimeout(hideLoader, 1000);
+    initAttempts++;
 
     try {
       tg = window.Telegram ? window.Telegram.WebApp : null;
@@ -576,14 +571,17 @@ module.exports = async (req, res) => {
       drawWheel();
 
       if (!currentUserId) {
+        if (initAttempts < 6) {
+          setTimeout(initApp, 400);
+          return;
+        }
         document.getElementById('loadText').textContent = 'Silakan buka WebApp melalui Telegram Bot!';
         hideLoader();
         return;
       }
 
-      loadUserData();
-
       if (!pollingTimer) {
+        loadUserData();
         pollingTimer = setInterval(function() {
           loadUserData(true);
         }, 2500);
@@ -1106,13 +1104,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // Script ini posisinya di akhir <body>, jadi seluruh DOM di atasnya
-  // sudah pasti ter-parse. Jalankan langsung tanpa menunggu event apapun
-  // (load/DOMContentLoaded bisa telat atau tidak fire di sebagian browser/network).
   initApp();
-  window.addEventListener('load', initApp);
-  setTimeout(initApp, 800);
-  setTimeout(hideLoader, 2000);
 </script>
 </body>
 </html>`;
