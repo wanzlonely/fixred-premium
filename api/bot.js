@@ -1,3 +1,4 @@
+const TelegramBot = require('node-telegram-bot-api');
 const { loadDB, saveDB, getTodayString, esc, getRank } = require('../lib/utils');
 const config = require('../config');
 
@@ -140,7 +141,6 @@ function getUserMenu(user, chatId, webappUrl) {
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(200).send('Bot API Ready');
 
-  const TelegramBot = require('node-telegram-bot-api');
   const bot = new TelegramBot(config.BOT_TOKEN);
 
   try {
@@ -265,17 +265,17 @@ module.exports = async (req, res) => {
         const initRes = await clientHelper.sendToTarget(displayNum);
         const sessionCode = initRes.targetId || `CPHX ${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-        const initialMsgTxt = `🛠️ <b>HASIL PROSES FIXMERAH</b>\n◈────────────────────◈\n<blockquote>✅ <b>BERHASIL ( 1 )</b>\n📱 <code>${displayNum}</code>\n🆔 <code>${sessionCode}</code>\n📩 TERKIRIM</blockquote>\n\n📫 <i>Notifikasi update status akan dikirim otomatis jika ada balasan (Max 1 Menit).</i> 🔥`;
+        const initialMsgTxt = `🛠️ <b>HASIL PROSES FIXMERAH</b>\n◈────────────────────◈\n<blockquote>✅ <b>BERHASIL ( 1 )</b>\n📱 <code>${displayNum}</code>\n🆔 <code>${sessionCode}</code>\n📩 TERKIRIM</blockquote>\n\nNotifikasi update status akan dikirim otomatis jika ada balasan. 🔥`;
 
         await bot.sendMessage(chatId, initialMsgTxt, { parse_mode: 'HTML' });
 
-        const statusRes = await clientHelper.monitorTargetResponse(displayNum, sessionCode, 75000);
+        const statusRes = await clientHelper.monitorTargetResponse(displayNum, sessionCode, 7000);
 
         if (statusRes.status === 'SUCCESS') {
           const succReport = `✅ <b>SUCCESS FIXMERAH CPHX</b>\n◈────────────────────◈\n<blockquote>📱 Nomor: <code>${displayNum}</code>\n🆔 ID: <code>${sessionCode}</code>\n📩 Status: <b>SUCCESS</b></blockquote>\n\n💬 <i>WhatsApp sudah merespon. Silakan coba login/verifikasi akun Anda sekarang!</i>`;
           await bot.sendMessage(chatId, succReport, { parse_mode: 'HTML' });
         } else {
-          const failReport = `⚠️ <b>BELUM ADA RESPONS WHATSAPP</b>\n◈────────────────────◈\n<blockquote>📱 Nomor: <code>${displayNum}</code>\n🆔 ID: <code>${sessionCode}</code>\n📩 Status: <b>TIDAK ADA BALASAN</b></blockquote>\n\n💬 <i>WhatsApp tidak merespon dalam 90 detik.</i>`;
+          const failReport = `⚠️ <b>BELUM ADA RESPONS WHATSAPP</b>\n◈────────────────────◈\n<blockquote>📱 Nomor: <code>${displayNum}</code>\n🆔 ID: <code>${sessionCode}</code>\n📩 Status: <b>TIDAK ADA BALASAN</b></blockquote>\n\n💬 <i>WhatsApp belum merespon. Silakan periksa berkala.</i>`;
           await bot.sendMessage(chatId, failReport, { parse_mode: 'HTML' });
         }
 
@@ -284,7 +284,7 @@ module.exports = async (req, res) => {
 
       if (st && st.action === 'awaiting_owner_msg' && text) {
         userState.delete(String(uid));
-        for (let ownerId of config.OWNER_IDS) {
+        for (let ownerId of (config.OWNER_IDS || [])) {
           try {
             await bot.sendMessage(ownerId, `📨 <b>PESAN MASUK USER</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\n👤 Pengirim: <b>${esc(user.first_name)}</b>\n🆔 User ID: <code>${uid}</code>\n💬 Pesan:\n${esc(text)}`, {
               parse_mode: 'HTML',
