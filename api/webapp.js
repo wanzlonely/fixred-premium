@@ -680,8 +680,8 @@ module.exports = async (req, res) => {
 
           var proofHtml = inv.proofImage ? 
             '<div class="proof-preview-container">' +
-              '<img src="' + inv.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\'' + inv.proofImage + '\')">' +
-              '<div class="zoom-btn-overlay" onclick="openZoomModal(\'' + inv.proofImage + '\')">' +
+              '<img src="' + inv.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\\'' + inv.proofImage + '\\')">' +
+              '<div class="zoom-btn-overlay" onclick="openZoomModal(\\'' + inv.proofImage + '\\')">' +
                 '<svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
                 'Perbesar Foto Fullscreen' +
               '</div>' +
@@ -695,7 +695,7 @@ module.exports = async (req, res) => {
               proofHtml +
               '<div style="display:flex;gap:8px;margin-top:12px">' +
                 '<button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="triggerUploadProof()">' + (inv.proofImage ? 'Ganti Foto Bukti' : 'Upload Foto Bukti') + '</button>' +
-                '<button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="cancelOrder(\'' + inv.id + '\', this)">Batalkan Pembelian</button>' +
+                '<button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="cancelOrder(\\'' + inv.id + '\\', this)">Batalkan Pembelian</button>' +
               '</div>' +
             '</div>';
         } else {
@@ -974,8 +974,8 @@ module.exports = async (req, res) => {
           pendingList.innerHTML = d.pendingPayments.map(function(p) {
             var imgHtml = p.proofImage ? 
               '<div class="proof-preview-container">' +
-                '<img src="' + p.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
-                '<div class="zoom-btn-overlay" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
+                '<img src="' + p.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\\'' + p.proofImage + '\\')">' +
+                '<div class="zoom-btn-overlay" onclick="openZoomModal(\\'' + p.proofImage + '\\')">' +
                   '<svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
                   'Lihat Foto Fullscreen' +
                 '</div>' +
@@ -986,8 +986,8 @@ module.exports = async (req, res) => {
               '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px">User: ' + p.userId + ' | Paket: ' + p.days + ' Hari (' + (p.amountFormatted || ('Rp ' + p.amount)) + ')</div>' +
               imgHtml +
               '<div style="display:flex;gap:8px;margin-top:10px">' +
-                '<button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="ownerAct(\'' + p.id + '\', \'approve\', this)">Setujui Pembayaran</button>' +
-                '<button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="ownerAct(\'' + p.id + '\', \'reject\', this)">Tolak</button>' +
+                '<button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #059669)" onclick="ownerAct(\\'' + p.id + '\\', \\'approve\\', this)">Setujui Pembayaran</button>' +
+                '<button class="btn-custom" style="padding:8px;font-size:12px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="ownerAct(\\'' + p.id + '\\', \\'reject\\', this)">Tolak</button>' +
               '</div>' +
             '</div>';
           }).join('');
@@ -1020,7 +1020,7 @@ module.exports = async (req, res) => {
                   '<div style="font-weight:700;font-size:13px">' + c.code + '</div>' +
                   '<div style="font-size:11px;color:var(--text-secondary)">' + c.days + ' Hari | Terpakai: ' + (c.used || 0) + '/' + (c.quota || '∞') + '</div>' +
                 '</div>' +
-                '<button class="btn-custom" style="width:auto;padding:6px 12px;font-size:11px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="deleteVoucher(\'' + c.code + '\', this)">Hapus</button>' +
+                '<button class="btn-custom" style="width:auto;padding:6px 12px;font-size:11px;background:linear-gradient(135deg, var(--accent-rose), #e11d48)" onclick="deleteVoucher(\\'' + c.code + '\\', this)">Hapus</button>' +
               '</div>' +
             '</div>';
           }).join('');
