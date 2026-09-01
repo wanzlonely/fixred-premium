@@ -8,9 +8,7 @@ module.exports = async (req, res) => {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>WALZY STORE HUB</title>
-<script src="https://telegram.org/js/telegram-web-app.js" defer></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
     --bg-main: #f8fafc;
@@ -553,7 +551,7 @@ module.exports = async (req, res) => {
   // Hard failsafe: no matter what happens below (network hang, DB down,
   // Telegram script not loaded, unexpected exception, etc.) the loader
   // MUST disappear within 4 seconds so the UI never gets stuck.
-  setTimeout(hideLoader, 4000);
+  setTimeout(hideLoader, 1500);
 
   function initApp() {
     if (appInitialized) return;
