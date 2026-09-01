@@ -13,7 +13,6 @@ module.exports = async (req, res) => {
   :root {
     --bg-main: #070a12;
     --bg-card: rgba(15, 23, 42, 0.75);
-    --bg-card-glow: rgba(0, 242, 254, 0.08);
     --border-card: rgba(255, 255, 255, 0.08);
     --border-highlight: rgba(0, 242, 254, 0.4);
     --accent-cyan: #00f2fe;
@@ -143,7 +142,7 @@ module.exports = async (req, res) => {
   }
   #spinCanvas { width: 280px; height: 280px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.1); box-shadow: 0 0 30px rgba(0, 242, 254, 0.2); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
   
-  .loader-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.4s ease; pointer-events: none; }
+  .loader-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.3s ease; pointer-events: none; }
   .modal-overlay { position: fixed; inset: 0; background: rgba(7, 10, 18, 0.9); backdrop-filter: blur(20px); z-index: 900; display: none; place-items: center; padding: 20px; }
   .modal-overlay.active { display: grid; }
   .proof-preview-container { position: relative; border-radius: 18px; overflow: hidden; margin-top: 12px; border: 1px solid var(--border-card); }
@@ -498,7 +497,7 @@ module.exports = async (req, res) => {
     var ldr = document.getElementById('loader');
     if (ldr) {
       ldr.style.opacity = '0';
-      setTimeout(function() { ldr.style.display = 'none'; }, 400);
+      setTimeout(function() { ldr.style.display = 'none'; }, 300);
     }
   }
 
@@ -538,12 +537,13 @@ module.exports = async (req, res) => {
   }
 
   function initApp() {
-    // Safety timer: Pastikan loader SELALU hilang dalam batas waktu maksimal 1.5 detik
-    setTimeout(hideLoader, 1500);
+    setTimeout(hideLoader, 800);
 
     try {
       tg = window.Telegram ? window.Telegram.WebApp : null;
-      if (tg) { tg.ready(); tg.expand(); }
+      if (tg) { 
+        try { tg.ready(); tg.expand(); } catch (e) {}
+      }
 
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         currentUserId = tg.initDataUnsafe.user.id;
@@ -560,7 +560,7 @@ module.exports = async (req, res) => {
 
       if (!currentUserId) {
         var loadTxtEl = document.getElementById('loadText');
-        if (loadTxtEl) loadTxtEl.textContent = 'Silakan buka WebApp melalui Telegram Bot!';
+        if (loadTxtEl) loadTxtEl.textContent = 'Mode Pratinjau WebApp';
         hideLoader();
         return;
       }
@@ -587,19 +587,10 @@ module.exports = async (req, res) => {
       if (currentFirstName) queryUrl += '&first_name=' + encodeURIComponent(currentFirstName);
       if (currentUsername) queryUrl += '&username=' + encodeURIComponent(currentUsername);
 
-      var controller = new AbortController();
-      var timeoutId = setTimeout(function() { controller.abort(); }, 6000);
-      
-      var res;
-      try {
-        res = await fetch(queryUrl, { signal: controller.signal });
-      } finally {
-        clearTimeout(timeoutId);
-      }
-      
+      var res = await fetch(queryUrl);
       var data = await res.json();
 
-      if (data.ok && data.user) {
+      if (data && data.ok && data.user) {
         var u = data.user;
         isUserOwner = u.isOwner;
 
@@ -694,11 +685,8 @@ module.exports = async (req, res) => {
           invBox.innerHTML = '';
           buyBtns.forEach(function(btn) { btn.disabled = false; });
         }
-      } else if (!isSilent) {
-        showToast('Info', (data && data.message) ? data.message : 'Memuat profil', 'info');
       }
     } catch (e) {
-      if (!isSilent) showToast('Error', 'Gagal memuat data dari server', 'error');
     } finally {
       hideLoader();
     }
@@ -791,7 +779,7 @@ module.exports = async (req, res) => {
       });
       var data = await res.json();
 
-      if (data.ok) {
+      if (data && data.ok) {
         var pIndex = data.prizeIndex !== undefined ? data.prizeIndex : 0;
         var numSlices = wheelPrizes.length;
         var sliceDeg = 360 / numSlices;
@@ -807,7 +795,7 @@ module.exports = async (req, res) => {
           isSpinning = false;
         }, 4200);
       } else {
-        showToast('Informasi', data.message, 'warning');
+        showToast('Informasi', data ? data.message : 'Gagal spin', 'warning');
         isSpinning = false;
       }
     } catch (e) {
@@ -967,7 +955,7 @@ module.exports = async (req, res) => {
       var res = await fetch('/api/api?endpoint=stats&user_id=' + currentUserId);
       var d = await res.json();
 
-      if (d.ok) {
+      if (d && d.ok) {
         var elRev = document.getElementById('oRev');
         if (elRev) elRev.textContent = 'Rp ' + (d.revenue || 0).toLocaleString('id-ID');
         
@@ -1034,7 +1022,7 @@ module.exports = async (req, res) => {
                 '<div style="display:flex;justify-content:space-between;align-items:center">' +
                   '<div>' +
                     '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:#fff">' + c.code + '</div>' +
-                    '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">' + c.days + ' Hari | Terpakai: ' + (c.used || 0) + '/' + (c.quota || '∞') + '</div>' +
+                    '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">' + c.days + ' Hari | Terpakai: ' + (c.used || 0) + '/' + (c.quota || '∞') + '</div>' +
                   '</div>' +
                   '<button class="btn-custom" style="width:auto;padding:8px 16px;font-size:11px;background:linear-gradient(135deg, var(--accent-pink), #be123c);color:#fff" onclick="deleteVoucher(\'' + c.code + '\', this)">Hapus</button>' +
                 '</div>' +
@@ -1122,12 +1110,12 @@ module.exports = async (req, res) => {
       });
       var data = await res.json();
 
-      if (data.ok) {
+      if (data && data.ok) {
         showToast('Broadcast Selesai', data.message, 'success');
         document.getElementById('bcTextInput').value = '';
         loadOwnerData();
       } else {
-        showToast('Gagal Broadcast', data.message, 'error');
+        showToast('Gagal Broadcast', data ? data.message : 'Gagal', 'error');
       }
     } catch (e) {
       showToast('Error', 'Gagal mengirim broadcast', 'error');
