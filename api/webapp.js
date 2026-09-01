@@ -434,8 +434,7 @@ var wheelPrizes=[
 
 function hideLoader(){
   var ldr=document.getElementById('loader');
-  if(!ldr) return;
-  if(ldr.classList.contains('hidden')) return;
+  if(!ldr || ldr.classList.contains('hidden')) return;
   ldr.classList.add('hidden');
   setTimeout(function(){ ldr.style.display='none'; }, 500);
 }
@@ -561,14 +560,16 @@ function initApp(){
       try{ localStorage.setItem('walzy_uid', String(currentUserId)); }catch(e){}
     }
     drawWheel();
-    setTimeout(function(){ hideLoader(); }, 600);
-    setTimeout(function(){ hideLoader(); }, 1400);
+    
+    // Safety fallback to hide loader no matter what
+    setTimeout(function(){ hideLoader(); }, 2500);
+
     if(currentUserId){
       loadUserData(false);
       if(!pollingTimer){
         pollingTimer=setInterval(function(){ loadUserData(true); }, 3000);
       }
-    }else{
+    } else {
       hideLoader();
     }
   }catch(err){
@@ -946,11 +947,8 @@ window.addEventListener('error', function(){ hideLoader(); });
 window.addEventListener('unhandledrejection', function(){ hideLoader(); });
 document.addEventListener('DOMContentLoaded', function(){
   initApp();
-  setTimeout(hideLoader, 1000);
-  setTimeout(hideLoader, 2500);
 });
 window.addEventListener('load', function(){ hideLoader(); });
-setTimeout(function(){ hideLoader(); }, 3000);
 </script>
 </body>
 </html>`;
