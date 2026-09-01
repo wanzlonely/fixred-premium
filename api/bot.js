@@ -88,18 +88,18 @@ function getOwnerMenu(user, chatId, db, webappUrl) {
   const totalRev = (db.stats && db.stats.revenue) ? db.stats.revenue : 0;
   const dispName = esc(user.first_name || 'Owner Executive');
 
-  const text = `⚡ <b>WALZY SYSTEM HUB - OWNER MODE</b> ⚡\n━ Framework Executive System ━\n\nSelamat Datang, <b>${dispName}</b> 👋\n\n┌ 💸 <b>Ringkasan Finansial:</b> <code>Rp ${totalRev.toLocaleString('id-ID')}</code>\n├ 👥 <b>Total Pengguna:</b> <code>${validUsersCount} Akun</code>\n└ 📥 <b>Transaksi Antrean:</b> <code>${pendingCount} Pending</code>\n\nPilih modul kontrol di bawah untuk mengelola sistem:`;
+  const text = `👑 <b>WALZY EXECUTIVE DASHBOARD</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\nSelamat Datang kembali, <b>${dispName}</b>!\n\n<blockquote>📊 <b>METRIK UTAMA SISTEM</b>\n├ 💰 <b>Total Pendapatan:</b> <code>Rp ${totalRev.toLocaleString('id-ID')}</code>\n├ 👥 <b>Pengguna Terdaftar:</b> <code>${validUsersCount} Akun</code>\n└ 📥 <b>Transaksi Pending:</b> <code>${pendingCount} Pesanan</code></blockquote>\n\n✦ <i>Akses penuh kontrol sistem tersedia melalui menu di bawah ini.</i>`;
 
   const keyboard = [
     [
-      { text: '🚀 PROSES FIX MERAH', callback_data: 'fix_merah' }
+      { text: '⚡ SINKRONISASI FIX MERAH', callback_data: 'fix_merah' }
     ],
     [
-      { text: '🖥️ PANEL WEBAPP ADMIN', web_app: { url: webappUrl } }
+      { text: '🖥️ BUKA WEBAPP ADMIN STUDIO', web_app: { url: webappUrl } }
     ],
     [
       { text: `📑 Cek Pending (${pendingCount})`, callback_data: 'owner_check_pending' },
-      { text: '📖 Panduan Admin', callback_data: 'help' }
+      { text: '❓ Bantuan Admin', callback_data: 'help' }
     ]
   ];
 
@@ -117,7 +117,7 @@ function getUserMenu(user, chatId, webappUrl) {
   }
   const remainingQuota = isPrem ? 'UNLIMITED ♾️' : `${Math.max(0, 5 - (user.dailyFix.count || 0))}/5`;
 
-  const text = `✨ <b>WALZY CYBER SYSTEM HUB</b> ✨\n━ Platform Sinkronisasi Merah ━\n\nHalo <b>${dispName}</b>, selamat datang kembali!\n\n┌ 👤 <b>ID Pengguna:</b> <code>${chatId}</code>\n├ 🎖️ <b>Peringkat:</b> ${rnk.icon} <code>${rnk.name}</code>\n├ 🪙 <b>Poin Vault:</b> <code>${user.points || 0} PTS</code>\n├ ⚡ <b>Kuota Harian:</b> <code>${remainingQuota}</code>\n└ 🔰 <b>Status Akses:</b> <b>${statusBadge}</b>\n\nFitur siap digunakan. Klik tombol di bawah untuk memulai:`;
+  const text = `✨ <b>WALZY CYBER SYSTEM HUB</b> ✨\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\nHalo <b>${dispName}</b>, selamat datang kembali!\n\n<blockquote>👤 <b>INFORMASI AKUN PENGGUNA</b>\n├ 🆔 <b>ID Telegram:</b> <code>${chatId}</code>\n├ 🏅 <b>Peringkat:</b> ${rnk.icon} <code>${rnk.name}</code>\n├ 🪙 <b>Poin Vault:</b> <code>${user.points || 0} PTS</code>\n├ ⚡ <b>Kuota Harian:</b> <code>${remainingQuota}</code>\n└ 🔰 <b>Status Akses:</b> <b>${statusBadge}</b></blockquote>\n\n✦ <i>Klik <b>SINKRONISASI FIX MERAH</b> di bawah untuk memulai proses nomor target.</i>`;
 
   const keyboard = [
     [
@@ -128,10 +128,10 @@ function getUserMenu(user, chatId, webappUrl) {
     ],
     [
       { text: '🎁 Claim Poin Harian', callback_data: 'user_checkin_info' },
-      { text: '💬 Customer Service', callback_data: 'contact_owner' }
+      { text: '💬 Customer Support', callback_data: 'contact_owner' }
     ],
     [
-      { text: '❓ Panduan Penggunaan', callback_data: 'help' }
+      { text: '❓ Panduan & FAQ', callback_data: 'help' }
     ]
   ];
 
@@ -161,25 +161,25 @@ module.exports = async (req, res) => {
       const user = getUser(db, uid, q.from);
 
       if (data === 'fix_merah') {
-        await bot.answerCallbackQuery(qId, { text: '🛠️ Modul Fix Merah Siap', show_alert: false });
+        await bot.answerCallbackQuery(qId, { text: '🛠️ Modul Fix Merah Aktif', show_alert: false });
         if (user) {
           user.state = { action: 'awaiting_fixmerah_number' };
           await saveDB(db);
         }
-        await bot.sendMessage(uid, `🛠️ <b>MODE SINKRONISASI FIX MERAH</b>\n\nSilakan kirimkan nomor WhatsApp target yang ingin diproses.\nFormat wajib: <code>+628xxxxxxxxxx</code> atau <code>08xxxxxxxxxx</code>`, { parse_mode: 'HTML' });
+        await bot.sendMessage(uid, `🛠️ <b>MODUL SINKRONISASI FIX MERAH WALZY</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\nSilakan kirimkan nomor WhatsApp target yang ingin diproses.\n\n<blockquote>📱 Contoh format valid:\n<code>+6281234567890</code> atau <code>081234567890</code></blockquote>`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
 
       if (data === 'owner_check_pending') {
-        await bot.answerCallbackQuery(qId, { text: '📑 Memuat antrean pending...', show_alert: false });
+        await bot.answerCallbackQuery(qId, { text: '📑 Membuka daftar pending...', show_alert: false });
         const allPayments = Object.values(db.payments || {});
         const pending = allPayments.filter(p => p.status === 'waiting_approval' || p.status === 'pending');
 
         if (pending.length === 0) {
-          await bot.sendMessage(uid, `🟢 <b>ANTREAN BERSIH</b>\n\nSaat ini tidak ada transaksi pending deposit.`, { parse_mode: 'HTML' });
+          await bot.sendMessage(uid, `🟢 <b>TIDAK ADA PENDING DEPOSIT</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\nSaat ini antrean transaksi bersih.`, { parse_mode: 'HTML' });
         } else {
           let listTxt = pending.slice(0, 5).map(p => `• <code>${p.id}</code> | User: <code>${p.userId}</code> | Paket: ${p.days} Hari (${p.amountFormatted})`).join('\n');
-          await bot.sendMessage(uid, `📥 <b>TRANSAKSI PENDING (${pending.length})</b>\n\n${listTxt}\n\nBuka WebApp Admin Studio untuk approval cepat.`, {
+          await bot.sendMessage(uid, `📥 <b>PENDING INVOICES (${pending.length})</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\n${listTxt}\n\n<i>Buka WebApp Admin Studio untuk approval/reject.</i>`, {
             parse_mode: 'HTML',
             reply_markup: { inline_keyboard: [[{ text: '🌐 Buka WebApp Admin', web_app: { url: webappUrl } }]] }
           });
@@ -189,18 +189,18 @@ module.exports = async (req, res) => {
 
       if (data === 'user_checkin_info') {
         await bot.answerCallbackQuery(qId, { text: '🎁 Info Check-in', show_alert: false });
-        await bot.sendMessage(uid, `🎁 <b>BONUS POIN HARIAN WALZY</b>\n\nKlaim poin harian kamu langsung dari WebApp:\n\n• Hari 1: +30 PTS\n• Hari 2: +50 PTS\n• Hari 3: +75 PTS\n• Hari 4: +100 PTS\n• Hari 5: +150 PTS\n• Hari 6: +200 PTS\n• Hari 7: +350 PTS\n\nPoin dapat ditukarkan dengan Akses VIP Gratis!`, {
+        await bot.sendMessage(uid, `🎁 <b>DAILY CHECK-IN REWARDS</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\nKlaim poin harian kamu secara teratur di WebApp:\n\n<blockquote>• Hari 1: +30 PTS\n• Hari 2: +50 PTS\n• Hari 3: +75 PTS\n• Hari 4: +100 PTS\n• Hari 5: +150 PTS\n• Hari 6: +200 PTS\n• Hari 7: +350 PTS</blockquote>\n\n<i>Kumpulkan poin untuk ditukarkan dengan Akses VIP Gratis!</i>`, {
           parse_mode: 'HTML',
-          reply_markup: { inline_keyboard: [[{ text: '🌐 Claim di WebApp Store', web_app: { url: webappUrl } }]] }
+          reply_markup: { inline_keyboard: [[{ text: '🌐 Claim Poin di WebApp', web_app: { url: webappUrl } }]] }
         });
         return res.status(200).send('OK');
       }
 
       if (data === 'help') {
-        await bot.answerCallbackQuery(qId, { text: '📖 Panduan Penggunaan', show_alert: false });
-        await bot.sendMessage(uid, `📖 <b>PANDUAN LENGKAP PENGGUNAAN BOT</b>\n\n1. <b>SINKRONISASI FIX MERAH:</b>\nTekan tombol ⚡ <b>SINKRONISASI FIX MERAH</b>, lalu ketik nomor WhatsApp target.\n\n2. <b>PEMBELIAN AKSES VIP:</b>\nTekan 🌐 <b>BUKA WEBAPP STORE</b> -> pilih tab <b>Order VIP</b> -> pilih paket & bayar.\n\n3. <b>REDEEM VOUCHER PROMO:</b>\nBuka WebApp -> masukkan kode voucher promo di halaman utama.\n\n4. <b>BONUS POIN & SPIN:</b>\nCheck-in harian dan putar Spin Wheel di WebApp untuk klaim poin gratis.`, {
+        await bot.answerCallbackQuery(qId, { text: '✨ Bantuan', show_alert: false });
+        await bot.sendMessage(uid, `❓ <b>PANDUAN LENGKAP WALZY STORE</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\n<blockquote>1. <b>Fix Merah:</b> Pilih menu utama lalu masukkan nomor HP target.\n2. <b>Order VIP:</b> Buka Mini Web -> Pindah ke tab Order VIP.\n3. <b>Redeem Voucher:</b> Masukkan kode promo di Mini Web.\n4. <b>Daily Spin & Points:</b> Putar roda keberuntungan dan check-in setiap hari untuk poin gratis.</blockquote>`, {
           parse_mode: 'HTML',
-          reply_markup: { inline_keyboard: [[{ text: '🌐 Masuk WebApp Store', web_app: { url: webappUrl } }]] }
+          reply_markup: { inline_keyboard: [[{ text: '🌐 Buka Mini Web Walzy Store', web_app: { url: webappUrl } }]] }
         });
         return res.status(200).send('OK');
       }
@@ -211,7 +211,7 @@ module.exports = async (req, res) => {
           user.state = { action: 'awaiting_owner_msg' };
           await saveDB(db);
         }
-        await bot.sendMessage(uid, `💬 <b>CUSTOMER SUPPORT WALZY</b>\n\nKetik dan kirimkan pesan Anda sekarang. Operator akan segera memberikan tanggapan.`, { parse_mode: 'HTML' });
+        await bot.sendMessage(uid, `💬 <b>HUBUNGI CUSTOMER SUPPORT</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\nTuliskan pertanyaan Anda. Pesan akan langsung diteruskan ke Operator.`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
 
@@ -222,7 +222,7 @@ module.exports = async (req, res) => {
           user.state = { action: 'replying_to_user', targetId: targetUserId };
           await saveDB(db);
         }
-        await bot.sendMessage(uid, `✏️ <b>BALAS USER (ID: ${targetUserId})</b>\n\nKetik pesan balasan resmi Anda di sini.`, { parse_mode: 'HTML' });
+        await bot.sendMessage(uid, `✏️ <b>BALAS USER (${targetUserId})</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\nKetik pesan balasan resmi Anda.`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
     }
@@ -247,7 +247,7 @@ module.exports = async (req, res) => {
         let cleanDigits = text.replace(/[^\d]/g, '');
         if (!cleanDigits) {
           await saveDB(db);
-          await bot.sendMessage(chatId, `❌ <b>Nomor tidak valid!</b> Silakan kirimkan format nomor HP yang benar.`, { parse_mode: 'HTML' });
+          await bot.sendMessage(chatId, `❌ <b>Format nomor tidak valid!</b> Silakan kirimkan angka nomor telepon yang benar.`, { parse_mode: 'HTML' });
           return res.status(200).send('OK');
         }
 
@@ -258,9 +258,9 @@ module.exports = async (req, res) => {
           }
           if (user.dailyFix.count >= 5) {
             await saveDB(db);
-            await bot.sendMessage(chatId, `⚠️ <b>KUOTA HARIAN TELAH HABIS</b>\n\nKuota harian pengguna gratis telah habis (5/5).\n\nUpgrade ke <b>VIP Member</b> untuk akses tanpa batas.`, {
+            await bot.sendMessage(chatId, `⚠️ <b>KUOTA HARIAN HABIS</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\nKuota gratis Fix Merah Anda hari ini sudah mencapai batas maksimum <b>(5/5)</b>.\n\n💡 <i>Tingkatkan akun Anda ke <b>VIP Member</b> di Mini Web untuk kuota Tanpa Batas (Unlimited)!</i>`, {
               parse_mode: 'HTML',
-              reply_markup: { inline_keyboard: [[{ text: '💎 Upgrade VIP Sekarang', web_app: { url: webappUrl } }]] }
+              reply_markup: { inline_keyboard: [[{ text: '💎 Upgrade VIP Unlimited', web_app: { url: webappUrl } }]] }
             });
             return res.status(200).send('OK');
           }
@@ -279,17 +279,17 @@ module.exports = async (req, res) => {
         const initRes = await clientHelper.sendToTarget(displayNum);
         const sessionCode = initRes.targetId || `CPHX ${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-        const initialMsgTxt = `🛠️ <b>STATUS PROSES FIX MERAH</b>\n\n📱 Target: <code>${displayNum}</code>\n🆔 Kode Sesi: <code>${sessionCode}</code>\n📩 Status: <b>TERKIRIM</b>\n\nMemantau tanggapan dari server WhatsApp...`;
+        const initialMsgTxt = `🛠️ <b>HASIL PROSES FIX MERAH</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n<blockquote>✅ <b>STATUS PROSES ( 1 )</b>\n📱 Nomor: <code>${displayNum}</code>\n🆔 ID: <code>${sessionCode}</code>\n📩 Hasil: <b>TERKIRIM</b></blockquote>\n\n<i>Notifikasi update status akan dikirim otomatis jika ada balasan.</i> 🔥`;
 
         await bot.sendMessage(chatId, initialMsgTxt, { parse_mode: 'HTML' });
 
         const statusRes = await clientHelper.monitorTargetResponse(displayNum, sessionCode, 5000);
 
         if (statusRes.status === 'SUCCESS') {
-          const succReport = `✅ <b>BERHASIL SINKRONISASI</b>\n\n📱 Target: <code>${displayNum}</code>\n🆔 Kode Sesi: <code>${sessionCode}</code>\n📩 Status: <b>SUKSES</b>\n\nSilakan verifikasi/login akun Anda sekarang.`;
+          const succReport = `✅ <b>SUCCESS FIX MERAH</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n<blockquote>📱 Nomor: <code>${displayNum}</code>\n🆔 ID: <code>${sessionCode}</code>\n📩 Status: <b>SUCCESS</b></blockquote>\n\n💬 <i>WhatsApp sudah merespon. Silakan coba login/verifikasi akun Anda sekarang!</i>`;
           await bot.sendMessage(chatId, succReport, { parse_mode: 'HTML' });
         } else {
-          const failReport = `⚠️ <b>BELUM ADA RESPONS</b>\n\n📱 Target: <code>${displayNum}</code>\n🆔 Kode Sesi: <code>${sessionCode}</code>\n📩 Status: <b>BELUM ADA BALASAN</b>\n\nSilakan lakukan pengecekan secara berkala.`;
+          const failReport = `⚠️ <b>BELUM ADA RESPONS WHATSAPP</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n<blockquote>📱 Nomor: <code>${displayNum}</code>\n🆔 ID: <code>${sessionCode}</code>\n📩 Status: <b>TIDAK ADA BALASAN</b></blockquote>\n\n💬 <i>WhatsApp belum merespon. Silakan periksa berkala.</i>`;
           await bot.sendMessage(chatId, failReport, { parse_mode: 'HTML' });
         }
 
@@ -302,7 +302,7 @@ module.exports = async (req, res) => {
 
         for (let ownerId of (config.OWNER_IDS || [])) {
           try {
-            await bot.sendMessage(ownerId, `📨 <b>PESAN DARI PENGGUNA</b>\n\n👤 Pengirim: <b>${esc(user.first_name)}</b>\n🆔 ID: <code>${uid}</code>\n💬 Isi Pesan:\n${esc(text)}`, {
+            await bot.sendMessage(ownerId, `📨 <b>PESAN MASUK USER</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\n👤 Pengirim: <b>${esc(user.first_name)}</b>\n🆔 User ID: <code>${uid}</code>\n💬 Pesan:\n${esc(text)}`, {
               parse_mode: 'HTML',
               reply_markup: {
                 inline_keyboard: [[{ text: `💬 Balas User (${uid})`, callback_data: `reply_user_${uid}` }]]
@@ -310,7 +310,7 @@ module.exports = async (req, res) => {
             });
           } catch (e) {}
         }
-        await bot.sendMessage(chatId, `✅ <b>PESAN TERKIRIM</b>\n\nPesan telah disampaikan ke Operator Support.`, { parse_mode: 'HTML' });
+        await bot.sendMessage(chatId, `✅ <b>PESAN BERHASIL TERKIRIM!</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\nPesan Anda telah diteruskan ke Customer Service. Harap menunggu balasan.`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
 
@@ -320,10 +320,10 @@ module.exports = async (req, res) => {
         await saveDB(db);
 
         try {
-          await bot.sendMessage(targetId, `💬 <b>BALASAN OPERATOR SUPPORT</b>\n\n${esc(text)}`, { parse_mode: 'HTML' });
-          await bot.sendMessage(chatId, `✅ Pesan berhasil dikirim ke ID <code>${targetId}</code>.`, { parse_mode: 'HTML' });
+          await bot.sendMessage(targetId, `💬 <b>BALASAN OPERATOR WALZY</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\n${esc(text)}`, { parse_mode: 'HTML' });
+          await bot.sendMessage(chatId, `✅ Balasan berhasil dikirim ke user ID <code>${targetId}</code>!`, { parse_mode: 'HTML' });
         } catch (e) {
-          await bot.sendMessage(chatId, `❌ Gagal mengirim pesan ke pengguna.`, { parse_mode: 'HTML' });
+          await bot.sendMessage(chatId, `❌ Gagal mengirim balasan ke user.`, { parse_mode: 'HTML' });
         }
         return res.status(200).send('OK');
       }
@@ -342,7 +342,7 @@ module.exports = async (req, res) => {
               if (!Array.isArray(inviter.referrals)) inviter.referrals = [];
               inviter.referrals.push(uid);
               try {
-                await bot.sendMessage(refId, `🎉 <b>REFERRAL BARU</b>\n\n<b>${esc(user.first_name)}</b> telah mendaftar!\nBonus: 🪙 <b>+50 PTS</b>`, { parse_mode: 'HTML' });
+                await bot.sendMessage(refId, `🎉 <b>REFERRAL BARU!</b>\n◈━━━━━━━━━━━━━━━━━━━━━━◈\n\n<b>${esc(user.first_name)}</b> bergabung melalui link Anda!\nBonus Poin: 🪙 <b>+50 PTS</b>`, { parse_mode: 'HTML' });
               } catch (e) {}
             }
           }
