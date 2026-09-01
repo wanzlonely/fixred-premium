@@ -325,7 +325,6 @@ module.exports = async (req, res) => {
       return res.status(200).json({ok:true,message:`Voucher Berhasil Diklaim! +${days} Hari VIP`});
     }
     
-    // ================= OWNER ENDPOINTS =================
     if(endpoint==='stats'){
       const userId=query.user_id||body.user_id;
       const ownerCheck=userId ? isOwner(userId) : false;
