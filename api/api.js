@@ -94,7 +94,7 @@ function ensureUserInDB(db, userId, nameData, usernameData) {
   if (Array.isArray(db.users[k].referrals)) {
     db.users[k].referralCount = db.users[k].referrals.length;
   }
-  
+
   const userPaidInvoices = Object.values(db.payments || {}).filter(p => String(p.userId) === k && (p.status === 'paid' || p.status === 'approved'));
   db.users[k].totalFix = userPaidInvoices.length;
 
@@ -115,13 +115,18 @@ module.exports = async (req, res) => {
 
   const fullUrl = req.url || '';
   const pathOnly = fullUrl.split('?')[0];
-  const query = req.query || {};
+  const queryString = fullUrl.includes('?') ? fullUrl.split('?').slice(1).join('?') : '';
+  const parsedParams = new URLSearchParams(queryString);
+  const query = {};
+  for (const [k, v] of parsedParams.entries()) query[k] = v;
+  if (req.query) Object.assign(query, req.query);
+
   let body = req.body || {};
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch (e) { body = {}; }
   }
 
-  const endpoint = query.endpoint || body.endpoint || (pathOnly.includes('/api/') ? pathOnly.split('/api/')[1] : '');
+  const endpoint = query.endpoint || body.endpoint || '';
 
   try {
     const db = await getDB();
