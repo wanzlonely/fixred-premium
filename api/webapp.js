@@ -550,6 +550,11 @@ module.exports = async (req, res) => {
   }
 
   var appInitialized = false;
+  // Hard failsafe: no matter what happens below (network hang, DB down,
+  // Telegram script not loaded, unexpected exception, etc.) the loader
+  // MUST disappear within 4 seconds so the UI never gets stuck.
+  setTimeout(hideLoader, 4000);
+
   function initApp() {
     if (appInitialized) return;
     appInitialized = true;
@@ -596,7 +601,14 @@ module.exports = async (req, res) => {
       if (currentFirstName) queryUrl += '&first_name=' + encodeURIComponent(currentFirstName);
       if (currentUsername) queryUrl += '&username=' + encodeURIComponent(currentUsername);
 
-      var res = await fetch(queryUrl);
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function() { controller.abort(); }, 8000);
+      var res;
+      try {
+        res = await fetch(queryUrl, { signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       var data = await res.json();
 
       if (data.ok) {
