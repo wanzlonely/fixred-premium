@@ -3,23 +3,6 @@ const { loadDB, saveDB, getTodayString, genInvoiceID, getRank } = require('../li
 const config = require('../config');
 
 const rateCache = new Map();
-let dbCache = null;
-let dbCacheTime = 0;
-const CACHE_TTL = 300;
-
-async function getDB() {
-  const now = Date.now();
-  if (dbCache && (now - dbCacheTime) < CACHE_TTL) return dbCache;
-  const db = await loadDB();
-  dbCache = db;
-  dbCacheTime = now;
-  return db;
-}
-
-function clearCache() {
-  dbCache = null;
-  dbCacheTime = 0;
-}
 
 function isOwner(id) {
   try {
@@ -129,7 +112,7 @@ module.exports = async (req, res) => {
   const endpoint = query.endpoint || body.endpoint || '';
 
   try {
-    const db = await getDB();
+    const db = await loadDB();
     if (!db.users) db.users = {};
     if (!db.payments) db.payments = {};
     if (!db.codes) db.codes = {};
@@ -228,7 +211,6 @@ module.exports = async (req, res) => {
       }
 
       await saveDB(db);
-      clearCache();
 
       return res.json({
         ok: true,
@@ -259,7 +241,6 @@ module.exports = async (req, res) => {
       user.points = (user.points || 0) + rewardPoints;
 
       await saveDB(db);
-      clearCache();
 
       return res.json({
         ok: true,
@@ -296,7 +277,6 @@ module.exports = async (req, res) => {
       user.premiumUntil = Math.max(Date.now(), user.premiumUntil || 0) + (sel.days * 86400000);
 
       await saveDB(db);
-      clearCache();
 
       return res.json({ ok: true, message: `Penukaran Berhasil! Paket ${sel.label} Telah Aktif.`, points: user.points });
     }
@@ -338,7 +318,6 @@ module.exports = async (req, res) => {
       user.pendingDeposit = invoice;
 
       await saveDB(db);
-      clearCache();
 
       return res.json({
         ok: true,
@@ -360,7 +339,6 @@ module.exports = async (req, res) => {
       user.pendingDeposit = null;
 
       await saveDB(db);
-      clearCache();
 
       return res.json({ ok: true, message: 'Pembelian Invoice Berhasil Dibatalkan' });
     }
@@ -379,7 +357,6 @@ module.exports = async (req, res) => {
       pay.status = 'waiting_approval';
 
       await saveDB(db);
-      clearCache();
 
       return res.json({ ok: true, message: 'Bukti pembayaran berhasil diunggah! Menunggu konfirmasi owner.' });
     }
@@ -413,7 +390,6 @@ module.exports = async (req, res) => {
       }
 
       await saveDB(db);
-      clearCache();
 
       return res.json({ ok: true, message: `Voucher Diklaim: +${days} Hari Akses VIP` });
     }
@@ -460,7 +436,6 @@ module.exports = async (req, res) => {
         db.stats.revenue = (db.stats.revenue || 0) + pay.amount;
 
         await saveDB(db);
-        clearCache();
 
         try {
           const bot = new TelegramBot(config.BOT_TOKEN);
@@ -474,7 +449,6 @@ module.exports = async (req, res) => {
         if (u) u.pendingDeposit = null;
 
         await saveDB(db);
-        clearCache();
 
         try {
           const bot = new TelegramBot(config.BOT_TOKEN);
@@ -498,7 +472,6 @@ module.exports = async (req, res) => {
 
       db.codes[code] = { code, days, quota, used: 0, createdAt: Date.now() };
       await saveDB(db);
-      clearCache();
       return res.json({ ok: true, message: `Voucher ${code} Berhasil Dibuat` });
     }
 
@@ -511,7 +484,6 @@ module.exports = async (req, res) => {
 
       delete db.codes[code];
       await saveDB(db);
-      clearCache();
       return res.json({ ok: true, message: `Voucher ${code} Dihapus` });
     }
 
