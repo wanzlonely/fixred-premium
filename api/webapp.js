@@ -7,23 +7,23 @@ module.exports = async (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>WALZY STORE HUB</title>
+<title>WALZY CYBER SUITE</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg-main: #f8fafc;
-    --bg-card: #ffffff;
-    --bg-card-hover: #f1f5f9;
-    --border-card: #e2e8f0;
-    --border-glow: rgba(2, 132, 199, 0.3);
-    --accent-cyan: #0284c7;
-    --accent-blue: #2563eb;
-    --accent-purple: #7c3aed;
-    --accent-pink: #db2777;
-    --accent-emerald: #059669;
-    --accent-amber: #d97706;
-    --text-primary: #0f172a;
-    --text-secondary: #64748b;
+    --bg-main: #070a12;
+    --bg-card: rgba(15, 23, 42, 0.75);
+    --bg-card-glow: rgba(0, 242, 254, 0.08);
+    --border-card: rgba(255, 255, 255, 0.08);
+    --border-highlight: rgba(0, 242, 254, 0.4);
+    --accent-cyan: #00f2fe;
+    --accent-blue: #4facfe;
+    --accent-purple: #9d4edd;
+    --accent-pink: #f43f5e;
+    --accent-emerald: #10b981;
+    --accent-amber: #f59e0b;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
     --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
@@ -31,122 +31,124 @@ module.exports = async (req, res) => {
   body {
     background: var(--bg-main);
     background-image: 
-      radial-gradient(circle at 0% 0%, rgba(2, 132, 199, 0.06) 0%, transparent 45%),
-      radial-gradient(circle at 100% 100%, rgba(124, 58, 237, 0.06) 0%, transparent 45%);
+      radial-gradient(circle at 10% 10%, rgba(0, 242, 254, 0.12) 0%, transparent 40%),
+      radial-gradient(circle at 90% 90%, rgba(157, 78, 221, 0.12) 0%, transparent 40%);
     color: var(--text-primary); min-height: 100vh; padding-bottom: 110px; overflow-x: hidden;
   }
   .icon-svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: all 0.3s ease; }
   .pulse { animation: pulseAnim 2s infinite; }
   .float { animation: floatAnim 3.5s ease-in-out infinite; }
   .spin-slow { animation: spinAnim 10s linear infinite; }
-  @keyframes pulseAnim { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.92); } }
-  @keyframes floatAnim { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  @keyframes pulseAnim { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.92); } }
+  @keyframes floatAnim { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
   @keyframes spinAnim { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
   .header {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    background: rgba(7, 10, 18, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border-card); height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.5);
   }
   .brand { display: flex; align-items: center; gap: 12px; }
   .brand-icon {
-    width: 44px; height: 44px; border-radius: 16px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-    display: grid; place-items: center; color: #fff; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+    width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    display: grid; place-items: center; color: #fff; box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
   }
-  .brand-title { font-family: var(--font-heading); font-weight: 800; font-size: 19px; letter-spacing: -0.5px; color: var(--text-primary); }
+  .brand-title { font-family: var(--font-heading); font-weight: 800; font-size: 19px; letter-spacing: -0.5px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
   .container { max-width: 520px; margin: 0 auto; padding: 20px 18px; }
   
   .cyber-card {
     background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 24px; padding: 22px; margin-bottom: 18px;
-    position: relative; overflow: hidden; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.04); transition: all 0.3s ease;
+    position: relative; overflow: hidden; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: all 0.3s ease;
   }
-  .cyber-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple)); }
+  .cyber-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple)); }
 
   .user-badge {
     display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px;
-    font-size: 11px; font-weight: 800; background: rgba(2, 132, 199, 0.08); color: var(--accent-cyan);
-    border: 1px solid rgba(2, 132, 199, 0.2); text-transform: uppercase; letter-spacing: 0.6px;
+    font-size: 11px; font-weight: 800; background: rgba(0, 242, 254, 0.1); color: var(--accent-cyan);
+    border: 1px solid rgba(0, 242, 254, 0.3); text-transform: uppercase; letter-spacing: 0.6px;
   }
 
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
   .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; }
 
   .stat-card {
-    background: #ffffff; border: 1px solid var(--border-card); border-radius: 20px; padding: 16px 14px;
-    display: flex; flex-direction: column; gap: 4px; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-card); border-radius: 20px; padding: 16px 14px;
+    display: flex; flex-direction: column; gap: 4px; position: relative; backdrop-filter: blur(10px);
   }
-  .stat-val { font-family: var(--font-heading); font-size: 22px; font-weight: 800; color: var(--text-primary); }
+  .stat-val { font-family: var(--font-heading); font-size: 22px; font-weight: 800; color: #fff; }
   .stat-lbl { font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
   .btn-custom {
     width: 100%; padding: 16px; border-radius: 18px; border: none; font-family: var(--font-heading); font-weight: 800; font-size: 14px;
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.25s ease;
-    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); color: #fff; box-shadow: 0 6px 20px rgba(2, 132, 199, 0.25);
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); color: #000; box-shadow: 0 6px 20px rgba(0, 242, 254, 0.3);
     letter-spacing: 0.3px; text-transform: uppercase;
   }
   .btn-custom:active { transform: scale(0.97); }
-  .btn-custom:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.6); }
+  .btn-custom:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.8); }
 
   .input-custom {
-    width: 100%; padding: 16px; border-radius: 18px; background: #f8fafc; border: 1px solid var(--border-card);
-    color: var(--text-primary); outline: none; font-size: 13px; font-weight: 600; transition: all 0.3s ease;
+    width: 100%; padding: 16px; border-radius: 18px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-card);
+    color: #fff; outline: none; font-size: 13px; font-weight: 600; transition: all 0.3s ease;
   }
-  .input-custom:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); background: #ffffff; }
+  .input-custom:focus { border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); background: rgba(15, 23, 42, 0.95); }
 
   .nav-bar {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 36px); max-width: 480px;
-    background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+    background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
     border: 1px solid var(--border-card); border-radius: 28px; display: flex; justify-content: space-around; padding: 8px; z-index: 80;
-    box-shadow: 0 14px 40px rgba(0,0,0,0.08);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.6);
   }
   .nav-tab {
     display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 8px; border-radius: 20px;
     color: var(--text-secondary); text-decoration: none; font-size: 10px; font-family: var(--font-heading); font-weight: 800;
     cursor: pointer; transition: all 0.3s ease; flex: 1; text-align: center; letter-spacing: 0.5px; text-transform: uppercase;
   }
-  .nav-tab.active { color: var(--accent-cyan); background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.2); }
+  .nav-tab.active { color: var(--accent-cyan); background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.25); }
 
   .view { display: none; opacity: 0; transform: translateY(14px); transition: all 0.35s ease; }
   .view.active { display: block; opacity: 1; transform: translateY(0); }
 
   .toast {
     position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-120px) scale(0.9);
-    width: calc(100% - 36px); max-width: 440px; background: #ffffff; border: 1px solid var(--accent-cyan); border-radius: 22px; padding: 18px 22px; z-index: 999;
-    display: flex; align-items: center; gap: 16px; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
-    overflow: hidden; opacity: 0; pointer-events: none;
+    width: calc(100% - 36px); max-width: 440px; background: rgba(15, 23, 42, 0.95); border: 1px solid var(--accent-cyan); border-radius: 22px; padding: 18px 22px; z-index: 999;
+    display: flex; align-items: center; gap: 16px; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    overflow: hidden; opacity: 0; pointer-events: none; backdrop-filter: blur(16px);
   }
   .toast.show { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; pointer-events: auto; }
   .toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--accent-cyan); width: 100%; transition: width 3.5s linear; }
 
   .streak-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 18px 0; }
   .streak-day {
-    background: #f8fafc; border: 1px solid var(--border-card); border-radius: 16px; padding: 12px 2px;
+    background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-card); border-radius: 16px; padding: 12px 2px;
     text-align: center; font-size: 10px; font-weight: 800; display: flex; flex-direction: column; gap: 4px; align-items: center;
     transition: all 0.3s ease; color: var(--text-secondary);
   }
-  .streak-day.active { background: rgba(5, 150, 105, 0.1); border-color: var(--accent-emerald); color: var(--accent-emerald); }
+  .streak-day.active { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-emerald); color: var(--accent-emerald); }
 
   .product-shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
   .shop-item {
-    background: #ffffff; border: 1px solid var(--border-card); border-radius: 22px; padding: 18px;
+    background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-card); border-radius: 22px; padding: 18px;
     display: flex; flex-direction: column; justify-content: space-between; gap: 14px; position: relative; overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: all 0.3s ease;
+    backdrop-filter: blur(12px); transition: all 0.3s ease;
   }
   .wheel-container { position: relative; width: 280px; height: 280px; margin: 14px auto; display: flex; justify-content: center; align-items: center; }
   .wheel-pointer {
     position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 0; height: 0;
     border-left: 16px solid transparent; border-right: 16px solid transparent; border-top: 28px solid var(--accent-pink); z-index: 20;
-    filter: drop-shadow(0 4px 10px rgba(219,39,119,0.5));
+    filter: drop-shadow(0 4px 10px rgba(244, 63, 94, 0.8));
   }
-  #spinCanvas { width: 280px; height: 280px; border-radius: 50%; border: 4px solid #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.08); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
-  .loader-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 99; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.4s ease; }
-  .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); z-index: 900; display: none; place-items: center; padding: 20px; }
+  #spinCanvas { width: 280px; height: 280px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.1); box-shadow: 0 0 30px rgba(0, 242, 254, 0.2); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
+  
+  .loader-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.4s ease; pointer-events: none; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(7, 10, 18, 0.9); backdrop-filter: blur(20px); z-index: 900; display: none; place-items: center; padding: 20px; }
   .modal-overlay.active { display: grid; }
   .proof-preview-container { position: relative; border-radius: 18px; overflow: hidden; margin-top: 12px; border: 1px solid var(--border-card); }
   .proof-preview-img { width: 100%; max-height: 200px; object-fit: cover; cursor: pointer; display: block; }
-  .zoom-btn-overlay { position: absolute; bottom: 10px; right: 10px; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); color: var(--text-primary); padding: 7px 16px; border-radius: 14px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .zoom-btn-overlay { position: absolute; bottom: 10px; right: 10px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); color: #fff; padding: 7px 16px; border-radius: 14px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px; cursor: pointer; border: 1px solid var(--border-card); }
 </style>
 </head>
 <body>
@@ -154,16 +156,16 @@ module.exports = async (req, res) => {
   <div class="brand-icon float" style="width:72px;height:72px;border-radius:24px;">
     <svg class="icon-svg spin-slow" style="width:40px;height:40px" viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
   </div>
-  <div style="font-family:var(--font-heading);font-weight:900;font-size:22px;letter-spacing:1px;color:var(--text-primary)">WALZY STORE HUB</div>
-  <div style="font-size:12px;color:var(--text-secondary);font-weight:600" id="loadText">Memuat antarmuka realtime...</div>
+  <div style="font-family:var(--font-heading);font-weight:900;font-size:22px;letter-spacing:1px;color:#fff">WALZY CYBER STORE</div>
+  <div style="font-size:12px;color:var(--text-secondary);font-weight:600" id="loadText">Menghubungkan ke server realtime...</div>
 </div>
 
 <div class="toast" id="toast">
-  <div id="toastIcon" style="color:var(--accent-cyan);display:grid;place-items:center;width:36px;height:36px;border-radius:14px;background:rgba(2, 132, 199, 0.1)">
+  <div id="toastIcon" style="color:var(--accent-cyan);display:grid;place-items:center;width:36px;height:36px;border-radius:14px;background:rgba(0, 242, 254, 0.1)">
     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
   </div>
   <div>
-    <div id="toastTitle" style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">Notifikasi</div>
+    <div id="toastTitle" style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:#fff">Notifikasi</div>
     <div id="toastMsg" style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">Pesan deskripsi</div>
   </div>
   <div class="toast-progress" id="toastProgress"></div>
@@ -171,8 +173,8 @@ module.exports = async (req, res) => {
 
 <div class="modal-overlay" id="imageZoomModal" onclick="closeZoomModal()">
   <div style="position:relative;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;align-items:center;gap:16px" onclick="event.stopPropagation()">
-    <img id="zoomedImageSrc" src="" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,0.3);border:2px solid #fff">
-    <button class="btn-custom" style="width:auto;padding:12px 30px;background:#ffffff;color:var(--text-primary)" onclick="closeZoomModal()">Tutup Gambar</button>
+    <img id="zoomedImageSrc" src="" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,0.8);border:1px solid var(--border-highlight)">
+    <button class="btn-custom" style="width:auto;padding:12px 30px;background:#ffffff;color:#000" onclick="closeZoomModal()">Tutup Foto</button>
   </div>
 </div>
 
@@ -193,15 +195,15 @@ module.exports = async (req, res) => {
     <div id="viewHome" class="view active">
       <div class="cyber-card">
         <div style="display:flex;align-items:center;gap:18px;margin-bottom:14px">
-          <div style="width:60px;height:60px;border-radius:20px;background:rgba(2, 132, 199, 0.1);display:grid;place-items:center;color:var(--accent-cyan);border:1px solid rgba(2, 132, 199, 0.2)">
+          <div style="width:60px;height:60px;border-radius:20px;background:rgba(0, 242, 254, 0.1);display:grid;place-items:center;color:var(--accent-cyan);border:1px solid rgba(0, 242, 254, 0.25)">
             <svg class="icon-svg float" style="width:32px;height:32px" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
           <div>
-            <div id="uName" style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--text-primary)">User Walzy</div>
+            <div id="uName" style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:#fff">User Walzy</div>
             <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600" id="uIdText">ID: --</div>
             <div style="display:flex;gap:8px;margin-top:8px">
               <span class="user-badge" id="uRankBadge">BASIC</span>
-              <span class="user-badge" id="uStatusBadge" style="color:var(--accent-purple);border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.08)">Gratis</span>
+              <span class="user-badge" id="uStatusBadge" style="color:var(--accent-purple);border-color:rgba(157,78,221,0.3);background:rgba(157,78,221,0.1)">Gratis</span>
             </div>
           </div>
         </div>
@@ -224,7 +226,7 @@ module.exports = async (req, res) => {
 
       <div class="cyber-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;display:flex;align-items:center;gap:10px;color:var(--text-primary)">
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;display:flex;align-items:center;gap:10px;color:#fff">
             <svg class="icon-svg spin-slow" style="color:var(--accent-amber)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             Spin Wheel Keberuntungan
           </div>
@@ -237,33 +239,33 @@ module.exports = async (req, res) => {
       </div>
 
       <div class="cyber-card">
-        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;color:var(--text-primary)">
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;color:#fff">
           <svg class="icon-svg" style="color:var(--accent-emerald)" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Redeem Kode Voucher
         </div>
         <input class="input-custom" id="vCodeInput" placeholder="Masukkan Kode Voucher Promo">
-        <button class="btn-custom" style="margin-top:14px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="claimVoucher(this)">Tukarkan Kode</button>
+        <button class="btn-custom" style="margin-top:14px;background:linear-gradient(135deg, var(--accent-emerald), #047857);color:#fff" onclick="claimVoucher(this)">Tukarkan Kode</button>
       </div>
 
       <div class="cyber-card">
-        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;color:var(--text-primary)">
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;color:#fff">
           <svg class="icon-svg" style="color:var(--accent-purple)" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Program Referral Undangan
         </div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;font-weight:600">Dapatkan +50 Poin setiap kali ada user baru mendaftar menggunakan link Anda.</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;font-weight:600">Dapatkan +50 Poin setiap kali ada user mendaftar lewat link Anda.</div>
         <input class="input-custom" id="refUrlInput" readonly value="Memuat link...">
         <button class="btn-custom" style="margin-top:14px" onclick="copyRefLink()">Salin Link Referral</button>
       </div>
     </div>
 
     <div id="viewOrder" class="view">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text-primary)">Katalog VIP Store</div>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:#fff">Katalog VIP Store</div>
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Pilih paket langganan VIP dan nikmati akses penuh tanpa batas!</div>
       <div id="activeInvoiceBox"></div>
       <div class="product-shop-grid">
         <div class="shop-item">
           <div>
-            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Trial</div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:#fff">VIP Trial</div>
             <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">Akses Full 3 Hari</div>
           </div>
           <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-cyan);margin-top:8px">Rp 7.000</div>
@@ -271,7 +273,7 @@ module.exports = async (req, res) => {
         </div>
         <div class="shop-item">
           <div>
-            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Hemat</div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:#fff">VIP Hemat</div>
             <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">Akses Full 5 Hari</div>
           </div>
           <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-cyan);margin-top:8px">Rp 10.000</div>
@@ -279,35 +281,35 @@ module.exports = async (req, res) => {
         </div>
         <div class="shop-item">
           <div>
-            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Starter</div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:#fff">VIP Starter</div>
             <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">7 Hari Popular</div>
           </div>
           <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-emerald);margin-top:8px">Rp 15.000</div>
-          <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="createOrder(7, 15000, this)">Beli VIP 7H</button>
+          <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857);color:#fff" onclick="createOrder(7, 15000, this)">Beli VIP 7H</button>
         </div>
         <div class="shop-item">
           <div>
-            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Pro</div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:#fff">VIP Pro</div>
             <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">14 Hari Best Value</div>
           </div>
           <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-purple);margin-top:8px">Rp 25.000</div>
-          <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #6d28d9)" onclick="createOrder(14, 25000, this)">Beli VIP 14H</button>
+          <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #6d28d9);color:#fff" onclick="createOrder(14, 25000, this)">Beli VIP 14H</button>
         </div>
-        <div class="shop-item" style="grid-column: span 2;border-color:rgba(217, 119, 6, 0.4)">
+        <div class="shop-item" style="grid-column: span 2;border-color:rgba(245, 158, 11, 0.4)">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
-              <div style="font-family:var(--font-heading);font-weight:800;font-size:17px;color:var(--text-primary)">VIP Sultan 30 Hari</div>
+              <div style="font-family:var(--font-heading);font-weight:800;font-size:17px;color:#fff">VIP Sultan 30 Hari</div>
               <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">Priority Support & Full Unlimited</div>
             </div>
             <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;color:var(--accent-amber)">Rp 45.000</div>
           </div>
-          <button class="btn-custom btn-buy-pkg" style="margin-top:14px;padding:14px;font-size:13px;background:linear-gradient(135deg, var(--accent-amber), #b45309)" onclick="createOrder(30, 45000, this)">Beli VIP 30 Hari Sultan</button>
+          <button class="btn-custom btn-buy-pkg" style="margin-top:14px;padding:14px;font-size:13px;background:linear-gradient(135deg, var(--accent-amber), #b45309);color:#fff" onclick="createOrder(30, 45000, this)">Beli VIP 30 Hari Sultan</button>
         </div>
       </div>
     </div>
 
     <div id="viewCheckin" class="view">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text-primary)">Daily Check-in Poin</div>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:#fff">Daily Check-in Poin</div>
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Check-in harian untuk mendapatkan poin bertingkat setiap minggunya!</div>
 
       <div class="cyber-card">
@@ -329,44 +331,44 @@ module.exports = async (req, res) => {
         </div>
       </div>
 
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;margin:22px 0 14px;color:var(--text-primary)">Point Shop - Tukar Poin Jadi VIP</div>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;margin:22px 0 14px;color:#fff">Point Shop - Tukar Poin Jadi VIP</div>
 
       <div class="product-shop-grid">
         <div class="shop-item">
           <div>
-            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">1 Hari VIP</div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:#fff">1 Hari VIP</div>
             <div style="font-size:12px;color:var(--accent-amber);margin-top:2px;font-weight:700">100 PTS</div>
           </div>
           <button class="btn-custom" style="padding:10px;font-size:12px" onclick="redeemPoints(1, this)">Tukarkan</button>
         </div>
         <div class="shop-item">
           <div>
-            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">3 Hari VIP</div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:#fff">3 Hari VIP</div>
             <div style="font-size:12px;color:var(--accent-amber);margin-top:2px;font-weight:700">250 PTS</div>
           </div>
           <button class="btn-custom" style="padding:10px;font-size:12px" onclick="redeemPoints(2, this)">Tukarkan</button>
         </div>
         <div class="shop-item">
           <div>
-            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">7 Hari VIP</div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:#fff">7 Hari VIP</div>
             <div style="font-size:12px;color:var(--accent-amber);margin-top:2px;font-weight:700">500 PTS</div>
           </div>
-          <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="redeemPoints(3, this)">Tukarkan</button>
+          <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857);color:#fff" onclick="redeemPoints(3, this)">Tukarkan</button>
         </div>
         <div class="shop-item">
           <div>
-            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">14 Hari VIP</div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:#fff">14 Hari VIP</div>
             <div style="font-size:12px;color:var(--accent-amber);margin-top:2px;font-weight:700">900 PTS</div>
           </div>
-          <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #6d28d9)" onclick="redeemPoints(4, this)">Tukarkan</button>
+          <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #6d28d9);color:#fff" onclick="redeemPoints(4, this)">Tukarkan</button>
         </div>
         <div class="shop-item" style="grid-column: span 2">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
-              <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">30 Hari VIP Sultan</div>
+              <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:#fff">30 Hari VIP Sultan</div>
               <div style="font-size:12px;color:var(--accent-amber);margin-top:2px;font-weight:700">1.600 PTS</div>
             </div>
-            <button class="btn-custom" style="width:auto;padding:10px 24px;font-size:12px;background:linear-gradient(135deg, var(--accent-amber), #b45309)" onclick="redeemPoints(5, this)">Tukarkan</button>
+            <button class="btn-custom" style="width:auto;padding:10px 24px;font-size:12px;background:linear-gradient(135deg, var(--accent-amber), #b45309);color:#fff" onclick="redeemPoints(5, this)">Tukarkan</button>
           </div>
         </div>
       </div>
@@ -375,18 +377,18 @@ module.exports = async (req, res) => {
 
   <div id="viewOwnerArea" style="display:none">
     <div id="oTabOrders" class="view active">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text-primary)">Katalog Order Pembayaran</div>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:#fff">Katalog Order Pembayaran</div>
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Daftar transaksi pending & foto bukti pembayaran terkirim.</div>
       <div id="oPendingList"></div>
     </div>
     <div id="oTabUsers" class="view">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text-primary)">Kelola User Valid</div>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:#fff">Kelola User Valid</div>
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Daftar pengguna terverifikasi.</div>
       <div id="oUserList"></div>
     </div>
     <div id="oTabVouchers" class="view">
       <div class="cyber-card">
-        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:14px;color:var(--text-primary)">Generator Voucher Promo</div>
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:14px;color:#fff">Generator Voucher Promo</div>
         <input class="input-custom" id="vGenCode" placeholder="Kode Voucher (cth: SULTAN100)" style="margin-bottom:12px">
         <div class="grid2" style="margin-bottom:12px">
           <input class="input-custom" id="vGenDays" type="number" placeholder="Durasi (Hari)">
@@ -394,18 +396,18 @@ module.exports = async (req, res) => {
         </div>
         <button class="btn-custom" onclick="createVoucher(this)">Buat Voucher</button>
       </div>
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin:16px 0 12px;color:var(--text-primary)">Voucher Aktif</div>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin:16px 0 12px;color:#fff">Voucher Aktif</div>
       <div id="oVoucherList"></div>
     </div>
     <div id="oTabBroadcast" class="view">
       <div class="cyber-card">
-        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:12px;color:var(--text-primary)">Kirim Broadcast Pesan Massal</div>
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:12px;color:#fff">Kirim Broadcast Pesan Massal</div>
         <textarea class="input-custom" id="bcTextInput" style="height:140px;resize:none;margin-bottom:14px" placeholder="Tuliskan pesan HTML broadcast massal..."></textarea>
         <button class="btn-custom" id="btnSendBc" onclick="sendBroadcast(this)">Kirim Broadcast Sekarang</button>
       </div>
     </div>
     <div id="oTabAnalytics" class="view">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:16px;color:var(--text-primary)">Analitik Pendapatan Studio</div>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:16px;color:#fff">Analitik Pendapatan Studio</div>
       <div class="grid2">
         <div class="stat-card">
           <div class="stat-val" id="oRev">Rp 0</div>
@@ -479,17 +481,20 @@ module.exports = async (req, res) => {
   var isSpinning = false;
   var currentWheelRotation = 0;
   var pollingTimer = null;
+  var loaderHidden = false;
 
   var wheelPrizes = [
     { label: "ZONK ❌", color: "#f43f5e" },
-    { label: "+30 PTS 🪙", color: "#0284c7" },
-    { label: "+50 PTS 🪙", color: "#7c3aed" },
-    { label: "+100 PTS 🪙", color: "#d97706" },
-    { label: "+3 KUOTA ⚡", color: "#059669" },
-    { label: "VIP 1 HARI 💎", color: "#db2777" }
+    { label: "+30 PTS 🪙", color: "#00f2fe" },
+    { label: "+50 PTS 🪙", color: "#9d4edd" },
+    { label: "+100 PTS 🪙", color: "#f59e0b" },
+    { label: "+3 KUOTA ⚡", color: "#10b981" },
+    { label: "VIP 1 HARI 💎", color: "#4facfe" }
   ];
 
   function hideLoader() {
+    if (loaderHidden) return;
+    loaderHidden = true;
     var ldr = document.getElementById('loader');
     if (ldr) {
       ldr.style.opacity = '0';
@@ -518,7 +523,7 @@ module.exports = async (req, res) => {
       ctx.lineTo(cx, cy);
       ctx.fill();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = '#ffffff';
+      ctx.strokeStyle = '#070a12';
       ctx.stroke();
 
       ctx.save();
@@ -533,6 +538,9 @@ module.exports = async (req, res) => {
   }
 
   function initApp() {
+    // Safety timer: Pastikan loader SELALU hilang dalam batas waktu maksimal 1.5 detik
+    setTimeout(hideLoader, 1500);
+
     try {
       tg = window.Telegram ? window.Telegram.WebApp : null;
       if (tg) { tg.ready(); tg.expand(); }
@@ -551,16 +559,17 @@ module.exports = async (req, res) => {
       drawWheel();
 
       if (!currentUserId) {
-        document.getElementById('loadText').textContent = 'Silakan buka WebApp melalui Telegram Bot!';
+        var loadTxtEl = document.getElementById('loadText');
+        if (loadTxtEl) loadTxtEl.textContent = 'Silakan buka WebApp melalui Telegram Bot!';
         hideLoader();
         return;
       }
 
+      loadUserData(false);
       if (!pollingTimer) {
-        loadUserData();
         pollingTimer = setInterval(function() {
           loadUserData(true);
-        }, 2500);
+        }, 3000);
       }
     } catch (err) {
       hideLoader();
@@ -569,33 +578,57 @@ module.exports = async (req, res) => {
 
   async function loadUserData(isSilent) {
     try {
+      if (!currentUserId) {
+        hideLoader();
+        return;
+      }
+
       var queryUrl = '/api/api?endpoint=user&user_id=' + currentUserId;
       if (currentFirstName) queryUrl += '&first_name=' + encodeURIComponent(currentFirstName);
       if (currentUsername) queryUrl += '&username=' + encodeURIComponent(currentUsername);
 
       var controller = new AbortController();
-      var timeoutId = setTimeout(function() { controller.abort(); }, 8000);
+      var timeoutId = setTimeout(function() { controller.abort(); }, 6000);
+      
       var res;
       try {
         res = await fetch(queryUrl, { signal: controller.signal });
       } finally {
         clearTimeout(timeoutId);
       }
+      
       var data = await res.json();
 
-      if (data.ok) {
+      if (data.ok && data.user) {
         var u = data.user;
         isUserOwner = u.isOwner;
 
-        document.getElementById('uName').textContent = u.first_name || 'User Walzy';
-        document.getElementById('uIdText').textContent = 'ID: ' + u.id;
-        document.getElementById('uRankBadge').textContent = u.rank ? u.rank.name : 'BASIC';
-        document.getElementById('uStatusBadge').textContent = u.isPremium ? 'VIP (' + u.premiumLeftDays + 'H)' : 'Gratis';
-        document.getElementById('sQuota').textContent = u.dailyFixRemaining || '5/5';
-        document.getElementById('sRefs').textContent = u.referralCount || 0;
-        document.getElementById('sPoints').textContent = u.points || 0;
-        document.getElementById('checkinPointsVal').textContent = (u.points || 0) + ' PTS';
-        document.getElementById('refUrlInput').value = u.referralLink || '';
+        var elName = document.getElementById('uName');
+        if (elName) elName.textContent = u.first_name || 'User Walzy';
+        
+        var elId = document.getElementById('uIdText');
+        if (elId) elId.textContent = 'ID: ' + u.id;
+        
+        var elRank = document.getElementById('uRankBadge');
+        if (elRank) elRank.textContent = u.rank ? u.rank.name : 'BASIC';
+        
+        var elStatus = document.getElementById('uStatusBadge');
+        if (elStatus) elStatus.textContent = u.isPremium ? 'VIP (' + u.premiumLeftDays + 'H)' : 'Gratis';
+        
+        var elQuota = document.getElementById('sQuota');
+        if (elQuota) elQuota.textContent = u.dailyFixRemaining || '5/5';
+        
+        var elRefs = document.getElementById('sRefs');
+        if (elRefs) elRefs.textContent = u.referralCount || 0;
+        
+        var elPts = document.getElementById('sPoints');
+        if (elPts) elPts.textContent = u.points || 0;
+        
+        var elChkPts = document.getElementById('checkinPointsVal');
+        if (elChkPts) elChkPts.textContent = (u.points || 0) + ' PTS';
+        
+        var elRefUrl = document.getElementById('refUrlInput');
+        if (elRefUrl) elRefUrl.value = u.referralLink || '';
 
         var spinBtn = document.getElementById('spinBtn');
         if (spinBtn && !isSpinning) spinBtn.disabled = !u.canSpin;
@@ -630,7 +663,7 @@ module.exports = async (req, res) => {
         var invBox = document.getElementById('activeInvoiceBox');
         var buyBtns = document.querySelectorAll('.btn-buy-pkg');
 
-        if (data.currentInvoice) {
+        if (data.currentInvoice && invBox) {
           var inv = data.currentInvoice;
           activeInvoiceId = inv.id;
 
@@ -652,32 +685,37 @@ module.exports = async (req, res) => {
               '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;font-weight:600">Status: <b>' + (inv.status === 'waiting_approval' ? 'Menunggu Konfirmasi Owner' : 'Belum Dibayar / Upload Bukti') + '</b></div>' +
               proofHtml +
               '<div style="display:flex;gap:10px;margin-top:14px">' +
-                '<button class="btn-custom" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="triggerUploadProof()">' + (inv.proofImage ? 'Ganti Foto Bukti' : 'Upload Foto Bukti') + '</button>' +
-                '<button class="btn-custom" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="cancelOrder(\'' + inv.id + '\', this)">Batalkan Pembelian</button>' +
+                '<button class="btn-custom" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857);color:#fff" onclick="triggerUploadProof()">' + (inv.proofImage ? 'Ganti Foto Bukti' : 'Upload Foto Bukti') + '</button>' +
+                '<button class="btn-custom" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-pink), #be123c);color:#fff" onclick="cancelOrder(\'' + inv.id + '\', this)">Batalkan Pembelian</button>' +
               '</div>' +
             '</div>';
-        } else {
+        } else if (invBox) {
           activeInvoiceId = null;
           invBox.innerHTML = '';
           buyBtns.forEach(function(btn) { btn.disabled = false; });
         }
       } else if (!isSilent) {
-        showToast('Error', data.message || 'Gagal memuat profil', 'error');
+        showToast('Info', (data && data.message) ? data.message : 'Memuat profil', 'info');
       }
     } catch (e) {
       if (!isSilent) showToast('Error', 'Gagal memuat data dari server', 'error');
     } finally {
-      if (!isSilent) hideLoader();
+      hideLoader();
     }
   }
 
   function openZoomModal(imgSrc) {
-    document.getElementById('zoomedImageSrc').src = imgSrc;
-    document.getElementById('imageZoomModal').classList.add('active');
+    var imgEl = document.getElementById('zoomedImageSrc');
+    var modalEl = document.getElementById('imageZoomModal');
+    if (imgEl && modalEl) {
+      imgEl.src = imgSrc;
+      modalEl.classList.add('active');
+    }
   }
 
   function closeZoomModal() {
-    document.getElementById('imageZoomModal').classList.remove('active');
+    var modalEl = document.getElementById('imageZoomModal');
+    if (modalEl) modalEl.classList.remove('active');
   }
 
   function switchTab(tabName, event) {
@@ -685,7 +723,8 @@ module.exports = async (req, res) => {
     document.querySelectorAll('#viewUserArea .view').forEach(function(v) { v.classList.remove('active'); });
     document.querySelectorAll('#userNavBar .nav-tab').forEach(function(t) { t.classList.remove('active'); });
 
-    document.getElementById('view' + tabName).classList.add('active');
+    var targetView = document.getElementById('view' + tabName);
+    if (targetView) targetView.classList.add('active');
     if (event && event.currentTarget) event.currentTarget.classList.add('active');
     if (tabName === 'Home') drawWheel();
   }
@@ -695,7 +734,8 @@ module.exports = async (req, res) => {
     document.querySelectorAll('#viewOwnerArea .view').forEach(function(v) { v.classList.remove('active'); });
     document.querySelectorAll('#ownerNavBar .nav-tab').forEach(function(t) { t.classList.remove('active'); });
 
-    document.getElementById('oTab' + tabName).classList.add('active');
+    var targetView = document.getElementById('oTab' + tabName);
+    if (targetView) targetView.classList.add('active');
     if (event && event.currentTarget) event.currentTarget.classList.add('active');
   }
 
@@ -704,6 +744,7 @@ module.exports = async (req, res) => {
     var t = document.getElementById('toast');
     var iconContainer = document.getElementById('toastIcon');
     var progress = document.getElementById('toastProgress');
+    if (!t) return;
     
     var colors = {
       success: 'var(--accent-emerald)',
@@ -714,11 +755,14 @@ module.exports = async (req, res) => {
     var color = colors[type] || colors.info;
 
     t.style.borderColor = color;
-    iconContainer.style.color = color;
+    if (iconContainer) iconContainer.style.color = color;
     if (progress) progress.style.background = color;
 
-    document.getElementById('toastTitle').textContent = title;
-    document.getElementById('toastMsg').textContent = msg;
+    var elTitle = document.getElementById('toastTitle');
+    if (elTitle) elTitle.textContent = title;
+    
+    var elMsg = document.getElementById('toastMsg');
+    if (elMsg) elMsg.textContent = msg;
 
     if (progress) {
       progress.style.transition = 'none';
@@ -755,7 +799,7 @@ module.exports = async (req, res) => {
 
         currentWheelRotation += (360 * 5) + (targetDeg - (currentWheelRotation % 360));
         var canvas = document.getElementById('spinCanvas');
-        canvas.style.transform = 'rotate(' + currentWheelRotation + 'deg)';
+        if (canvas) canvas.style.transform = 'rotate(' + currentWheelRotation + 'deg)';
 
         setTimeout(function() {
           showToast(data.prize.type === 'zonk' ? 'Informasi Spin' : 'Selamat!', data.message, data.prize.type === 'zonk' ? 'warning' : 'success');
@@ -774,7 +818,7 @@ module.exports = async (req, res) => {
   }
 
   async function triggerCheckin(btn) {
-    if (btn) { btn.disabled = true; btn.innerHTML = 'Proses Check-in...'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Proses...'; }
     try {
       var res = await fetch('/api/api?endpoint=checkin', {
         method: 'POST',
@@ -852,7 +896,8 @@ module.exports = async (req, res) => {
   }
 
   function triggerUploadProof() {
-    document.getElementById('proofFileInput').click();
+    var fileInput = document.getElementById('proofFileInput');
+    if (fileInput) fileInput.click();
   }
 
   function submitProofFile(event) {
@@ -860,7 +905,7 @@ module.exports = async (req, res) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      return showToast('Error Upload', 'Bukti pembayaran harus berupa file foto!', 'error');
+      return showToast('Error Upload', 'Bukti pembayaran harus berupa foto!', 'error');
     }
 
     var reader = new FileReader();
@@ -883,7 +928,8 @@ module.exports = async (req, res) => {
   }
 
   async function claimVoucher(btn) {
-    var code = document.getElementById('vCodeInput').value.trim();
+    var inputEl = document.getElementById('vCodeInput');
+    var code = inputEl ? inputEl.value.trim() : '';
     if (!code) return showToast('Peringatan', 'Masukkan kode voucher promo!', 'warning');
 
     var orig = btn ? btn.innerHTML : '';
@@ -898,7 +944,7 @@ module.exports = async (req, res) => {
       var data = await res.json();
       showToast(data.ok ? 'Sukses Klaim' : 'Gagal Klaim', data.message, data.ok ? 'success' : 'error');
       if (data.ok) {
-        document.getElementById('vCodeInput').value = '';
+        if (inputEl) inputEl.value = '';
         loadUserData();
       }
     } catch (e) {
@@ -910,6 +956,7 @@ module.exports = async (req, res) => {
 
   function copyRefLink() {
     var input = document.getElementById('refUrlInput');
+    if (!input) return;
     input.select();
     document.execCommand('copy');
     showToast('Berhasil Disalin', 'Link referral tersalin ke clipboard!', 'success');
@@ -921,68 +968,81 @@ module.exports = async (req, res) => {
       var d = await res.json();
 
       if (d.ok) {
-        document.getElementById('oRev').textContent = 'Rp ' + (d.revenue || 0).toLocaleString('id-ID');
-        document.getElementById('oUsers').textContent = d.usersValid || 0;
-        document.getElementById('oVip').textContent = d.premium || 0;
-        document.getElementById('oFix').textContent = d.totalFix || 0;
+        var elRev = document.getElementById('oRev');
+        if (elRev) elRev.textContent = 'Rp ' + (d.revenue || 0).toLocaleString('id-ID');
+        
+        var elUsers = document.getElementById('oUsers');
+        if (elUsers) elUsers.textContent = d.usersValid || 0;
+        
+        var elVip = document.getElementById('oVip');
+        if (elVip) elVip.textContent = d.premium || 0;
+        
+        var elFix = document.getElementById('oFix');
+        if (elFix) elFix.textContent = d.totalFix || 0;
 
         var pendingList = document.getElementById('oPendingList');
-        if (d.pendingPayments && d.pendingPayments.length > 0) {
-          pendingList.innerHTML = d.pendingPayments.map(function(p) {
-            var imgHtml = p.proofImage ? 
-              '<div class="proof-preview-container">' +
-                '<img src="' + p.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
-                '<div class="zoom-btn-overlay" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
-                  '<svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
-                  'Lihat Foto Fullscreen' +
-                '</div>' +
-              '</div>' : '<div style="font-size:12px;color:var(--accent-pink);margin-top:4px;font-weight:600">Belum upload foto bukti.</div>';
+        if (pendingList) {
+          if (d.pendingPayments && d.pendingPayments.length > 0) {
+            pendingList.innerHTML = d.pendingPayments.map(function(p) {
+              var imgHtml = p.proofImage ? 
+                '<div class="proof-preview-container">' +
+                  '<img src="' + p.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
+                  '<div class="zoom-btn-overlay" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
+                    '<svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
+                    'Lihat Foto Fullscreen' +
+                  '</div>' +
+                '</div>' : '<div style="font-size:12px;color:var(--accent-pink);margin-top:4px;font-weight:600">Belum upload foto bukti.</div>';
 
-            return '<div class="cyber-card">' +
-              '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">Invoice: ' + p.id + '</div>' +
-              '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">User: ' + p.userId + ' | Paket: ' + p.days + ' Hari (' + (p.amountFormatted || ('Rp ' + p.amount)) + ')</div>' +
-              imgHtml +
-              '<div style="display:flex;gap:10px;margin-top:14px">' +
-                '<button class="btn-custom" style="padding:11px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="ownerAct(\'' + p.id + '\', \'approve\', this)">Setujui Pembayaran</button>' +
-                '<button class="btn-custom" style="padding:11px;font-size:12px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="ownerAct(\'' + p.id + '\', \'reject\', this)">Tolak</button>' +
-              '</div>' +
-            '</div>';
-          }).join('');
-        } else {
-          pendingList.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">Tidak ada pending deposit.</div>';
+              return '<div class="cyber-card">' +
+                '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:#fff">Invoice: ' + p.id + '</div>' +
+                '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">User: ' + p.userId + ' | Paket: ' + p.days + ' Hari (' + (p.amountFormatted || ('Rp ' + p.amount)) + ')</div>' +
+                imgHtml +
+                '<div style="display:flex;gap:10px;margin-top:14px">' +
+                  '<button class="btn-custom" style="padding:11px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857);color:#fff" onclick="ownerAct(\'' + p.id + '\', \'approve\', this)">Setujui Pembayaran</button>' +
+                  '<button class="btn-custom" style="padding:11px;font-size:12px;background:linear-gradient(135deg, var(--accent-pink), #be123c);color:#fff" onclick="ownerAct(\'' + p.id + '\', \'reject\', this)">Tolak</button>' +
+                '</div>' +
+              '</div>';
+            }).join('');
+          } else {
+            pendingList.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">Tidak ada pending deposit.</div>';
+          }
         }
 
         var userList = document.getElementById('oUserList');
-        if (d.recentUsers && d.recentUsers.length > 0) {
-          userList.innerHTML = d.recentUsers.slice(0, 15).map(function(u) {
-            var isVip = u.premiumUntil && u.premiumUntil > Date.now();
-            return '<div class="cyber-card" style="padding:16px">' +
-              '<div style="display:flex;justify-content:space-between;align-items:center">' +
-                '<div>' +
-                  '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">' + (u.first_name || 'User Walzy') + '</div>' +
-                  '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">ID: ' + u.id + ' | Order: ' + (u.totalFix || 0) + '</div>' +
+        if (userList) {
+          if (d.recentUsers && d.recentUsers.length > 0) {
+            userList.innerHTML = d.recentUsers.slice(0, 15).map(function(u) {
+              var isVip = u.premiumUntil && u.premiumUntil > Date.now();
+              return '<div class="cyber-card" style="padding:16px">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                  '<div>' +
+                    '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:#fff">' + (u.first_name || 'User Walzy') + '</div>' +
+                    '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">ID: ' + u.id + ' | Order: ' + (u.totalFix || 0) + '</div>' +
+                  '</div>' +
+                  '<span class="user-badge">' + (isVip ? 'VIP' : 'Free') + '</span>' +
                 '</div>' +
-                '<span class="user-badge">' + (isVip ? 'VIP' : 'Free') + '</span>' +
-              '</div>' +
-            '</div>';
-          }).join('');
+              '</div>';
+            }).join('');
+          }
         }
 
         var vList = document.getElementById('oVoucherList');
-        if (d.codes && d.codes.length > 0) {
-          vList.innerHTML = d.codes.map(function(c) {
-            return '<div class="cyber-card" style="padding:16px">' +
-              '<div style="display:flex;justify-content:space-between;align-items:center">' +
-                '<div>' +
-                  '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">' + c.code + '</div>' +
-                  '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">' + c.days + ' Hari | Terpakai: ' + (c.used || 0) + '/' + (c.quota || '∞') + '</div>' +
+        if (vList) {
+          if (d.codes && d.codes.length > 0) {
+            vList.innerHTML = d.codes.map(function(c) {
+              return '<div class="cyber-card" style="padding:16px">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                  '<div>' +
+                    '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:#fff">' + c.code + '</div>' +
+                    '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">' + c.days + ' Hari | Terpakai: ' + (c.used || 0) + '/' + (c.quota || '∞') + '</div>' +
+                  '</div>' +
+                  '<button class="btn-custom" style="width:auto;padding:8px 16px;font-size:11px;background:linear-gradient(135deg, var(--accent-pink), #be123c);color:#fff" onclick="deleteVoucher(\'' + c.code + '\', this)">Hapus</button>' +
                 '</div>' +
-                '<button class="btn-custom" style="width:auto;padding:8px 16px;font-size:11px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="deleteVoucher(\'' + c.code + '\', this)">Hapus</button>' +
-              '</div>' +
-            '</div>';
-          }).join('');
-        } else {
-          vList.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">Belum ada voucher aktif.</div>';
+              '</div>';
+            }).join('');
+          } else {
+            vList.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">Belum ada voucher aktif.</div>';
+          }
         }
       }
     } catch (e) {}
