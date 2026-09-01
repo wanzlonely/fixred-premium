@@ -1,718 +1,899 @@
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  const htmlContent = `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>WALZY CYBER HUB</title>
+<title>WALZY STORE</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg-main: #0B0E14;
-  --card-bg: rgba(22, 27, 34, 0.65);
-  --card-border: rgba(255, 255, 255, 0.08);
-  --cyan: #00F0FF;
-  --blue: #3B82F6;
-  --purple: #9D4EDD;
-  --emerald: #10B981;
-  --pink: #F43F5E;
-  --amber: #F59E0B;
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
-  --font-head: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
+--bg:#f7f8fc;
+--bg2:#eef1ff;
+--card:rgba(255,255,255,0.92);
+--card2:#ffffff;
+--bd:rgba(15,23,42,0.06);
+--bd2:rgba(15,23,42,0.10);
+--text:#0f172a;
+--muted:#6b7a99;
+--cyan:#06b6d4;
+--blue:#3b82f6;
+--purple:#8b5cf6;
+--emerald:#10b981;
+--amber:#f59e0b;
+--pink:#ef4444;
+--shadow:0 8px 24px rgba(15,23,42,0.05), 0 1px 0 rgba(255,255,255,0.9) inset;
+--shadow2:0 16px 40px rgba(15,23,42,0.08);
 }
-*{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; font-family:var(--font-body); }
-body{
-  background-color: var(--bg-main);
-  background-image: 
-    radial-gradient(circle at 10% 0%, rgba(0, 240, 255, 0.12), transparent 40%),
-    radial-gradient(circle at 90% 100%, rgba(157, 78, 221, 0.12), transparent 40%);
-  color: var(--text-main);
-  min-height: 100vh;
-  padding-bottom: 90px;
-  overflow-x: hidden;
-}
-.icon{ width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
-.header{
-  position:sticky; top:0; z-index:40; height:70px;
-  display:flex; align-items:center; justify-content:space-between; padding:0 20px;
-  background: rgba(11, 14, 20, 0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--card-border);
-}
-.brand{ display:flex; align-items:center; gap:12px; }
-.brand-logo{
-  width:42px; height:42px; border-radius:14px;
-  background: linear-gradient(135deg, var(--cyan), var(--purple));
-  display:grid; place-items:center; color:#fff;
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); font-family:var(--font-head); font-weight:900; font-size:22px;
-}
-.brand-title{ font-family:var(--font-head); font-weight:800; font-size:18px; color:#fff; letter-spacing:0.5px;}
-.live-badge{
-  display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:20px;
-  background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.3);
-  font-size:11px; font-weight:800; color:var(--emerald); text-transform:uppercase;
-}
-.live-dot{ width:6px; height:6px; border-radius:50%; background:var(--emerald); animation:pulse 2s infinite; }
-.container{ max-width:500px; margin:0 auto; padding:16px; position:relative; }
-
-/* Cyber Cards */
-.card{
-  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px;
-  padding: 18px; margin-bottom: 14px; position: relative; overflow: hidden;
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-.card::before{ content:''; position:absolute; top:0; left:0; width:100%; height:2px; background:linear-gradient(90deg, var(--cyan), var(--purple)); }
-
-.grid-3{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin:14px 0; }
-.grid-2{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin:14px 0; }
-.stat-box{
-  background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); border-radius: 16px;
-  padding: 14px 12px; text-align: left;
-}
-.stat-val{ font-family:var(--font-head); font-weight:800; font-size:22px; color:#fff; }
-.stat-label{ font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; }
-
-/* Buttons & Inputs */
-.btn{
-  width:100%; padding:14px; border-radius:16px; border:none;
-  font-family:var(--font-head); font-weight:800; font-size:13px; text-transform:uppercase;
-  display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
-  transition:all 0.2s; color:#fff;
-}
-.btn:active{ transform:scale(0.96); }
-.btn:disabled{ opacity:0.5; cursor:not-allowed; }
-.btn-cyan{ background:linear-gradient(135deg, var(--cyan), var(--blue)); color:#000; box-shadow:0 0 15px rgba(0,240,255,0.3); }
-.btn-purple{ background:linear-gradient(135deg, var(--purple), #581C87); box-shadow:0 0 15px rgba(157,78,221,0.3); }
-.btn-amber{ background:linear-gradient(135deg, var(--amber), #B45309); }
-.btn-emerald{ background:linear-gradient(135deg, var(--emerald), #047857); }
-.btn-pink{ background:linear-gradient(135deg, var(--pink), #BE123C); }
-.btn-dark{ background:rgba(255,255,255,0.05); border:1px solid var(--card-border); color:#fff; }
-
-.input{
-  width:100%; padding:14px 16px; border-radius:16px; background:rgba(0,0,0,0.3);
-  border:1px solid var(--card-border); color:#fff; font-size:13px; font-weight:600; outline:none;
-  transition:border 0.3s;
-}
-.input:focus{ border-color:var(--cyan); box-shadow:0 0 10px rgba(0,240,255,0.2); }
-
-/* Bottom Navigation */
-.nav-bottom{
-  position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
-  width:calc(100% - 32px); max-width:480px;
-  background: rgba(11, 14, 20, 0.95); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
-  border:1px solid var(--card-border); border-radius:24px;
-  display:flex; justify-content:space-around; align-items:center; padding:8px 6px; z-index:90;
-  box-shadow:0 20px 40px rgba(0,0,0,0.8);
-}
-.nav-item{
-  display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 8px;
-  border-radius:18px; color:var(--text-muted); cursor:pointer; flex:1; transition:all 0.3s;
-}
-.nav-item span{ font-family:var(--font-head); font-weight:800; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; }
-.nav-item.active{ color:var(--cyan); background:rgba(0,240,255,0.1); border:1px solid rgba(0,240,255,0.2); }
-
-.view{ display:none; opacity:0; animation:fadeIn 0.3s forwards; }
-.view.active{ display:block; }
-@keyframes fadeIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-@keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.5;} }
-@keyframes spin{ 100%{transform:rotate(360deg);} }
-
-/* Spin Wheel */
-.wheel-wrapper{ position:relative; width:260px; height:260px; margin:20px auto; }
-.wheel-pointer{ position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent; border-top:22px solid var(--pink); z-index:10; filter:drop-shadow(0 0 10px var(--pink)); }
-.wheel-canvas{ width:100%; height:100%; border-radius:50%; border:4px solid rgba(255,255,255,0.1); box-shadow:0 0 30px rgba(0,240,255,0.2); transition:transform 4s cubic-bezier(0.1, 0.9, 0.2, 1); }
-
-/* Badges */
-.badge{ padding:4px 10px; border-radius:20px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; border:1px solid transparent; }
-.badge-cyan{ background:rgba(0,240,255,0.1); color:var(--cyan); border-color:rgba(0,240,255,0.3); }
-.badge-purple{ background:rgba(157,78,221,0.1); color:var(--purple); border-color:rgba(157,78,221,0.3); }
-
-/* Toast */
-.toast{ position:fixed; top:20px; left:50%; transform:translate(-50%, -100px); background:rgba(11,14,20,0.95); border:1px solid var(--card-border); border-radius:18px; padding:14px 18px; display:flex; align-items:center; gap:12px; min-width:300px; box-shadow:0 10px 30px rgba(0,0,0,0.8); z-index:10000; transition:transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); backdrop-filter:blur(10px); }
-.toast.show{ transform:translate(-50%, 0); }
-.toast-icon{ display:grid; place-items:center; width:36px; height:36px; border-radius:12px; }
-
-/* Loader */
-.loader-overlay{ position:fixed; inset:0; background:var(--bg-main); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; transition:opacity 0.4s; }
-
-/* Modal */
-.modal{ position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); display:none; place-items:center; z-index:9000; padding:20px; }
-.modal.open{ display:grid; }
-.img-preview{ width:100%; border-radius:16px; border:1px solid var(--card-border); margin-top:10px; max-height:180px; object-fit:cover; cursor:pointer; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;font-family:'Plus Jakarta Sans',sans-serif}
+body{background:var(--bg);background-image:radial-gradient(700px 380px at 15% 0%, rgba(6,182,212,0.09), transparent 60%), radial-gradient(700px 380px at 85% 0%, rgba(139,92,246,0.10), transparent 60%), linear-gradient(180deg, var(--bg), var(--bg2));color:var(--text);min-height:100vh;padding-bottom:110px;overflow-x:hidden}
+.icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:linear-gradient(180deg,#ffffff,#f7f8fc);transition:opacity .4s ease, visibility .4s ease}
+.loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.loader-logo{width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);box-shadow:0 12px 28px rgba(6,182,212,0.26);display:grid;place-items:center;color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:28px;animation:float 2.6s ease-in-out infinite}
+.loader-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:19px;color:#0f172a}
+.loader-sub{font-size:12px;color:var(--muted);font-weight:600}
+.loader-bar{width:148px;height:4px;border-radius:999px;background:rgba(15,23,42,0.07);overflow:hidden}
+.loader-bar i{display:block;height:100%;width:40%;background:linear-gradient(90deg,#06b6d4,#8b5cf6);border-radius:999px;animation:bar 1.1s ease-in-out infinite}
+@keyframes bar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.9)}}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.header{position:sticky;top:0;z-index:30;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(255,255,255,0.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--bd)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);display:grid;place-items:center;color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;box-shadow:0 6px 16px rgba(6,182,212,0.22)}
+.brand-name{font-family:'Outfit',sans-serif;font-weight:800;font-size:16px}
+.live{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(16,185,129,0.09);border:1px solid rgba(16,185,129,0.16);font-size:10px;font-weight:800;color:var(--emerald)}
+.live b{width:7px;height:7px;border-radius:50%;background:var(--emerald);box-shadow:0 0 8px var(--emerald);animation:pulse 1.6s infinite;display:inline-block}
+.container{max-width:520px;margin:0 auto;padding:16px 14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg, transparent, rgba(6,182,212,0.28), rgba(139,92,246,0.28), transparent)}
+.badge{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border:1px solid var(--bd);background:rgba(15,23,42,0.04);color:var(--muted)}
+.badge.cyan{background:rgba(6,182,212,0.09);border-color:rgba(6,182,212,0.16);color:var(--cyan)}
+.badge.purple{background:rgba(139,92,246,0.09);border-color:rgba(139,92,246,0.16);color:var(--purple)}
+.badge.emerald{background:rgba(16,185,129,0.09);border-color:rgba(16,185,129,0.16);color:var(--emerald)}
+.badge.amber{background:rgba(245,158,11,0.11);border-color:rgba(245,158,11,0.18);color:var(--amber)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.stat{background:var(--card2);border:1px solid var(--bd);border-radius:16px;padding:12px 10px;box-shadow:0 4px 12px rgba(15,23,42,0.03)}
+.stat-v{font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;color:#0f172a}
+.stat-l{font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.btn{width:100%;padding:13px 14px;border-radius:14px;border:none;font-family:'Outfit',sans-serif;font-weight:800;font-size:12.5px;letter-spacing:.3px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:transform .15s ease, opacity .15s ease}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;box-shadow:0 8px 18px rgba(59,130,246,0.20)}
+.btn-emerald{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+.btn-purple{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff}
+.btn-pink{background:linear-gradient(135deg,#ef4444,#be123c);color:#fff}
+.btn-ghost{background:rgba(15,23,42,0.05);border:1px solid var(--bd);color:#0f172a}
+.input{width:100%;padding:13px 12px;border-radius:14px;background:rgba(255,255,255,0.9);border:1px solid var(--bd);color:#0f172a;outline:none;font-size:13px;font-weight:600}
+.input:focus{border-color:rgba(6,182,212,0.28);box-shadow:0 0 0 4px rgba(6,182,212,0.08)}
+.view{display:none;opacity:0}
+.view.active{display:block;opacity:1;animation:in .32s ease}
+.nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);width:calc(100% - 22px);max-width:500px;background:rgba(255,255,255,0.90);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--bd);border-radius:22px;display:flex;justify-content:space-around;padding:6px;z-index:60;box-shadow:var(--shadow2)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:16px;color:var(--muted);font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;transition:all .2s ease;border:1px solid transparent}
+.tab.active{color:var(--cyan);background:rgba(6,182,212,0.09);border-color:rgba(6,182,212,0.14)}
+.wheel-wrap{position:relative;width:270px;height:270px;margin:0 auto}
+.wheel{width:270px;height:270px;border-radius:50%;border:4px solid #fff;box-shadow:0 8px 24px rgba(15,23,42,0.06), 0 0 0 1px rgba(15,23,42,0.05) inset;transition:transform 4s cubic-bezier(.15,.85,.2,1);overflow:hidden}
+.wheel-pointer{position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:14px solid var(--cyan);filter:drop-shadow(0 3px 6px rgba(6,182,212,0.3));z-index:2}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.shop-item{background:var(--card2);border:1px solid var(--bd);border-radius:16px;padding:12px;box-shadow:0 4px 10px rgba(15,23,42,0.03);transition:transform .18s ease}
+.shop-item:hover{transform:translateY(-2px)}
+.shop-item.best{border-color:rgba(245,158,11,0.26)}
+.shop-badge{position:absolute;top:7px;right:7px;padding:2px 6px;border-radius:999px;font-size:8px;font-weight:800;background:linear-gradient(135deg,#f59e0b,#ff7a00);color:#fff}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-12px);background:rgba(255,255,255,0.96);border:1px solid var(--bd);border-radius:16px;padding:11px 12px;display:flex;gap:9px;align-items:center;min-width:280px;max-width:92vw;box-shadow:0 12px 28px rgba(15,23,42,0.10);opacity:0;pointer-events:none;transition:all .28s ease;z-index:10000}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast-bar{position:absolute;bottom:0;left:0;height:3px;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:0 0 16px 16px;animation:prog 3s linear forwards}
+@keyframes prog{from{width:100%}to{width:0%}}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,0.32);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;place-items:center;z-index:9000;padding:16px}
+.modal.open{display:grid}
+.proof{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--bd);margin-top:8px}
+.proof img{width:100%;max-height:210px;object-fit:cover;display:block}
+.streak{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.streak-day{width:32px;height:36px;border-radius:9px;background:rgba(15,23,42,0.04);border:1px solid var(--bd);display:grid;place-items:center;font-size:10px;font-weight:800;color:var(--muted)}
+.streak-day.active{background:rgba(6,182,212,0.11);border-color:rgba(6,182,212,0.18);color:#0f172a}
+.invoice{background:linear-gradient(135deg, rgba(6,182,212,0.05), rgba(139,92,246,0.05));border:1px solid var(--bd);border-radius:16px;padding:12px;margin-bottom:8px}
+.avatar{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg, rgba(6,182,212,0.16), rgba(139,92,246,0.16));border:1px solid var(--bd);display:grid;place-items:center;color:var(--cyan)}
+.section-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 </style>
 </head>
 <body>
-
-<div class="loader-overlay" id="loader">
-  <div class="brand-logo" style="width:70px; height:70px; font-size:36px; animation:pulse 1.5s infinite;">W</div>
-  <div style="font-family:var(--font-head); font-weight:800; font-size:20px; color:#fff;">WALZY SYSTEM</div>
+<div class="loader" id="loader">
+  <div class="loader-logo">W</div>
+  <div class="loader-title">WALZY STORE</div>
+  <div class="loader-sub" id="loadText">Menghubungkan ke server realtime...</div>
+  <div class="loader-bar"><i></i></div>
 </div>
 
 <div class="toast" id="toast">
-  <div class="toast-icon" id="toastIcon"><svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-  <div>
-    <div id="toastTitle" style="font-family:var(--font-head); font-weight:800; font-size:14px; color:#fff;">Notifikasi</div>
-    <div id="toastMsg" style="font-size:11px; color:var(--text-muted); margin-top:2px; font-weight:600;">Message</div>
-  </div>
+  <div id="toastIcon" style="width:32px;height:32px;border-radius:10px;background:rgba(6,182,212,0.10);display:grid;place-items:center;color:var(--cyan)"><svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+  <div style="flex:1"><div id="toastTitle" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:12px;color:#0f172a">System</div><div id="toastMsg" style="font-size:11px;color:var(--muted);font-weight:600;margin-top:1px">Message</div></div>
+  <div class="toast-bar" id="toastProgress"></div>
 </div>
 
-<div class="modal" id="imageModal" onclick="this.classList.remove('open')">
-  <img id="modalImg" src="" style="max-width:100%; max-height:80vh; border-radius:20px; border:1px solid var(--cyan); box-shadow:0 0 30px rgba(0,240,255,0.2);">
-</div>
+<div class="modal" id="imageZoomModal" onclick="closeZoomModal()"><div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:12px;align-items:center"><img id="zoomedImageSrc" src="" style="max-width:92vw;max-height:76vh;object-fit:contain;border-radius:16px;box-shadow:0 16px 40px rgba(15,23,42,0.14)"><button class="btn btn-ghost" style="width:auto;padding:9px 22px" onclick="closeZoomModal()">Tutup</button></div></div>
 
 <div class="header">
-  <div class="brand">
-    <div class="brand-logo">W</div>
-    <div class="brand-title">WALZY HUB</div>
-  </div>
-  <div class="live-badge"><div class="live-dot"></div> Online</div>
+  <div class="brand"><div class="brand-logo">W</div><div class="brand-name">WALZY</div></div>
+  <div class="live"><b></b> <span id="liveText">REALTIME</span></div>
 </div>
 
-<div class="container" id="appContainer">
-  
-  <!-- ================= USER VIEWS ================= -->
-  <div id="userViews">
-    <!-- TAB 1: HOME -->
-    <div id="vUserHome" class="view active">
-      <div class="card" style="display:flex; align-items:center; gap:16px;">
-        <div style="width:60px; height:60px; border-radius:16px; background:rgba(0,240,255,0.1); border:1px solid rgba(0,240,255,0.2); display:grid; place-items:center; color:var(--cyan);">
-          <svg class="icon" style="width:30px; height:30px;" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <div>
-          <div id="uName" style="font-family:var(--font-head); font-weight:800; font-size:18px; color:#fff;">Loading...</div>
-          <div id="uId" style="font-size:11px; color:var(--text-muted); font-weight:600; margin-bottom:6px;">ID: --</div>
-          <div style="display:flex; gap:6px;"><span class="badge badge-cyan" id="uRank">BASIC</span> <span class="badge badge-purple" id="uStatus">GRATIS</span></div>
-        </div>
-      </div>
-      <div class="grid-3">
-        <div class="stat-box"><div class="stat-val" style="color:var(--cyan);" id="uQuota">0/5</div><div class="stat-label">Kuota Fix</div></div>
-        <div class="stat-box"><div class="stat-val" style="color:var(--amber);" id="uPoints">0</div><div class="stat-label">Poin Vault</div></div>
-        <div class="stat-box"><div class="stat-val" style="color:var(--emerald);" id="uRefs">0</div><div class="stat-label">Referral</div></div>
-      </div>
+<div class="container">
+  <div id="viewUserArea">
+    <div id="viewHome" class="view active">
       <div class="card">
-        <div style="font-family:var(--font-head); font-weight:800; font-size:15px; margin-bottom:4px;">Wheel Keberuntungan</div>
-        <div class="wheel-wrapper"><div class="wheel-pointer"></div><canvas id="spinCanvas" class="wheel-canvas" width="260" height="260"></canvas></div>
-        <button class="btn btn-cyan" id="btnSpin" onclick="triggerSpin()">Putar Spin Harian</button>
-      </div>
-    </div>
-
-    <!-- TAB 2: STORE -->
-    <div id="vUserStore" class="view">
-      <div style="font-family:var(--font-head); font-weight:900; font-size:22px; margin-bottom:6px;">VIP Access</div>
-      <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Beli paket VIP untuk kuota Fix Merah tanpa batas.</div>
-      
-      <!-- Container yang di-update via innerHTML (Aman karena tidak ada input form) -->
-      <div id="userActiveInvoice"></div>
-
-      <div class="grid-2">
-        <div class="card" style="padding:16px; margin-bottom:0;">
-          <div style="font-family:var(--font-head); font-weight:800; font-size:15px;">Trial 3H</div>
-          <div style="font-family:var(--font-head); font-weight:800; font-size:18px; color:var(--cyan); margin:6px 0;">Rp 7.000</div>
-          <button class="btn btn-cyan" style="padding:10px; font-size:11px;" onclick="createOrder(3, 7000)">Beli</button>
-        </div>
-        <div class="card" style="padding:16px; margin-bottom:0;">
-          <div style="font-family:var(--font-head); font-weight:800; font-size:15px;">Hemat 5H</div>
-          <div style="font-family:var(--font-head); font-weight:800; font-size:18px; color:var(--cyan); margin:6px 0;">Rp 10.000</div>
-          <button class="btn btn-cyan" style="padding:10px; font-size:11px;" onclick="createOrder(5, 10000)">Beli</button>
-        </div>
-        <div class="card" style="padding:16px; margin-bottom:0;">
-          <div style="font-family:var(--font-head); font-weight:800; font-size:15px;">Starter 7H</div>
-          <div style="font-family:var(--font-head); font-weight:800; font-size:18px; color:var(--emerald); margin:6px 0;">Rp 15.000</div>
-          <button class="btn btn-emerald" style="padding:10px; font-size:11px;" onclick="createOrder(7, 15000)">Beli</button>
-        </div>
-        <div class="card" style="padding:16px; margin-bottom:0;">
-          <div style="font-family:var(--font-head); font-weight:800; font-size:15px;">Pro 14H</div>
-          <div style="font-family:var(--font-head); font-weight:800; font-size:18px; color:var(--purple); margin:6px 0;">Rp 25.000</div>
-          <button class="btn btn-purple" style="padding:10px; font-size:11px;" onclick="createOrder(14, 25000)">Beli</button>
-        </div>
-        <div class="card" style="grid-column:span 2; border-color:rgba(245,158,11,0.4);">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div style="font-family:var(--font-head); font-weight:800; font-size:18px;">Sultan 30 Hari</div>
-              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Unlimited + Priority Support</div>
-            </div>
-            <div style="font-family:var(--font-head); font-weight:800; font-size:22px; color:var(--amber);">Rp 45.000</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="avatar"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div style="flex:1">
+            <div id="uName" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:16px">Memuat...</div>
+            <div id="uIdText" style="font-size:11px;color:var(--muted);font-weight:600;margin-top:1px">ID: --</div>
+            <div style="display:flex;gap:5px;margin-top:7px"><span class="badge cyan" id="uRankBadge">BASIC</span><span class="badge purple" id="uStatusBadge">Gratis</span><span class="badge emerald" id="uPremiumBadge" style="display:none"></span></div>
           </div>
-          <button class="btn btn-amber" style="margin-top:14px;" onclick="createOrder(30, 45000)">Beli Akses Sultan</button>
         </div>
+      </div>
+      <div class="grid3">
+        <div class="stat"><div class="stat-v" style="color:var(--cyan)" id="sQuota">5/5</div><div class="stat-l">Kuota Fix</div></div>
+        <div class="stat"><div class="stat-v" id="sRefs">0</div><div class="stat-l">Referral</div></div>
+        <div class="stat"><div class="stat-v" style="color:var(--amber)" id="sPoints">0</div><div class="stat-l">Poin</div></div>
+      </div>
+      <div class="card">
+        <div class="section-title">🚀 Akses Cepat</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn btn-primary" onclick="switchTab('viewProduk', document.querySelectorAll('#userNavBar .tab')[1])">🛒 Beli VIP</button>
+          <button class="btn btn-ghost" onclick="switchTab('viewDaily', document.querySelectorAll('#userNavBar .tab')[2])">🎡 Daily Rewards</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">🎟️ Redeem Voucher</div>
+        <input class="input" id="vCodeInput" placeholder="Masukkan kode voucher">
+        <button class="btn btn-emerald" style="margin-top:8px" onclick="claimVoucher(this)">Tukarkan Sekarang</button>
+        <div id="voucherStatus" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
       </div>
     </div>
 
-    <!-- TAB 3: CHECK-IN / MISSIONS -->
-    <div id="vUserCheckin" class="view">
-      <div style="font-family:var(--font-head); font-weight:900; font-size:22px; margin-bottom:16px;">Daily Tasks</div>
-      
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div><div style="font-size:11px; color:var(--text-muted); font-weight:700;">Total Poin</div><div style="font-family:var(--font-head); font-weight:800; font-size:24px; color:var(--amber);" id="cPoints">0 PTS</div></div>
-          <button class="btn btn-amber" id="btnCheckin" style="width:auto; padding:10px 20px;" onclick="triggerCheckin()">Check-in</button>
-        </div>
-        <div style="display:flex; gap:6px; margin-top:16px;" id="streakBox">
-          <!-- Update class via JS -->
-          <div class="streak-bx" id="st1" style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--card-border); border-radius:10px; padding:8px 0; text-align:center; font-size:10px; font-weight:800; color:var(--text-muted);">H1</div>
-          <div class="streak-bx" id="st2" style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--card-border); border-radius:10px; padding:8px 0; text-align:center; font-size:10px; font-weight:800; color:var(--text-muted);">H2</div>
-          <div class="streak-bx" id="st3" style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--card-border); border-radius:10px; padding:8px 0; text-align:center; font-size:10px; font-weight:800; color:var(--text-muted);">H3</div>
-          <div class="streak-bx" id="st4" style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--card-border); border-radius:10px; padding:8px 0; text-align:center; font-size:10px; font-weight:800; color:var(--text-muted);">H4</div>
-          <div class="streak-bx" id="st5" style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--card-border); border-radius:10px; padding:8px 0; text-align:center; font-size:10px; font-weight:800; color:var(--text-muted);">H5</div>
-          <div class="streak-bx" id="st6" style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--card-border); border-radius:10px; padding:8px 0; text-align:center; font-size:10px; font-weight:800; color:var(--text-muted);">H6</div>
-          <div class="streak-bx" id="st7" style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--card-border); border-radius:10px; padding:8px 0; text-align:center; font-size:10px; font-weight:800; color:var(--text-muted);">H7</div>
-        </div>
+    <div id="viewProduk" class="view">
+      <div style="font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;margin-bottom:2px">Produk VIP</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;font-weight:600">Pilih paket unlimited fix</div>
+      <div id="activeInvoiceBox"></div>
+      <div class="shop-grid">
+        <div class="shop-item"><div style="font-weight:800;font-size:13px">Trial 3 Hari</div><div style="font-size:10px;color:var(--muted)">Akses 3H</div><div style="font-weight:800;font-size:16px;color:var(--cyan);margin-top:6px">Rp 7.000</div><button class="btn btn-primary btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(3,7000,this)">Beli</button></div>
+        <div class="shop-item"><div style="font-weight:800;font-size:13px">Hemat 5 Hari</div><div style="font-size:10px;color:var(--muted)">5 Hari</div><div style="font-weight:800;font-size:16px;color:var(--cyan);margin-top:6px">Rp 10.000</div><button class="btn btn-primary btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(5,10000,this)">Beli</button></div>
+        <div class="shop-item"><div style="font-weight:800;font-size:13px">Starter 7 Hari</div><div style="font-size:10px;color:var(--muted)">Popular</div><div style="font-weight:800;font-size:16px;color:var(--emerald);margin-top:6px">Rp 15.000</div><button class="btn btn-emerald btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(7,15000,this)">Beli</button></div>
+        <div class="shop-item"><div style="font-weight:800;font-size:13px">Pro 14 Hari</div><div style="font-size:10px;color:var(--muted)">Best Value</div><div style="font-weight:800;font-size:16px;color:var(--purple);margin-top:6px">Rp 25.000</div><button class="btn btn-purple btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(14,25000,this)">Beli</button></div>
+        <div class="shop-item best" style="grid-column:span 2;position:relative"><span class="shop-badge">BEST</span><div style="font-weight:800;font-size:15px">Sultan 30 Hari</div><div style="font-size:11px;color:var(--muted)">Unlimited + Bonus 500 PTS</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div style="font-weight:800;font-size:19px;color:var(--amber)">Rp 40.000</div><button class="btn btn-primary btn-buy-pkg" style="width:auto;padding:9px 16px;background:linear-gradient(135deg,#f59e0b,#ff7a00)" onclick="createOrder(30,40000,this)">Beli Sultan</button></div></div>
       </div>
-      
+    </div>
+
+    <div id="viewDaily" class="view">
       <div class="card">
-        <div style="font-family:var(--font-head); font-weight:800; font-size:15px; margin-bottom:10px;">Klaim Voucher Promo</div>
-        <input class="input" id="inpVoucher" placeholder="Masukkan Kode (cth: PROMO2024)">
-        <button class="btn btn-emerald" style="margin-top:12px;" onclick="claimVoucher()">Tukarkan Voucher</button>
+        <div class="section-title">📅 Daily Check-in</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:11px;color:var(--muted);font-weight:600">Streak: <b id="dailyStreakText" style="color:#0f172a">0 Hari</b> • Poin: <b id="checkinPointsVal" style="color:#0f172a">0 PTS</b></div>
+          <span class="badge emerald" id="dailyStatusBadge">Belum</span>
+        </div>
+        <div class="streak" id="streakContainer">
+          <div class="streak-day" id="stDay1">1</div><div class="streak-day" id="stDay2">2</div><div class="streak-day" id="stDay3">3</div><div class="streak-day" id="stDay4">4</div><div class="streak-day" id="stDay5">5</div><div class="streak-day" id="stDay6">6</div><div class="streak-day" id="stDay7">7</div>
+        </div>
+        <button class="btn btn-emerald" id="checkinBtn" style="margin-top:12px" onclick="triggerCheckin(this)">Check-in Hari Ini</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+          <button class="btn btn-ghost" style="padding:9px;font-size:10px" onclick="redeemPoints('quota', this)">100 PTS = Kuota</button>
+          <button class="btn btn-ghost" style="padding:9px;font-size:10px" onclick="redeemPoints('spin', this)">150 PTS = Spin</button>
+        </div>
       </div>
 
       <div class="card">
-        <div style="font-family:var(--font-head); font-weight:800; font-size:15px; margin-bottom:10px;">Tukar Poin</div>
-        <div class="grid-2">
-          <button class="btn btn-dark" style="font-size:11px; padding:12px;" onclick="redeemPts('quota')">100 PTS = +1 Kuota</button>
-          <button class="btn btn-dark" style="font-size:11px; padding:12px;" onclick="redeemPts('spin')">150 PTS = 1x Spin</button>
+        <div class="section-title">🎡 Spin Wheel Harian</div>
+        <div class="wheel-wrap"><div class="wheel-pointer"></div><canvas id="spinCanvas" class="wheel" width="270" height="270"></canvas></div>
+        <button class="btn btn-primary" id="spinBtn" style="margin-top:12px" onclick="triggerSpin(this)">Putar Spin</button>
+        <div id="spinResult" style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;font-weight:600"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">👥 Referral</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600">+50 Poin per teman bergabung • Total: <b id="refCountText" style="color:#0f172a">0</b></div>
+        <input class="input" id="refUrlInput" readonly value="Memuat...">
+        <button class="btn btn-ghost" style="margin-top:8px" onclick="copyRefLink()">Salin Link</button>
+      </div>
+    </div>
+
+    <div id="viewProfil" class="view">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="avatar" style="width:60px;height:60px;border-radius:16px"><svg class="icon" style="width:26px;height:26px" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div style="flex:1">
+            <div id="pName" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px">Memuat...</div>
+            <div id="pIdText" style="font-size:11px;color:var(--muted);font-weight:700">ID: --</div>
+            <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap"><span class="badge cyan" id="pRankBadge">BASIC</span><span class="badge purple" id="pStatusBadge">Gratis</span><span class="badge emerald" id="pPremiumLeft">Free</span></div>
+          </div>
         </div>
       </div>
+      <div class="grid3">
+        <div class="stat"><div class="stat-v" id="pQuota">5/5</div><div class="stat-l">Kuota</div></div>
+        <div class="stat"><div class="stat-v" id="pTotalFix">0</div><div class="stat-l">Total Fix</div></div>
+        <div class="stat"><div class="stat-v" style="color:var(--amber)" id="pPoints">0</div><div class="stat-l">Poin</div></div>
+      </div>
+      <div class="grid2">
+        <div class="stat"><div class="stat-v" id="pRefs">0</div><div class="stat-l">Referral</div></div>
+        <div class="stat"><div class="stat-v" id="pStreak">0</div><div class="stat-l">Streak</div></div>
+      </div>
+      <div class="card"><div class="section-title">🔗 Link Referral</div><input class="input" id="pRefUrl" readonly value="Memuat..."><button class="btn btn-ghost" style="margin-top:8px" onclick="copyRefLink2()">Salin Link</button></div>
+      <div class="card"><div class="section-title">🧾 Invoice & Riwayat</div><div id="profileInvoiceList" style="font-size:12px;color:var(--muted)">Memuat...</div></div>
     </div>
   </div>
 
-  <!-- ================= OWNER VIEWS ================= -->
-  <div id="ownerViews" style="display:none;">
-    <div id="vOwnerDash" class="view active">
-      <div style="font-family:var(--font-head); font-weight:900; font-size:22px; margin-bottom:16px;">Executive Dash</div>
-      <div class="grid-2">
-        <div class="card" style="padding:14px; margin-bottom:0;"><div style="font-size:11px; color:var(--text-muted); font-weight:700;">Revenue</div><div id="oRev" style="font-family:var(--font-head); font-size:18px; font-weight:800; color:var(--emerald); margin-top:4px;">Rp 0</div></div>
-        <div class="card" style="padding:14px; margin-bottom:0;"><div style="font-size:11px; color:var(--text-muted); font-weight:700;">Total Users</div><div id="oUsers" style="font-family:var(--font-head); font-size:18px; font-weight:800; color:#fff; margin-top:4px;">0</div></div>
-        <div class="card" style="padding:14px; margin-bottom:0;"><div style="font-size:11px; color:var(--text-muted); font-weight:700;">VIP Users</div><div id="oVip" style="font-family:var(--font-head); font-size:18px; font-weight:800; color:var(--cyan); margin-top:4px;">0</div></div>
-        <div class="card" style="padding:14px; margin-bottom:0;"><div style="font-size:11px; color:var(--text-muted); font-weight:700;">Pending Order</div><div id="oPend" style="font-family:var(--font-head); font-size:18px; font-weight:800; color:var(--amber); margin-top:4px;">0</div></div>
-      </div>
-    </div>
-
-    <div id="vOwnerPay" class="view">
-      <div style="font-family:var(--font-head); font-weight:900; font-size:22px; margin-bottom:16px;">Verifikasi Order</div>
-      <div id="ownerPendingList"></div>
-    </div>
-
-    <div id="vOwnerVouch" class="view">
-      <div style="font-family:var(--font-head); font-weight:900; font-size:22px; margin-bottom:16px;">Kelola Voucher</div>
-      <div class="card">
-        <input class="input" id="oVouchCode" placeholder="Kode (Misal: GRATISVIP)" style="margin-bottom:10px;">
-        <div class="grid-2" style="margin-top:0; margin-bottom:10px;">
-          <input class="input" id="oVouchDays" type="number" placeholder="Hari (cth: 3)">
-          <input class="input" id="oVouchQuota" type="number" placeholder="Kuota (0 = ∞)">
+  <div id="viewOwnerArea" style="display:none">
+    <div id="viewOwnerDashboard" class="view active">
+      <div class="card"><div class="section-title">👑 Dashboard Owner</div>
+        <div class="grid2">
+          <div class="stat"><div class="stat-v" style="color:var(--emerald)" id="oRev">Rp 0</div><div class="stat-l">Revenue</div></div>
+          <div class="stat"><div class="stat-v" id="oUsers">0</div><div class="stat-l">Total User</div></div>
+          <div class="stat"><div class="stat-v" style="color:var(--amber)" id="oPending">0</div><div class="stat-l">Pending</div></div>
+          <div class="stat"><div class="stat-v" style="color:var(--cyan)" id="oPremium">0</div><div class="stat-l">VIP Aktif</div></div>
         </div>
-        <button class="btn btn-purple" onclick="createCode()">Buat Voucher</button>
+        <div class="grid2" style="margin-top:8px">
+          <div class="stat"><div class="stat-v" id="oTotalFix">0</div><div class="stat-l">Total Fix</div></div>
+          <div class="stat"><div class="stat-v" id="oCodes">0</div><div class="stat-l">Voucher Aktif</div></div>
+        </div>
       </div>
-      <div style="font-family:var(--font-head); font-weight:800; font-size:16px; margin:16px 0 10px;">Voucher Aktif</div>
-      <div id="ownerVouchList"></div>
+      <div class="card"><div class="section-title">💳 Pembayaran Masuk</div><div id="oPendingList"></div></div>
     </div>
 
-    <div id="vOwnerUser" class="view">
-      <div style="font-family:var(--font-head); font-weight:900; font-size:22px; margin-bottom:16px;">Database User</div>
-      <div id="ownerUserList"></div>
+    <div id="viewOwnerUsers" class="view">
+      <div class="card"><div class="section-title">👥 Total User</div><div id="oUserList"></div></div>
     </div>
 
-    <div id="vOwnerBroad" class="view">
-      <div style="font-family:var(--font-head); font-weight:900; font-size:22px; margin-bottom:16px;">Broadcast Pesan</div>
-      <div class="card">
-        <textarea class="input" id="oBroadText" style="min-height:120px; resize:none; margin-bottom:12px;" placeholder="Tuliskan pesan broadcast HTML..."></textarea>
-        <button class="btn btn-cyan" onclick="sendBroadcast()">Kirim Massal</button>
+    <div id="viewOwnerDeposit" class="view">
+      <div class="card"><div class="section-title">📥 Deposit & Invoice</div><div id="oDepositList"></div></div>
+      <div class="card"><div class="section-title">✅ Riwayat Lunas</div><div id="oPaidList"></div></div>
+    </div>
+
+    <div id="viewOwnerVoucher" class="view">
+      <div class="card"><div class="section-title">🎟️ Buat Kode Voucher</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <input class="input" id="vGenCode" placeholder="KODE (contoh WALZYVIP)" style="grid-column:span 2">
+          <input class="input" id="vGenDays" placeholder="Hari (contoh 7)" type="number">
+          <input class="input" id="vGenQuota" placeholder="Kuota (0=unlimited)" type="number">
+        </div>
+        <button class="btn btn-purple" onclick="createVoucher(this)">Buat Voucher</button>
+        <div id="voucherCreateStatus" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+      </div>
+      <div class="card"><div class="section-title">📋 Daftar Voucher</div><div id="oVoucherList"></div></div>
+    </div>
+
+    <div id="viewOwnerBroadcast" class="view">
+      <div class="card"><div class="section-title">📢 Broadcast</div>
+        <textarea class="input" id="bcTextInput" style="min-height:120px;resize:none" placeholder="Tulis pesan broadcast ke semua user..."></textarea>
+        <button class="btn btn-primary" style="margin-top:8px" onclick="sendBroadcast(this)">Kirim Broadcast Sekarang</button>
+        <div id="broadcastStatus" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- USER NAV -->
-<div class="nav-bottom" id="navUser">
-  <div class="nav-item active" onclick="switchTab('User', 'Home', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Beranda</span></div>
-  <div class="nav-item" onclick="switchTab('User', 'Store', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Produk</span></div>
-  <div class="nav-item" onclick="switchTab('User', 'Checkin', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg><span>Check-in</span></div>
+<div class="nav" id="userNavBar">
+  <div class="tab active" onclick="switchTab('viewHome', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Beranda</div>
+  <div class="tab" onclick="switchTab('viewProduk', this)"><svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Produk</div>
+  <div class="tab" onclick="switchTab('viewDaily', this)"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Daily</div>
+  <div class="tab" onclick="switchTab('viewProfil', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</div>
 </div>
 
-<!-- OWNER NAV -->
-<div class="nav-bottom" id="navOwner" style="display:none;">
-  <div class="nav-item active" onclick="switchTab('Owner', 'Dash', this)"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dash</span></div>
-  <div class="nav-item" onclick="switchTab('Owner', 'Pay', this)"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Orders</span></div>
-  <div class="nav-item" onclick="switchTab('Owner', 'Vouch', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>Voucher</span></div>
-  <div class="nav-item" onclick="switchTab('Owner', 'User', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Users</span></div>
-  <div class="nav-item" onclick="switchTab('Owner', 'Broad', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Broad</span></div>
+<div class="nav" id="ownerNavBar" style="display:none">
+  <div class="tab active" onclick="switchOwnerTab('viewOwnerDashboard', this)"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</div>
+  <div class="tab" onclick="switchOwnerTab('viewOwnerUsers', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Users</div>
+  <div class="tab" onclick="switchOwnerTab('viewOwnerDeposit', this)"><svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Deposit</div>
+  <div class="tab" onclick="switchOwnerTab('viewOwnerVoucher', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h16v5"/><path d="M20 12v5H6a2 2 0 0 0-2 2c0 1.1.9 2 2 2h16v-5"/></svg>Voucher</div>
+  <div class="tab" onclick="switchOwnerTab('viewOwnerBroadcast', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>Broadcast</div>
 </div>
 
-<input type="file" id="inpFile" accept="image/*" style="display:none" onchange="handleProofUpload(event)">
+<input type="file" id="proofFileInput" accept="image/*" style="display:none" onchange="submitProofFile(event)">
 
 <script>
-var tg = window.Telegram ? window.Telegram.WebApp : null;
-var uid = null, ufirst = '', uuser = '';
-var isOwner = false;
-var toastTimer = null, pollTimer = null;
-var isSpinning = false, currentRot = 0;
-var activeInvoiceId = null;
-
-// Tracking state to avoid innerHTML flickering
-var lastUserHash = '', lastOwnerHash = '';
-
-var prizes = [
-  {l:"+50 PTS", c:"#9D4EDD"}, {l:"ZONK", c:"#334155"}, {l:"+25 PTS", c:"#00F0FF"},
-  {l:"+100 PTS", c:"#F59E0B"}, {l:"+3 KUOTA", c:"#10B981"}, {l:"VIP 1 H", c:"#3B82F6"}
+var tg=null;
+var currentUserId=null;
+var currentFirstName='';
+var currentUsername='';
+var activeInvoiceId=null;
+var isUserOwner=false;
+var toastTimeout=null;
+var isSpinning=false;
+var pollingTimer=null;
+var ownerPollingTimer=null;
+var wheelRotation=0;
+var wheelPrizes=[
+{label:"+50 PTS",color:"#8b5cf6"},
+{label:"ZONK",color:"#e2e8f0"},
+{label:"+25 PTS",color:"#06b6d4"},
+{label:"+100 PTS",color:"#f59e0b"},
+{label:"+3 KUOTA",color:"#10b981"},
+{label:"VIP 1 HARI",color:"#3b82f6"}
 ];
 
-function init(){
-  if(tg){ try{ tg.ready(); tg.expand(); tg.setHeaderColor('#0B0E14'); tg.setBackgroundColor('#0B0E14'); }catch(e){} }
-  if(tg && tg.initDataUnsafe?.user?.id){
-    uid = tg.initDataUnsafe.user.id;
-    ufirst = tg.initDataUnsafe.user.first_name || '';
-    uuser = tg.initDataUnsafe.user.username || '';
-  }else{
-    const sp = new URLSearchParams(window.location.search);
-    uid = sp.get('user_id') || sp.get('id');
-  }
-  
-  drawWheel();
-  
-  if(uid){
-    fetchData(); // Initial load
-    pollTimer = setInterval(fetchData, 3000);
-  } else {
-    document.getElementById('loader').style.opacity = '0';
-    setTimeout(()=>document.getElementById('loader').style.display='none', 400);
-  }
+function hideLoader(){
+  var ldr=document.getElementById('loader');
+  if(!ldr) return;
+  if(ldr.classList.contains('hidden')) return;
+  ldr.classList.add('hidden');
+  setTimeout(function(){ ldr.style.display='none'; }, 450);
 }
 
-async function fetchData(){
-  try{
-    const res = await fetch(\`/api/api?endpoint=user&user_id=\${uid}&first_name=\${encodeURIComponent(ufirst)}\`);
-    const d = await res.json();
-    if(d?.ok){
-      isOwner = d.user.isOwner;
-      
-      if(isOwner){
-        document.getElementById('userViews').style.display = 'none';
-        document.getElementById('navUser').style.display = 'none';
-        document.getElementById('ownerViews').style.display = 'block';
-        document.getElementById('navOwner').style.display = 'flex';
-        fetchOwnerData(); // Owner polling
-      }
-      
-      const cHash = JSON.stringify({u:d.user, i:d.currentInvoice});
-      if(cHash !== lastUserHash){
-        lastUserHash = cHash;
-        renderUser(d.user, d.currentInvoice);
-      }
-    }
-  }catch(e){}
-  
-  // Ensure loader is gone
-  const ldr = document.getElementById('loader');
-  if(ldr && ldr.style.display !== 'none'){
-    ldr.style.opacity = '0';
-    setTimeout(()=>ldr.style.display='none', 400);
-  }
-}
-
-async function fetchOwnerData(){
-  try{
-    const res = await fetch(\`/api/api?endpoint=stats&user_id=\${uid}\`);
-    const d = await res.json();
-    if(d?.ok){
-      const cHash = JSON.stringify(d);
-      if(cHash !== lastOwnerHash){
-        lastOwnerHash = cHash;
-        renderOwner(d);
-      }
-    }
-  }catch(e){}
-}
-
-function renderUser(u, inv){
-  document.getElementById('uName').innerText = u.first_name;
-  document.getElementById('uId').innerText = 'ID: ' + u.id;
-  document.getElementById('uRank').innerText = u.rank.name;
-  document.getElementById('uStatus').innerText = u.isPremium ? 'VIP ' + u.premiumLeftDays + 'H' : 'GRATIS';
-  document.getElementById('uStatus').className = u.isPremium ? 'badge badge-cyan' : 'badge badge-purple';
-  
-  document.getElementById('uQuota').innerText = u.dailyFixRemaining;
-  document.getElementById('uPoints').innerText = u.points;
-  document.getElementById('cPoints').innerText = u.points + ' PTS';
-  document.getElementById('uRefs').innerText = u.referralCount;
-  
-  const bSpin = document.getElementById('btnSpin');
-  if(!isSpinning) {
-    bSpin.disabled = !u.canSpin;
-    bSpin.innerText = u.canSpin ? 'Putar Spin Harian' : 'Sudah Diputar Hari Ini';
-  }
-  
-  const bChk = document.getElementById('btnCheckin');
-  bChk.disabled = !u.canCheckin;
-  bChk.innerText = u.canCheckin ? 'Check-in Sekarang' : 'Selesai Check-in';
-
-  for(let i=1; i<=7; i++){
-    const el = document.getElementById('st'+i);
-    if(i <= u.checkinStreak){ el.style.background = 'rgba(16, 185, 129, 0.15)'; el.style.color = 'var(--emerald)'; el.style.borderColor = 'rgba(16,185,129,0.3)'; }
-    else{ el.style.background = 'rgba(0,0,0,0.3)'; el.style.color = 'var(--text-muted)'; el.style.borderColor = 'var(--card-border)'; }
-  }
-
-  const invBox = document.getElementById('userActiveInvoice');
-  if(inv){
-    activeInvoiceId = inv.id;
-    const st = inv.status==='waiting_approval' ? 'Verifikasi Admin' : 'Belum Dibayar';
-    const img = inv.proofImage ? \`<img src="\${inv.proofImage}" class="img-preview" onclick="openModal('\${inv.proofImage}')">\` : \`<div style="font-size:11px; color:var(--pink); margin-top:8px;">Belum upload bukti.</div>\`;
-    invBox.innerHTML = \`
-      <div class="card" style="border-color:var(--amber);">
-        <div style="display:flex; justify-content:space-between;">
-          <div style="font-family:var(--font-head); font-weight:800; font-size:14px;">Invoice: \${inv.id}</div>
-          <div class="badge" style="background:rgba(245,158,11,0.1); color:var(--amber);">\${st}</div>
-        </div>
-        <div style="font-size:12px; margin-top:4px; color:var(--text-muted);">\${inv.days} Hari VIP • Rp \${inv.amount.toLocaleString('id-ID')}</div>
-        \${img}
-        <div class="grid-2" style="margin-top:12px; margin-bottom:0;">
-          <button class="btn btn-cyan" style="padding:10px; font-size:11px;" onclick="document.getElementById('inpFile').click()">Upload Bukti</button>
-          <button class="btn btn-dark" style="padding:10px; font-size:11px; color:var(--pink);" onclick="cancelOrder('\${inv.id}')">Batal</button>
-        </div>
-      </div>\`;
-  } else {
-    activeInvoiceId = null;
-    invBox.innerHTML = '';
-  }
-}
-
-function renderOwner(d){
-  document.getElementById('oRev').innerText = 'Rp ' + d.revenue.toLocaleString('id-ID');
-  document.getElementById('oUsers').innerText = d.usersValid;
-  document.getElementById('oVip').innerText = d.premium;
-  document.getElementById('oPend').innerText = d.pendingPayments.length;
-  
-  const pList = document.getElementById('ownerPendingList');
-  if(d.pendingPayments.length > 0){
-    pList.innerHTML = d.pendingPayments.map(p => {
-      const img = p.proofImage ? \`<img src="\${p.proofImage}" class="img-preview" onclick="openModal('\${p.proofImage}')">\` : \`<div style="font-size:11px; color:var(--pink); margin-top:6px;">Tanpa Bukti</div>\`;
-      return \`<div class="card">
-        <div style="font-family:var(--font-head); font-weight:800; font-size:14px;">\${p.id}</div>
-        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">User: \${p.userId} | \${p.days}H | Rp \${p.amount.toLocaleString('id-ID')}</div>
-        \${img}
-        <div class="grid-2" style="margin-top:12px; margin-bottom:0;">
-          <button class="btn btn-emerald" style="padding:10px; font-size:11px;" onclick="actOrder('\${p.id}','approve')">Setujui</button>
-          <button class="btn btn-pink" style="padding:10px; font-size:11px;" onclick="actOrder('\${p.id}','reject')">Tolak</button>
-        </div>
-      </div>\`;
-    }).join('');
-  } else pList.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Tidak ada transaksi pending.</div>';
-
-  const vList = document.getElementById('ownerVouchList');
-  if(d.codes.length > 0){
-    vList.innerHTML = d.codes.map(c => \`<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; margin-bottom:8px;">
-      <div>
-        <div style="font-family:var(--font-head); font-weight:800; font-size:14px;">\${c.code}</div>
-        <div style="font-size:11px; color:var(--text-muted);">\${c.days}H | \${c.used}/\${c.quota||'∞'} Terpakai</div>
-      </div>
-      <button class="btn btn-dark" style="width:auto; padding:8px 14px; font-size:10px; color:var(--pink);" onclick="delCode('\${c.code}')">Hapus</button>
-    </div>\`).join('');
-  } else vList.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Voucher kosong.</div>';
-
-  const uList = document.getElementById('ownerUserList');
-  if(d.recentUsers.length > 0){
-    uList.innerHTML = d.recentUsers.slice(0, 15).map(u => {
-      const isVip = u.premiumUntil > Date.now();
-      return \`<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; margin-bottom:8px;">
-        <div>
-          <div style="font-family:var(--font-head); font-weight:800; font-size:14px;">\${u.first_name}</div>
-          <div style="font-size:11px; color:var(--text-muted);">ID: \${u.id} | Order: \${u.totalFix}</div>
-        </div>
-        <div class="badge \${isVip ? 'badge-emerald' : 'badge-purple'}">\${isVip ? 'VIP' : 'FREE'}</div>
-      </div>\`;
-    }).join('');
-  }
-}
-
-function showToast(t, m, type){
-  const el = document.getElementById('toast');
-  const ic = document.getElementById('toastIcon');
-  document.getElementById('toastTitle').innerText = t;
-  document.getElementById('toastMsg').innerText = m;
-  
-  const clr = type==='error'?'var(--pink)':type==='success'?'var(--emerald)':'var(--cyan)';
-  el.style.borderColor = clr;
-  ic.style.background = \`rgba(\${type==='error'?'244,63,94':type==='success'?'16,185,129':'0,240,255'}, 0.1)\`;
-  ic.style.color = clr;
-  
-  el.classList.add('show');
-  if(tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(type==='error'?'error':type==='success'?'success':'warning');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>el.classList.remove('show'), 3000);
-}
-
-function switchTab(role, tab, btn){
-  document.querySelectorAll(\`#\${role.toLowerCase()}Views .view\`).forEach(v=>v.classList.remove('active'));
-  document.getElementById(\`v\${role}\${tab}\`).classList.add('active');
-  document.querySelectorAll(\`#nav\${role} .nav-item\`).forEach(n=>n.classList.remove('active'));
-  btn.classList.add('active');
-  if(tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
-  window.scrollTo(0,0);
+function showToast(title, msg, type){
+  var toast=document.getElementById('toast');
+  var tTitle=document.getElementById('toastTitle');
+  var tMsg=document.getElementById('toastMsg');
+  var tIcon=document.getElementById('toastIcon');
+  if(!toast) return;
+  tTitle.textContent=title||'System';
+  tMsg.textContent=msg||'';
+  var colors={success:'#10b981',error:'#ef4444',warning:'#f59e0b',info:'#06b6d4'};
+  var c=colors[type]||'#06b6d4';
+  tIcon.style.color=c;
+  toast.classList.add('show');
+  clearTimeout(toastTimeout);
+  var prog=document.getElementById('toastProgress');
+  if(prog){ prog.style.animation='none'; void prog.offsetWidth; prog.style.animation='prog 3s linear forwards'; prog.style.background='linear-gradient(90deg,'+c+','+c+')'; }
+  toastTimeout=setTimeout(function(){ toast.classList.remove('show'); }, 3000);
+  if(tg && tg.HapticFeedback){ try{ tg.HapticFeedback.notificationOccurred(type==='error'?'error':type==='success'?'success':'warning'); }catch(e){} }
 }
 
 function drawWheel(){
-  const cv = document.getElementById('spinCanvas');
-  if(!cv) return;
-  const ctx = cv.getContext('2d');
-  const cx = cv.width/2, cy = cv.height/2, r = cx - 6, sl = prizes.length, ang = (Math.PI*2)/sl;
-  ctx.clearRect(0,0,cv.width,cv.height);
-  for(let i=0; i<sl; i++){
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r, i*ang, (i+1)*ang); ctx.closePath();
-    ctx.fillStyle = prizes[i].c; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.stroke();
-    ctx.save(); ctx.translate(cx,cy); ctx.rotate(i*ang + ang/2);
-    ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='800 12px Outfit';
-    ctx.fillText(prizes[i].l, r-14, 4); ctx.restore();
+  var canvas=document.getElementById('spinCanvas');
+  if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  if(!ctx) return;
+  var w=canvas.width;
+  var h=canvas.height;
+  var cx=w/2;
+  var cy=h/2;
+  var r=Math.min(w,h)/2 - 6;
+  ctx.clearRect(0,0,w,h);
+  var slices=wheelPrizes.length;
+  var anglePer=(Math.PI*2)/slices;
+  for(var i=0;i<slices;i++){
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,i*anglePer,(i+1)*anglePer);
+    ctx.closePath();
+    ctx.fillStyle=wheelPrizes[i].color;
+    ctx.fill();
+    ctx.strokeStyle='rgba(15,23,42,0.05)';
+    ctx.lineWidth=2;
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(i*anglePer + anglePer/2);
+    ctx.textAlign='right';
+    ctx.fillStyle=i===1 ? '#64748b' : '#fff';
+    ctx.font='bold 12px Outfit';
+    ctx.fillText(wheelPrizes[i].label, r-16, 4);
+    ctx.restore();
   }
-  ctx.beginPath(); ctx.arc(cx,cy,30,0,Math.PI*2); ctx.fillStyle='#0B0E14'; ctx.fill();
-  ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.stroke();
-  ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.font='900 12px Outfit'; ctx.fillText('SPIN', cx, cy+4);
+  ctx.beginPath();
+  ctx.arc(cx,cy,36,0,Math.PI*2);
+  ctx.fillStyle='#ffffff';
+  ctx.fill();
+  ctx.strokeStyle='rgba(15,23,42,0.07)';
+  ctx.lineWidth=2;
+  ctx.stroke();
+  ctx.fillStyle='#0f172a';
+  ctx.font='800 11px Outfit';
+  ctx.textAlign='center';
+  ctx.fillText('WALZY', cx, cy-2);
+  ctx.fillStyle='#64748b';
+  ctx.font='700 8px Plus Jakarta Sans';
+  ctx.fillText('SPIN', cx, cy+9);
 }
 
-async function triggerSpin(){
-  if(isSpinning || !uid) return;
-  isSpinning = true;
-  document.getElementById('btnSpin').disabled = true;
+function openZoomModal(src){
+  var m=document.getElementById('imageZoomModal');
+  var img=document.getElementById('zoomedImageSrc');
+  if(!m||!img) return;
+  img.src=src;
+  m.classList.add('open');
+}
+function closeZoomModal(){
+  var m=document.getElementById('imageZoomModal');
+  if(m) m.classList.remove('open');
+}
+
+function switchTab(viewId, el){
+  var views=document.querySelectorAll('#viewUserArea .view');
+  views.forEach(function(v){ v.classList.remove('active'); });
+  var target=document.getElementById(viewId);
+  if(target) target.classList.add('active');
+  var tabs=document.querySelectorAll('#userNavBar .tab');
+  tabs.forEach(function(t){ t.classList.remove('active'); });
+  if(el) el.classList.add('active');
+  if(tg && tg.HapticFeedback){ try{ tg.HapticFeedback.selectionChanged(); }catch(e){} }
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function switchOwnerTab(viewId, el){
+  var views=document.querySelectorAll('#viewOwnerArea .view');
+  views.forEach(function(v){ v.classList.remove('active'); });
+  var target=document.getElementById(viewId);
+  if(target) target.classList.add('active');
+  var tabs=document.querySelectorAll('#ownerNavBar .tab');
+  tabs.forEach(function(t){ t.classList.remove('active'); });
+  if(el) el.classList.add('active');
+  if(viewId==='viewOwnerDashboard' || viewId==='viewOwnerUsers' || viewId==='viewOwnerDeposit' || viewId==='viewOwnerVoucher') loadOwnerData();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function initApp(){
   try{
-    const res = await fetch('/api/api?endpoint=spin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:uid})});
-    const d = await res.json();
-    if(d.ok){
-      const i = d.prizeIndex;
-      const ang = 360/prizes.length;
-      const target = 360*5 + (360 - (i*ang + ang/2));
-      currentRot += target;
-      document.getElementById('spinCanvas').style.transform = \`rotate(\${currentRot}deg)\`;
-      setTimeout(()=>{
-        showToast('Berhasil', d.message, 'success');
-        isSpinning = false;
-        fetchData(); // Trigger immediate update
-      }, 4000);
-    }else{
-      showToast('Gagal', d.message, 'error');
-      isSpinning = false; fetchData();
+    tg=window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    if(tg){
+      try{ tg.ready(); tg.expand(); if(tg.setHeaderColor) tg.setHeaderColor('#ffffff'); if(tg.setBackgroundColor) tg.setBackgroundColor('#f7f8fc'); }catch(e){}
     }
-  }catch(e){ showToast('Error', 'Gagal memutar spin', 'error'); isSpinning = false; }
+    if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id){
+      currentUserId=tg.initDataUnsafe.user.id;
+      currentFirstName=tg.initDataUnsafe.user.first_name||'';
+      currentUsername=tg.initDataUnsafe.user.username||'';
+    }else{
+      var sp=new URLSearchParams(window.location.search);
+      currentUserId=sp.get('user_id')||sp.get('userId')||sp.get('id')||localStorage.getItem('walzy_uid')||null;
+      currentFirstName=sp.get('first_name')||'';
+      currentUsername=sp.get('username')||'';
+    }
+    if(currentUserId){
+      try{ localStorage.setItem('walzy_uid', String(currentUserId)); }catch(e){}
+    }
+    drawWheel();
+    setTimeout(hideLoader, 500);
+    setTimeout(hideLoader, 1300);
+    if(currentUserId){
+      loadUserData(false);
+      if(!pollingTimer){
+        pollingTimer=setInterval(function(){ loadUserData(true); }, 2500);
+      }
+      if(!ownerPollingTimer){
+        ownerPollingTimer=setInterval(function(){ if(isUserOwner) loadOwnerData(); }, 3500);
+      }
+    }else{
+      hideLoader();
+      var el=document.getElementById('uName');
+      if(el) el.textContent='Guest Mode';
+    }
+  }catch(err){
+    hideLoader();
+  }
 }
 
-async function triggerCheckin(){
-  if(!uid) return;
+async function loadUserData(isSilent){
   try{
-    const res = await fetch('/api/api?endpoint=checkin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:uid})});
-    const d = await res.json();
-    showToast(d.ok?'Sukses':'Gagal', d.message, d.ok?'success':'error');
-    if(d.ok) fetchData();
-  }catch(e){}
+    if(!currentUserId) return;
+    var url='/api/api?endpoint=user&user_id='+encodeURIComponent(currentUserId);
+    if(currentFirstName) url+='&first_name='+encodeURIComponent(currentFirstName);
+    if(currentUsername) url+='&username='+encodeURIComponent(currentUsername);
+    var ctrl=new AbortController();
+    var t=setTimeout(function(){ ctrl.abort(); }, 6500);
+    var r=await fetch(url, {signal:ctrl.signal});
+    clearTimeout(t);
+    var data=await r.json();
+    if(!data || !data.ok || !data.user){
+      if(!isSilent) hideLoader();
+      return;
+    }
+    var u=data.user;
+    isUserOwner=!!u.isOwner;
+
+    var map=[
+      ['uName', u.first_name||'User'],
+      ['uIdText', 'ID: '+u.id],
+      ['pName', u.first_name||'User'],
+      ['pIdText', 'ID: '+u.id]
+    ];
+    map.forEach(function(pair){
+      var el=document.getElementById(pair[0]);
+      if(el) el.textContent=pair[1];
+    });
+
+    var rankText=u.rank ? u.rank.name : 'BASIC';
+    var statusText=u.isPremium ? 'VIP ('+u.premiumLeftDays+'H)' : 'Gratis';
+    var premiumText=u.isPremium ? u.premiumLeftDays+' Hari' : 'Free';
+
+    [['uRankBadge', rankText], ['pRankBadge', rankText], ['uStatusBadge', statusText], ['pStatusBadge', u.isPremium ? 'VIP' : 'Gratis'], ['pPremiumLeft', premiumText]].forEach(function(p){
+      var el=document.getElementById(p[0]);
+      if(el) el.textContent=p[1];
+    });
+
+    var premiumBadge=document.getElementById('uPremiumBadge');
+    if(premiumBadge){
+      if(u.isPremium){ premiumBadge.style.display='inline-flex'; premiumBadge.textContent='VIP '+u.premiumLeftDays+'H'; }
+      else premiumBadge.style.display='none';
+    }
+
+    var quotaText=u.dailyFixRemaining||'5/5';
+    [['sQuota', quotaText], ['pQuota', quotaText]].forEach(function(p){
+      var el=document.getElementById(p[0]); if(el) el.textContent=p[1];
+    });
+
+    var pointsText=u.points||0;
+    [['sPoints', pointsText], ['pPoints', pointsText]].forEach(function(p){
+      var el=document.getElementById(p[0]); if(el) el.textContent=p[1];
+    });
+
+    [['sRefs', u.referralCount||0], ['pRefs', u.referralCount||0], ['pTotalFix', u.totalFix||0], ['pStreak', u.checkinStreak||0], ['refCountText', u.referralCount||0]].forEach(function(p){
+      var el=document.getElementById(p[0]); if(el) el.textContent=p[1];
+    });
+
+    var chkVal=document.getElementById('checkinPointsVal');
+    if(chkVal) chkVal.textContent=(u.points||0)+' PTS';
+    var dailyStreak=document.getElementById('dailyStreakText');
+    if(dailyStreak) dailyStreak.textContent=(u.checkinStreak||0)+' Hari';
+    var dailyBadge=document.getElementById('dailyStatusBadge');
+    if(dailyBadge){
+      dailyBadge.textContent=u.canCheckin ? 'Belum' : 'Sudah';
+      dailyBadge.className='badge '+(u.canCheckin ? 'amber' : 'emerald');
+    }
+
+    var refLink=u.referralLink||'';
+    var ref1=document.getElementById('refUrlInput');
+    if(ref1) ref1.value=refLink;
+    var ref2=document.getElementById('pRefUrl');
+    if(ref2) ref2.value=refLink;
+
+    var spinBtn=document.getElementById('spinBtn');
+    if(spinBtn && !isSpinning){
+      spinBtn.disabled=!u.canSpin;
+      spinBtn.textContent=u.canSpin ? 'Putar Spin' : 'Sudah Spin Hari Ini';
+    }
+    var chkBtn=document.getElementById('checkinBtn');
+    if(chkBtn){
+      chkBtn.disabled=!u.canCheckin;
+      chkBtn.textContent=u.canCheckin ? 'Check-in Hari Ini' : 'Sudah Check-in';
+    }
+
+    for(var i=1;i<=7;i++){
+      var el=document.getElementById('stDay'+i);
+      if(el){
+        if(i <= (u.checkinStreak||0)) el.classList.add('active');
+        else el.classList.remove('active');
+      }
+    }
+
+    if(isUserOwner){
+      var ua=document.getElementById('viewUserArea'); if(ua) ua.style.display='none';
+      var un=document.getElementById('userNavBar'); if(un) un.style.display='none';
+      var oa=document.getElementById('viewOwnerArea'); if(oa) oa.style.display='block';
+      var onb=document.getElementById('ownerNavBar'); if(onb) onb.style.display='flex';
+      loadOwnerData();
+    }else{
+      var ua2=document.getElementById('viewUserArea'); if(ua2) ua2.style.display='block';
+      var un2=document.getElementById('userNavBar'); if(un2) un2.style.display='flex';
+      var oa2=document.getElementById('viewOwnerArea'); if(oa2) oa2.style.display='none';
+      var onb2=document.getElementById('ownerNavBar'); if(onb2) onb2.style.display='none';
+    }
+
+    var invBox=document.getElementById('activeInvoiceBox');
+    var buyBtns=document.querySelectorAll('.btn-buy-pkg');
+    if(data.currentInvoice && invBox){
+      var inv=data.currentInvoice;
+      activeInvoiceId=inv.id||inv.invoice;
+      buyBtns.forEach(function(b){ b.disabled=true; });
+      var proofHtml=inv.proofImage ? '<div class="proof"><img src="'+inv.proofImage+'" onclick="openZoomModal(\\''+inv.proofImage+'\\')"></div>' : '<div style="font-size:11px;color:var(--muted);margin-top:6px">Belum upload bukti</div>';
+      var stText=inv.status==='waiting_approval' ? 'Menunggu Verifikasi' : inv.status==='paid' ? 'Lunas' : 'Menunggu Bayar';
+      invBox.innerHTML='<div class="invoice"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:800;font-size:12px">'+(inv.id||inv.invoice)+' • '+inv.days+'H</div><span class="badge cyan">'+stText+'</span></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Rp '+(inv.amount||0).toLocaleString('id-ID')+'</div>'+proofHtml+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><button class="btn btn-primary" style="padding:9px;font-size:11px" onclick="triggerUploadProof()">Upload Bukti</button><button class="btn btn-ghost" style="padding:9px;font-size:11px" onclick="cancelOrder(\\''+(inv.id||inv.invoice)+'\\', this)">Batal</button></div></div>';
+    }else{
+      if(invBox) invBox.innerHTML='';
+      buyBtns.forEach(function(b){ b.disabled=false; });
+    }
+
+    var pil=document.getElementById('profileInvoiceList');
+    if(pil){
+      if(data.invoices && data.invoices.length>0){
+        pil.innerHTML=data.invoices.slice(-10).reverse().map(function(iv){
+          var st=iv.status==='paid' ? 'Lunas' : iv.status==='waiting_approval' ? 'Verifikasi' : iv.status==='pending' ? 'Pending' : iv.status;
+          var badgeClass=iv.status==='paid' ? 'emerald' : iv.status==='waiting_approval' ? 'amber' : 'cyan';
+          return '<div class="invoice"><div style="display:flex;justify-content:space-between"><div style="font-weight:800;font-size:11px">'+(iv.id||iv.invoice)+' • '+(iv.days||0)+'H</div><span class="badge '+badgeClass+'" style="font-size:9px">'+st+'</span></div><div style="font-size:10px;color:var(--muted);margin-top:3px">Rp '+(iv.amount||0).toLocaleString('id-ID')+' • '+new Date(iv.createdAt||Date.now()).toLocaleDateString('id-ID')+'</div>'+(iv.proofImage ? '<div class="proof" style="margin-top:6px"><img src="'+iv.proofImage+'" onclick="openZoomModal(\\''+iv.proofImage+'\\')"></div>' : '')+'</div>';
+        }).join('');
+      }else{
+        pil.innerHTML='<div style="font-size:11px;color:var(--muted)">Belum ada invoice.</div>';
+      }
+    }
+
+    var lt=document.getElementById('liveText');
+    if(lt) lt.textContent='REALTIME • '+new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+
+    hideLoader();
+  }catch(e){
+    hideLoader();
+  }
 }
 
-async function redeemPts(opt){
+async function triggerSpin(btn){
+  if(isSpinning) return;
+  if(!currentUserId) return showToast('Error','User ID tidak ditemukan','error');
+  if(btn){ btn.disabled=true; btn.textContent='Memutar...'; }
+  isSpinning=true;
   try{
-    const res = await fetch('/api/api?endpoint=redeem', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:uid, option:opt})});
-    const d = await res.json();
-    showToast(d.ok?'Sukses':'Gagal', d.message, d.ok?'success':'error');
-    if(d.ok) fetchData();
-  }catch(e){}
+    var res=await fetch('/api/api?endpoint=spin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:currentUserId})});
+    var data=await res.json();
+    if(data && data.ok){
+      var pIndex=data.prizeIndex!==undefined ? data.prizeIndex : Math.floor(Math.random()*wheelPrizes.length);
+      var anglePer=360/wheelPrizes.length;
+      var target=360*6 + (360 - (pIndex*anglePer + anglePer/2));
+      wheelRotation+=target;
+      var canvas=document.getElementById('spinCanvas');
+      if(canvas) canvas.style.transform='rotate('+wheelRotation+'deg)';
+      var sr=document.getElementById('spinResult');
+      if(sr) sr.textContent='Memutar...';
+      setTimeout(function(){
+        showToast('Spin Berhadiah', data.message||'Hadiah!', 'success');
+        var sr2=document.getElementById('spinResult');
+        if(sr2) sr2.textContent=data.message||'Selamat!';
+        loadUserData(false);
+        if(btn){ btn.disabled=false; btn.textContent='Sudah Spin Hari Ini'; }
+        isSpinning=false;
+      }, 3800);
+    }else{
+      showToast('Gagal Spin', data ? data.message : 'Gagal', 'error');
+      var sr3=document.getElementById('spinResult');
+      if(sr3) sr3.textContent=data ? data.message : 'Gagal';
+      if(btn){ btn.disabled=false; btn.textContent='Putar Spin'; }
+      isSpinning=false;
+    }
+  }catch(e){
+    showToast('Error','Gagal spin','error');
+    if(btn){ btn.disabled=false; btn.textContent='Putar Spin'; }
+    isSpinning=false;
+  }
 }
 
-async function claimVoucher(){
-  const code = document.getElementById('inpVoucher').value.trim();
-  if(!code) return showToast('Error','Masukkan kode voucher!','error');
+async function triggerCheckin(btn){
+  if(!currentUserId) return;
+  if(btn){ btn.disabled=true; btn.textContent='Memproses...'; }
   try{
-    const res = await fetch('/api/api?endpoint=claim_code', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:uid, code:code})});
-    const d = await res.json();
-    showToast(d.ok?'Sukses':'Gagal', d.message, d.ok?'success':'error');
-    if(d.ok){ document.getElementById('inpVoucher').value = ''; fetchData(); }
-  }catch(e){}
+    var res=await fetch('/api/api?endpoint=checkin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:currentUserId})});
+    var data=await res.json();
+    showToast(data.ok ? 'Check-in' : 'Info', data.message, data.ok ? 'success' : 'warning');
+    await loadUserData(false);
+  }catch(e){ showToast('Error','Gagal check-in','error'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='Check-in Hari Ini'; } }
 }
 
-async function createOrder(d, a){
+async function redeemPoints(option, btn){
+  if(!currentUserId) return;
+  if(btn) btn.disabled=true;
   try{
-    const res = await fetch('/api/api?endpoint=create_order', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:uid, days:d, amount:a})});
-    const data = await res.json();
-    showToast(data.ok?'Dibuat':'Gagal', data.message, data.ok?'success':'error');
-    if(data.ok) fetchData();
-  }catch(e){}
+    var res=await fetch('/api/api?endpoint=redeem', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:currentUserId, option:option})});
+    var data=await res.json();
+    showToast(data.ok ? 'Berhasil' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+    if(data.ok) await loadUserData(false);
+  }catch(e){ showToast('Error','Gagal redeem','error'); }
+  finally{ if(btn) btn.disabled=false; }
 }
 
-async function cancelOrder(inv){
+async function createOrder(days, amount, btn){
+  if(!currentUserId) return showToast('Error','User ID tidak ditemukan','error');
+  if(btn){ btn.disabled=true; btn.textContent='Membuat...'; }
   try{
-    const res = await fetch('/api/api?endpoint=cancel_order', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:uid, invoice:inv})});
-    const d = await res.json();
-    showToast(d.ok?'Batal':'Gagal', d.message, d.ok?'success':'error');
-    if(d.ok) fetchData();
-  }catch(e){}
+    var res=await fetch('/api/api?endpoint=create_order', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:currentUserId, days:days, amount:amount})});
+    var data=await res.json();
+    if(data.ok){ showToast('Invoice Dibuat', 'ID: '+(data.invoice.invoice||data.invoice.id), 'success'); await loadUserData(false); }
+    else showToast('Gagal', data.message||'Gagal', 'error');
+  }catch(e){ showToast('Error','Gagal membuat pesanan','error'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=days===30 ? 'Beli Sultan' : 'Beli'; } }
 }
 
-function handleProofUpload(e){
-  const file = e.target.files[0];
-  if(!file || !activeInvoiceId) return;
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    try{
-      showToast('Uploading...', 'Mengunggah bukti transfer', 'info');
-      const res = await fetch('/api/api?endpoint=upload_proof', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:uid, invoice:activeInvoiceId, image_data:ev.target.result})});
-      const d = await res.json();
-      showToast(d.ok?'Sukses':'Gagal', d.message, d.ok?'success':'error');
-      if(d.ok) fetchData();
-    }catch(err){}
+async function cancelOrder(invoiceId, btn){
+  if(!currentUserId) return;
+  if(btn) btn.disabled=true;
+  try{
+    var res=await fetch('/api/api?endpoint=cancel_order', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:currentUserId, invoice:invoiceId})});
+    var data=await res.json();
+    showToast(data.ok ? 'Dibatalkan' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+    if(data.ok) await loadUserData(false);
+  }catch(e){ showToast('Error','Gagal','error'); }
+  finally{ if(btn) btn.disabled=false; }
+}
+
+function triggerUploadProof(){
+  var input=document.getElementById('proofFileInput');
+  if(input) input.click();
+}
+
+async function submitProofFile(event){
+  var file=event.target.files && event.target.files[0];
+  if(!file) return;
+  if(!activeInvoiceId) return showToast('Error','Tidak ada invoice','error');
+  if(file.size>5*1024*1024) return showToast('Error','Maks 5MB','error');
+  var reader=new FileReader();
+  reader.onload=function(e){
+    (async function(){
+      try{
+        var base64=e.target.result;
+        showToast('Uploading','Mengunggah...','info');
+        var res=await fetch('/api/api?endpoint=upload_proof', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:currentUserId, invoice:activeInvoiceId, image_data:base64})});
+        var data=await res.json();
+        showToast(data.ok ? 'Sukses' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+        if(data.ok) await loadUserData(false);
+      }catch(err){ showToast('Error','Gagal upload','error'); }
+    })();
   };
   reader.readAsDataURL(file);
-  e.target.value = '';
+  event.target.value='';
 }
 
-function openModal(src){
-  document.getElementById('modalImg').src = src;
-  document.getElementById('imageModal').classList.add('open');
-}
-
-// ================= OWNER ACTIONS =================
-async function actOrder(inv, act){
+async function claimVoucher(btn){
+  var codeEl=document.getElementById('vCodeInput');
+  if(!codeEl) return;
+  var code=codeEl.value.trim();
+  if(!code) return showToast('Error','Masukkan kode!','warning');
+  if(!currentUserId) return showToast('Error','User ID tidak ditemukan','error');
+  if(btn){ btn.disabled=true; btn.textContent='Memproses...'; }
+  var statusEl=document.getElementById('voucherStatus');
+  if(statusEl) statusEl.textContent='Memproses voucher...';
   try{
-    const res = await fetch('/api/api?endpoint=owner_action', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({owner_id:uid, invoice:inv, action:act})});
-    const d = await res.json();
-    showToast(d.ok?'Sukses':'Gagal', d.message, d.ok?'success':'error');
-    if(d.ok) fetchOwnerData();
+    var res=await fetch('/api/api?endpoint=claim_code', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:currentUserId, code:code})});
+    var data=await res.json();
+    showToast(data.ok ? 'Sukses Klaim' : 'Gagal Klaim', data.message, data.ok ? 'success' : 'error');
+    if(statusEl) statusEl.textContent=data.message||'';
+    if(data.ok){ codeEl.value=''; await loadUserData(false); }
+  }catch(e){
+    showToast('Error','Gagal klaim','error');
+    if(statusEl) statusEl.textContent='Gagal klaim voucher';
+  }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='Tukarkan Sekarang'; } }
+}
+
+function copyRefLink(){
+  var el=document.getElementById('refUrlInput');
+  if(!el||!el.value) return showToast('Error','Link belum ada','warning');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(el.value).then(function(){ showToast('Berhasil','Link disalin!','success'); }).catch(function(){ el.select(); document.execCommand('copy'); showToast('Berhasil','Link disalin!','success'); });
+  }else{ el.select(); document.execCommand('copy'); showToast('Berhasil','Link disalin!','success'); }
+}
+
+function copyRefLink2(){
+  var el=document.getElementById('pRefUrl');
+  if(!el||!el.value) return showToast('Error','Link belum ada','warning');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(el.value).then(function(){ showToast('Berhasil','Link disalin!','success'); }).catch(function(){ el.select(); document.execCommand('copy'); showToast('Berhasil','Link disalin!','success'); });
+  }else{ el.select(); document.execCommand('copy'); showToast('Berhasil','Link disalin!','success'); }
+}
+
+async function loadOwnerData(){
+  try{
+    if(!currentUserId) return;
+    var res=await fetch('/api/api?endpoint=stats&user_id='+encodeURIComponent(currentUserId));
+    var d=await res.json();
+    if(d && d.ok){
+      var els={
+        oRev:'Rp '+(d.revenue||0).toLocaleString('id-ID'),
+        oUsers:d.usersValid||0,
+        oPending:(d.pendingPayments||[]).length,
+        oPremium:d.premium||0,
+        oTotalFix:d.totalFix||0,
+        oCodes:(d.codes||[]).length
+      };
+      Object.keys(els).forEach(function(k){
+        var el=document.getElementById(k);
+        if(el) el.textContent=els[k];
+      });
+
+      var pendingList=document.getElementById('oPendingList');
+      var depositList=document.getElementById('oDepositList');
+      var paidList=document.getElementById('oPaidList');
+      var pendingHtml='';
+      if(d.pendingPayments && d.pendingPayments.length>0){
+        pendingHtml=d.pendingPayments.map(function(p){
+          return '<div class="invoice"><div style="display:flex;justify-content:space-between"><div><div style="font-weight:800;font-size:12px">'+p.id+'</div><div style="font-size:10px;color:var(--muted)">User: '+p.userId+' | '+p.days+'H | Rp '+(p.amount||0).toLocaleString('id-ID')+'</div>'+(p.proofImage ? '<div class="proof" style="margin-top:6px"><img src="'+p.proofImage+'" onclick="openZoomModal(\\''+p.proofImage+'\\')"></div>' : '<div style="font-size:10px;color:var(--amber);margin-top:4px">Belum upload bukti</div>')+'</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><button class="btn btn-emerald" style="padding:8px;font-size:10px" onclick="ownerAct(\\''+p.id+'\\', \\'approve\\', this)">Setujui</button><button class="btn btn-pink" style="padding:8px;font-size:10px" onclick="ownerAct(\\''+p.id+'\\', \\'reject\\', this)">Tolak</button></div></div>';
+        }).join('');
+      }else{
+        pendingHtml='<div style="font-size:11px;color:var(--muted)">Tidak ada pending.</div>';
+      }
+      if(pendingList) pendingList.innerHTML=pendingHtml;
+      if(depositList) depositList.innerHTML=pendingHtml;
+
+      if(paidList){
+        if(d.paidPayments && d.paidPayments.length>0){
+          paidList.innerHTML=d.paidPayments.slice(0,10).map(function(p){
+            return '<div class="invoice" style="padding:10px"><div style="font-weight:800;font-size:11px">'+p.id+' • '+p.userId+'</div><div style="font-size:10px;color:var(--muted)">Rp '+(p.amount||0).toLocaleString('id-ID')+' • '+p.days+'H • Lunas</div></div>';
+          }).join('');
+        }else{
+          paidList.innerHTML='<div style="font-size:11px;color:var(--muted)">Belum ada riwayat lunas.</div>';
+        }
+      }
+
+      var userList=document.getElementById('oUserList');
+      if(userList){
+        if(d.recentUsers && d.recentUsers.length>0){
+          userList.innerHTML=d.recentUsers.slice(0,20).map(function(u){
+            var isVip=u.premiumUntil && u.premiumUntil>Date.now();
+            var left=isVip ? Math.ceil((u.premiumUntil-Date.now())/86400000)+'H' : '';
+            return '<div class="card" style="padding:10px;margin-bottom:6px;box-shadow:none"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:800;font-size:12px">'+(u.first_name||'User')+'</div><div style="font-size:10px;color:var(--muted)">ID: '+u.id+' | Fix: '+(u.totalFix||0)+' | Poin: '+(u.points||0)+'</div></div><span class="badge '+(isVip?'emerald':'')+'">'+(isVip ? 'VIP '+left : 'Free')+'</span></div></div>';
+          }).join('');
+        }else{
+          userList.innerHTML='<div style="font-size:11px;color:var(--muted)">Belum ada user.</div>';
+        }
+      }
+
+      var vList=document.getElementById('oVoucherList');
+      if(vList){
+        if(d.codes && d.codes.length>0){
+          vList.innerHTML=d.codes.map(function(c){
+            var quotaText=c.quota && c.quota>0 ? (c.used||0)+'/'+c.quota : (c.used||0)+'/∞';
+            var status=c.quota>0 && (c.used||0)>=c.quota ? 'Habis' : 'Aktif';
+            return '<div class="card" style="padding:10px;margin-bottom:6px;box-shadow:none"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:800;font-size:12px">'+c.code+' <span class="badge '+(status==='Aktif'?'emerald':'amber')+'" style="font-size:8px;margin-left:4px">'+status+'</span></div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+c.days+' Hari | '+quotaText+'</div></div><button class="btn btn-pink" style="width:auto;padding:6px 10px;font-size:10px" onclick="deleteVoucher(\\''+c.code+'\\', this)">Hapus</button></div></div>';
+          }).join('');
+        }else{
+          vList.innerHTML='<div style="font-size:11px;color:var(--muted)">Belum ada voucher.</div>';
+        }
+      }
+    }
   }catch(e){}
 }
 
-async function createCode(){
-  const c = document.getElementById('oVouchCode').value.trim();
-  const d = document.getElementById('oVouchDays').value;
-  const q = document.getElementById('oVouchQuota').value;
-  if(!c || !d) return showToast('Error','Isi kode dan durasi!','error');
+async function ownerAct(invoice, action, btn){
+  if(btn){ btn.disabled=true; btn.textContent='...'; }
   try{
-    const res = await fetch('/api/api?endpoint=create_code', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({owner_id:uid, code:c, days:d, quota:q})});
-    const data = await res.json();
-    showToast(data.ok?'Sukses':'Gagal', data.message, data.ok?'success':'error');
-    if(data.ok){ document.getElementById('oVouchCode').value=''; fetchOwnerData(); }
-  }catch(e){}
+    var res=await fetch('/api/api?endpoint=owner_action', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({owner_id:currentUserId, invoice:invoice, action:action})});
+    var data=await res.json();
+    showToast(data.ok ? 'Sukses' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+    if(data.ok){ await loadOwnerData(); await loadUserData(true); }
+  }catch(e){ showToast('Error','Gagal','error'); }
 }
 
-async function delCode(c){
+async function createVoucher(btn){
+  var code=document.getElementById('vGenCode').value.trim().toUpperCase();
+  var days=document.getElementById('vGenDays').value;
+  var quota=document.getElementById('vGenQuota').value;
+  var statusEl=document.getElementById('voucherCreateStatus');
+  if(!code||!days) return showToast('Error','Lengkapi kode & hari!','warning');
+  if(btn){ btn.disabled=true; btn.textContent='Membuat...'; }
+  if(statusEl) statusEl.textContent='Membuat voucher...';
   try{
-    const res = await fetch('/api/api?endpoint=delete_code', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({owner_id:uid, code:c})});
-    const d = await res.json();
-    showToast(d.ok?'Dihapus':'Gagal', d.message, d.ok?'success':'error');
-    if(d.ok) fetchOwnerData();
-  }catch(e){}
+    var res=await fetch('/api/api?endpoint=create_code', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({owner_id:currentUserId, code:code, days:days, quota:quota})});
+    var data=await res.json();
+    showToast(data.ok ? 'Voucher Dibuat' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+    if(statusEl) statusEl.textContent=data.message||'';
+    if(data.ok){ document.getElementById('vGenCode').value=''; document.getElementById('vGenDays').value=''; document.getElementById('vGenQuota').value=''; await loadOwnerData(); }
+  }catch(e){ showToast('Error','Gagal','error'); if(statusEl) statusEl.textContent='Gagal membuat voucher'; }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='Buat Voucher'; } }
 }
 
-async function sendBroadcast(){
-  const t = document.getElementById('oBroadText').value.trim();
-  if(!t) return showToast('Error','Pesan kosong!','error');
-  showToast('Proses','Mengirim broadcast...','info');
+async function deleteVoucher(code, btn){
+  if(btn) btn.disabled=true;
   try{
-    const res = await fetch('/api/api?endpoint=broadcast', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({owner_id:uid, text:t})});
-    const d = await res.json();
-    showToast(d.ok?'Selesai':'Gagal', d.message, d.ok?'success':'error');
-    if(d.ok){ document.getElementById('oBroadText').value=''; fetchOwnerData(); }
-  }catch(e){}
+    var res=await fetch('/api/api?endpoint=delete_code', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({owner_id:currentUserId, code:code})});
+    var data=await res.json();
+    showToast(data.ok ? 'Dihapus' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+    if(data.ok) await loadOwnerData();
+  }catch(e){ showToast('Error','Gagal','error'); }
+  finally{ if(btn) btn.disabled=false; }
 }
 
-window.onload = init;
+async function sendBroadcast(btn){
+  var text=document.getElementById('bcTextInput').value.trim();
+  var statusEl=document.getElementById('broadcastStatus');
+  if(!text) return showToast('Error','Pesan kosong!','warning');
+  if(btn){ btn.disabled=true; btn.textContent='Mengirim...'; }
+  if(statusEl) statusEl.textContent='Mengirim broadcast...';
+  try{
+    var res=await fetch('/api/api?endpoint=broadcast', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({owner_id:currentUserId, text:text})});
+    var data=await res.json();
+    if(data && data.ok){ showToast('Broadcast Selesai', data.message, 'success'); document.getElementById('bcTextInput').value=''; if(statusEl) statusEl.textContent=data.message; await loadOwnerData(); }
+    else{ showToast('Gagal', data ? data.message : 'Gagal', 'error'); if(statusEl) statusEl.textContent=data ? data.message : 'Gagal'; }
+  }catch(e){ showToast('Error','Gagal broadcast','error'); if(statusEl) statusEl.textContent='Gagal broadcast'; }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='Kirim Broadcast Sekarang'; } }
+}
+
+window.addEventListener('error', function(){ hideLoader(); });
+window.addEventListener('unhandledrejection', function(){ hideLoader(); });
+document.addEventListener('DOMContentLoaded', function(){
+  initApp();
+  setTimeout(hideLoader, 900);
+  setTimeout(hideLoader, 2200);
+});
+window.addEventListener('load', function(){ hideLoader(); });
+setTimeout(function(){ hideLoader(); }, 3000);
 </script>
 </body>
 </html>`;
-  res.send(htmlContent);
+  res.send(html);
 };
