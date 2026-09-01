@@ -1,424 +1,544 @@
 const TelegramBot = require('node-telegram-bot-api');
-const { loadDB, saveDB, getTodayString } = require('../lib/utils');
+const { loadDB, saveDB, getTodayString, genInvoiceID, getRank } = require('../lib/utils');
 const config = require('../config');
 
-const OWNER_IDS = config.OWNER_IDS || ['123456789'];
-const DANA_NUMBER = config.DANA_NUMBER || '081234567890';
+const rateCache = new Map();
+let dbCache = null;
+let dbCacheTime = 0;
+const CACHE_TTL = 300;
 
-function getJakartaISO() {
-  const d = new Date();
-  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-  return new Date(utc + (3600000 * 7)).toISOString().split('T')[0];
+async function getDB() {
+  const now = Date.now();
+  if (dbCache && (now - dbCacheTime) < CACHE_TTL) return dbCache;
+  const db = await loadDB();
+  dbCache = db;
+  dbCacheTime = now;
+  return db;
 }
 
-function getWeekOfMonth() {
-  const date = new Date();
-  const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
-  const day = new Date(utc + (3600000 * 7)).getDate();
-  if (day <= 7) return 1;
-  if (day <= 14) return 2;
-  if (day <= 21) return 3;
-  return 4;
+function clearCache() {
+  dbCache = null;
+  dbCacheTime = 0;
 }
 
-function getUserRank(points) {
-  if (points >= 1000) return 'Legend';
-  if (points >= 500) return 'Pro';
-  if (points >= 200) return 'Advanced';
-  return 'Beginner';
+function isOwner(id) {
+  try {
+    if (config && config.OWNER_IDS) return config.OWNER_IDS.map(String).includes(String(id));
+  } catch (e) {}
+  return false;
 }
 
-function getPremiumLeft(untilTimestamp) {
-  if (!untilTimestamp) return 'Non-Aktif';
-  const diff = untilTimestamp - Date.now();
-  if (diff <= 0) return 'Expired';
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  if (days > 0) return `${days} Hari ${hours} Jam`;
-  return `${hours} Jam`;
+function isSuspiciousId(id) {
+  if (!id) return true;
+  const s = String(id);
+  const n = Number(id);
+  if (!n || n <= 0 || s.startsWith('-') || s.length > 20 || s.includes('.')) return true;
+  return false;
 }
 
-function ensureUserInDB(db, userId, name = '') {
-  const today = getJakartaISO();
-  if (!db.users) db.users = {};
-  if (!db.users[userId]) {
-    db.users[userId] = {
-      id: String(userId),
-      name: name || `User_${userId}`,
-      quota: 5,
+function getUniqueUsers(usersObj) {
+  const map = new Map();
+  for (let u of Object.values(usersObj || {})) {
+    if (!u || isSuspiciousId(u.id)) continue;
+    const key = String(u.id);
+    if (!map.has(key)) map.set(key, u);
+  }
+  return Array.from(map.values());
+}
+
+function isPremium(u) {
+  return u && u.premiumUntil && u.premiumUntil > Date.now();
+}
+
+function checkRate(ip) {
+  const now = Date.now();
+  const key = ip || 'unknown';
+  const entry = rateCache.get(key);
+  if (!entry) {
+    rateCache.set(key, { count: 1, ts: now });
+    return true;
+  }
+  if (now - entry.ts > 60000) {
+    rateCache.set(key, { count: 1, ts: now });
+    return true;
+  }
+  if (entry.count > 120) return false;
+  entry.count++;
+  return true;
+}
+
+function ensureUserInDB(db, userId, nameData, usernameData) {
+  const k = String(userId);
+  if (!db.users[k]) {
+    db.users[k] = {
+      id: Number(userId) || userId,
+      first_name: nameData || 'User',
+      username: usernameData || '',
+      joinedAt: Date.now(),
+      referralCount: 0,
+      referrals: [],
+      referredBy: null,
       totalFix: 0,
-      points: 0,
-      referrals: 0,
-      streak: 0,
-      lastCheckin: '',
-      lastDailyReset: today,
-      lastSpinDate: '',
+      dailyFix: { date: getTodayString(), count: 0 },
       premiumUntil: 0,
-      referredBy: ''
+      lastSpin: null,
+      points: 0,
+      checkinStreak: 0,
+      lastCheckin: null
     };
+  } else {
+    if (nameData && db.users[k].first_name !== nameData) db.users[k].first_name = nameData;
+    if (usernameData !== undefined && db.users[k].username !== usernameData) db.users[k].username = usernameData;
   }
-  const u = db.users[userId];
-  if (name && u.name !== name) u.name = name;
-  if (u.lastDailyReset !== today) {
-    u.quota = 5;
-    u.lastDailyReset = today;
-  }
-  return u;
-}
 
-const PRODUCTS = {
-  trial: { days: 3, price: 7000, name: 'Trial 3H' },
-  hemat: { days: 5, price: 10000, name: 'Hemat 5H' },
-  starter: { days: 7, price: 15000, name: 'Starter 7H' },
-  pro: { days: 14, price: 25000, name: 'Pro 14H' },
-  sultan: { days: 30, price: 40000, name: 'Sultan 30H' }
-};
+  if (Array.isArray(db.users[k].referrals)) {
+    db.users[k].referralCount = db.users[k].referrals.length;
+  }
+  
+  const userPaidInvoices = Object.values(db.payments || {}).filter(p => String(p.userId) === k && (p.status === 'paid' || p.status === 'approved'));
+  db.users[k].totalFix = userPaidInvoices.length;
+
+  return db.users[k];
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
-  if (req.method === 'OPTIONS') return res.status(200).json({ status: true });
+  if (req.method === 'OPTIONS') return res.status(200).json({ ok: true });
 
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const endpoint = url.searchParams.get('endpoint') || req.body?.endpoint || '';
-  const query = Object.fromEntries(url.searchParams.entries());
-  const body = req.body || {};
+  const clientIp = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  if (!checkRate(clientIp)) return res.status(429).json({ ok: false, message: 'Batas Permintaan Terlampaui' });
+
+  const fullUrl = req.url || '';
+  const pathOnly = fullUrl.split('?')[0];
+  const query = req.query || {};
+  let body = req.body || {};
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch (e) { body = {}; }
+  }
+
+  const endpoint = query.endpoint || body.endpoint || (pathOnly.includes('/api/') ? pathOnly.split('/api/')[1] : '');
 
   try {
-    const db = await loadDB();
+    const db = await getDB();
     if (!db.users) db.users = {};
-    if (!db.orders) db.orders = [];
-    if (!db.codes) db.codes = [];
-    if (!db.stats) db.stats = { revenue: 0, totalFix: 0 };
+    if (!db.payments) db.payments = {};
+    if (!db.codes) db.codes = {};
+    if (!db.stats) db.stats = { totalFix: 0, totalSuccess: 0, totalFailed: 0, revenue: 0, revenueHistory: [], lastReset: Date.now() };
 
     if (endpoint === 'user') {
       const userId = query.user_id || body.user_id;
-      const name = query.name || body.name || '';
-      if (!userId) return res.status(400).json({ status: false, message: 'Missing user_id' });
+      const firstName = query.first_name || body.first_name || null;
+      const userName = query.username || body.username || null;
 
-      const user = ensureUserInDB(db, userId, name);
+      if (!userId) return res.status(400).json({ ok: false, message: 'Parameter user_id diperlukan' });
+      if (isSuspiciousId(userId)) return res.json({ ok: false, message: 'User ID Tidak Valid' });
+
+      let user = ensureUserInDB(db, userId, firstName, userName);
+      const isPrem = isPremium(user);
+      const premiumLeft = isPrem ? Math.ceil((user.premiumUntil - Date.now()) / 86400000) : 0;
+
+      if (!user.dailyFix || user.dailyFix.date !== getTodayString()) {
+        user.dailyFix = { date: getTodayString(), count: 0 };
+      }
+
+      const canSpin = !user.lastSpin || user.lastSpin !== getTodayString();
+      const canCheckin = !user.lastCheckin || user.lastCheckin !== getTodayString();
+      const rankInfo = getRank(user.referralCount || 0);
+
+      const userInvoices = Object.values(db.payments).filter(p => String(p.userId) === String(userId));
+      const activeInvoice = userInvoices.find(p => p.status === 'pending' || p.status === 'waiting_approval' || p.status === 'waiting_payment') || null;
+
+      const remainingQuota = isPrem ? 'Unlimited' : `${Math.max(0, 5 - (user.dailyFix.count || 0))}/5`;
+
       await saveDB(db);
-
-      const isVip = user.premiumUntil > Date.now();
-      const rank = getUserRank(user.points);
-      const premiumLeft = getPremiumLeft(user.premiumUntil);
-      const userOrders = db.orders.filter(o => o.userId === String(userId));
-      const isOwner = OWNER_IDS.map(String).includes(String(userId));
 
       return res.json({
-        status: true,
-        data: {
-          ...user,
-          isVip,
-          rank,
-          premiumLeft,
-          referralLink: `https://t.me/${config.BOT_USERNAME || 'walzystore_bot'}?start=${userId}`,
-          dana: DANA_NUMBER,
-          orders: userOrders,
-          isOwner
-        }
+        ok: true,
+        user: {
+          id: user.id,
+          first_name: user.first_name || 'User',
+          username: user.username || '',
+          referralCount: user.referralCount || 0,
+          totalFix: user.totalFix || 0,
+          points: user.points || 0,
+          checkinStreak: user.checkinStreak || 0,
+          dailyFixRemaining: remainingQuota,
+          isPremium: isPrem,
+          premiumLeftDays: premiumLeft,
+          canSpin,
+          canCheckin,
+          rank: rankInfo,
+          pendingDeposit: user.pendingDeposit || null,
+          referralLink: `https://t.me/${config.BOT_USERNAME || 'walzystore_bot'}?start=ref_${user.id}`,
+          isOwner: isOwner(userId)
+        },
+        currentInvoice: activeInvoice,
+        invoices: userInvoices.slice(0, 20)
       });
-    }
-
-    if (endpoint === 'create_order') {
-      const userId = body.user_id || query.user_id;
-      const planId = body.plan_id || query.plan_id;
-
-      if (!userId || !planId || !PRODUCTS[planId]) {
-        return res.status(400).json({ status: false, message: 'Invalid data' });
-      }
-
-      ensureUserInDB(db, userId);
-      const existing = db.orders.find(o => o.userId === String(userId) && o.status === 'pending');
-      if (existing) {
-        return res.json({ status: true, invoice: existing });
-      }
-
-      const prod = PRODUCTS[planId];
-      const invoiceId = 'INV' + Date.now().toString().slice(-6);
-      const newOrder = {
-        invoiceId,
-        userId: String(userId),
-        planId,
-        planName: prod.name,
-        days: prod.days,
-        amount: prod.price,
-        status: 'pending',
-        proof: '',
-        createdAt: new Date().toISOString()
-      };
-
-      db.orders.push(newOrder);
-      await saveDB(db);
-      return res.json({ status: true, invoice: newOrder });
-    }
-
-    if (endpoint === 'cancel_order') {
-      const userId = body.user_id || query.user_id;
-      const invoiceId = body.invoice_id || query.invoice_id;
-
-      const idx = db.orders.findIndex(o => o.invoiceId === invoiceId && o.userId === String(userId) && o.status === 'pending');
-      if (idx === -1) return res.status(404).json({ status: false, message: 'Invoice not found' });
-
-      db.orders.splice(idx, 1);
-      await saveDB(db);
-      return res.json({ status: true, message: 'Invoice dibatalkan' });
-    }
-
-    if (endpoint === 'upload_proof') {
-      const userId = body.user_id || query.user_id;
-      const invoiceId = body.invoice_id || query.invoice_id;
-      const imageBase64 = body.image_base64;
-
-      if (!imageBase64 || imageBase64.length > 8000000) {
-        return res.status(400).json({ status: false, message: 'Bukti maksimal 6MB' });
-      }
-
-      const order = db.orders.find(o => o.invoiceId === invoiceId && o.userId === String(userId));
-      if (!order) return res.status(404).json({ status: false, message: 'Order tidak ditemukan' });
-
-      order.proof = imageBase64;
-      order.status = 'waiting_approval';
-      await saveDB(db);
-
-      try {
-        const bot = new TelegramBot(config.BOT_TOKEN);
-        for (let ownerId of OWNER_IDS) {
-          await bot.sendMessage(ownerId, `📥 <b>BUKTI DEPOSIT BARU</b>\nInvoice: <code>${invoiceId}</code>\nUser: <code>${userId}</code>`);
-        }
-      } catch (e) {}
-
-      return res.json({ status: true, message: 'Bukti terkirim, menunggu verifikasi' });
-    }
-
-    if (endpoint === 'claim_code') {
-      const userId = body.user_id || query.user_id;
-      const code = body.code || query.code;
-
-      if (!code) return res.status(400).json({ status: false, message: 'Kode kosong' });
-
-      const u = ensureUserInDB(db, userId);
-      const cIndex = db.codes.findIndex(c => c.code.toLowerCase() === code.trim().toLowerCase());
-      if (cIndex === -1) return res.status(404).json({ status: false, message: 'Kode voucher salah' });
-
-      const v = db.codes[cIndex];
-      if (v.quota !== 0 && v.used >= v.quota) {
-        return res.status(400).json({ status: false, message: 'Kuota voucher habis' });
-      }
-
-      v.used += 1;
-      const curr = u.premiumUntil > Date.now() ? u.premiumUntil : Date.now();
-      u.premiumUntil = curr + (v.days * 86400000);
-      await saveDB(db);
-
-      return res.json({ status: true, message: `Voucher sukses! +${v.days} Hari VIP` });
     }
 
     if (endpoint === 'spin') {
       const userId = body.user_id || query.user_id;
-      const u = ensureUserInDB(db, userId);
-      const today = getJakartaISO();
+      if (!userId || isSuspiciousId(userId)) return res.status(400).json({ ok: false, message: 'User ID tidak valid' });
 
-      if (u.lastSpinDate === today) {
-        return res.status(400).json({ status: false, message: 'Spin harian sudah dipakai' });
+      let user = ensureUserInDB(db, userId);
+      if (user.lastSpin === getTodayString()) {
+        return res.json({ ok: false, message: 'Anda telah memutar Spin Harian hari ini!' });
       }
 
-      const prizes = [
-        { label: '+50 Poin', type: 'points', value: 50, weight: 25 },
-        { label: 'ZONK', type: 'none', value: 0, weight: 20 },
-        { label: '+25 Poin', type: 'points', value: 25, weight: 30 },
-        { label: '+100 Poin', type: 'points', value: 100, weight: 10 },
-        { label: '+3 Kuota', type: 'quota', value: 3, weight: 10 },
-        { label: 'VIP 1H', type: 'vip', value: 1, weight: 5 }
+      const prizePool = [
+        { index: 0, type: 'zonk', value: 0, label: 'ZONK ❌ (Coba Lagi)', weight: 40 },
+        { index: 1, type: 'points', value: 30, label: '+30 Poin Vault 🪙', weight: 30 },
+        { index: 2, type: 'points', value: 50, label: '+50 Poin Vault 🪙', weight: 15 },
+        { index: 3, type: 'points', value: 100, label: '+100 Poin Vault 🪙', weight: 8 },
+        { index: 4, type: 'fix', value: 3, label: '+3 Fast-Track ⚡', weight: 5 },
+        { index: 5, type: 'vip', value: 1, label: '+1 Hari Akses VIP 💎', weight: 2 }
       ];
 
-      let totalWeight = prizes.reduce((a, b) => a + b.weight, 0);
-      let rnd = Math.floor(Math.random() * totalWeight);
-      let prizeIndex = 0;
+      const totalWeight = prizePool.reduce((acc, item) => acc + item.weight, 0);
+      let randomNum = Math.random() * totalWeight;
+      let selectedPrize = prizePool[0];
 
-      for (let i = 0; i < prizes.length; i++) {
-        if (rnd < prizes[i].weight) {
-          prizeIndex = i;
+      for (let item of prizePool) {
+        if (randomNum < item.weight) {
+          selectedPrize = item;
           break;
         }
-        rnd -= prizes[i].weight;
+        randomNum -= item.weight;
       }
 
-      const prize = prizes[prizeIndex];
-      u.lastSpinDate = today;
+      user.lastSpin = getTodayString();
 
-      if (prize.type === 'points') u.points += prize.value;
-      if (prize.type === 'quota') u.quota += prize.value;
-      if (prize.type === 'vip') {
-        const base = u.premiumUntil > Date.now() ? u.premiumUntil : Date.now();
-        u.premiumUntil = base + 86400000;
+      if (selectedPrize.type === 'vip') {
+        user.premiumUntil = Math.max(Date.now(), user.premiumUntil || 0) + (selectedPrize.value * 86400000);
+      } else if (selectedPrize.type === 'points') {
+        user.points = (user.points || 0) + selectedPrize.value;
+      } else if (selectedPrize.type === 'fix') {
+        user.dailyFix.count = Math.max(0, (user.dailyFix.count || 0) - selectedPrize.value);
       }
 
       await saveDB(db);
-      return res.json({ status: true, prizeIndex, prize });
+      clearCache();
+
+      return res.json({
+        ok: true,
+        message: selectedPrize.type === 'zonk' ? 'Apes! Anda mendapatkan Zonk ❌. Coba keberuntungan besok!' : `Selamat! Anda mendapatkan ${selectedPrize.label}`,
+        prizeIndex: selectedPrize.index,
+        prize: selectedPrize,
+        points: user.points
+      });
     }
 
     if (endpoint === 'checkin') {
       const userId = body.user_id || query.user_id;
-      const u = ensureUserInDB(db, userId);
-      const today = getJakartaISO();
+      if (!userId || isSuspiciousId(userId)) return res.status(400).json({ ok: false, message: 'User ID tidak valid' });
 
-      if (u.lastCheckin === today) {
-        return res.status(400).json({ status: false, message: 'Hari ini sudah check-in' });
+      let user = ensureUserInDB(db, userId);
+      const today = getTodayString();
+
+      if (user.lastCheckin === today) {
+        return res.json({ ok: false, message: 'Check-in Harian Sudah Diklaim Hari Ini!' });
       }
 
-      const yesterday = new Date(Date.now() + (7 * 3600000) - 86400000).toISOString().split('T')[0];
-      if (u.lastCheckin === yesterday) {
-        u.streak = u.streak >= 7 ? 1 : u.streak + 1;
-      } else {
-        u.streak = 1;
-      }
+      user.lastCheckin = today;
+      user.checkinStreak = ((user.checkinStreak || 0) % 7) + 1;
 
-      u.lastCheckin = today;
-      const weekRewards = {
-        1: [10, 15, 20, 25, 30, 50, 100],
-        2: [15, 20, 25, 30, 40, 60, 120],
-        3: [20, 25, 30, 40, 50, 70, 140],
-        4: [25, 30, 40, 50, 60, 80, 160]
+      const streakRewards = { 1: 30, 2: 50, 3: 75, 4: 100, 5: 150, 6: 200, 7: 350 };
+      const rewardPoints = streakRewards[user.checkinStreak] || 30;
+
+      user.points = (user.points || 0) + rewardPoints;
+
+      await saveDB(db);
+      clearCache();
+
+      return res.json({
+        ok: true,
+        message: `Streak Hari ke-${user.checkinStreak} Sukses! +${rewardPoints} Poin Ditambahkan.`,
+        streak: user.checkinStreak,
+        pointsEarned: rewardPoints,
+        totalPoints: user.points
+      });
+    }
+
+    if (endpoint === 'redeem_points') {
+      const userId = body.user_id || query.user_id;
+      const option = Number(body.option || query.option);
+
+      if (!userId || isSuspiciousId(userId) || !option) return res.status(400).json({ ok: false, message: 'Pilihan Item Tidak Valid' });
+
+      let user = ensureUserInDB(db, userId);
+      const options = {
+        1: { cost: 100, days: 1, label: '1 Hari VIP' },
+        2: { cost: 250, days: 3, label: '3 Hari VIP' },
+        3: { cost: 500, days: 7, label: '7 Hari VIP' },
+        4: { cost: 900, days: 14, label: '14 Hari VIP' },
+        5: { cost: 1600, days: 30, label: '30 Hari VIP Sultan' }
       };
 
-      const week = getWeekOfMonth();
-      const earned = weekRewards[week][u.streak - 1];
-      u.points += earned;
-      await saveDB(db);
+      const sel = options[option];
+      if (!sel) return res.json({ ok: false, message: 'Item Point Store Tidak Ditemukan' });
 
-      return res.json({ status: true, message: `Check-in Berhasil! +${earned} PTS`, streak: u.streak, points: u.points });
+      if ((user.points || 0) < sel.cost) {
+        return res.json({ ok: false, message: `Saldo Poin Kurang. Dibutuhkan ${sel.cost} PTS` });
+      }
+
+      user.points -= sel.cost;
+      user.premiumUntil = Math.max(Date.now(), user.premiumUntil || 0) + (sel.days * 86400000);
+
+      await saveDB(db);
+      clearCache();
+
+      return res.json({ ok: true, message: `Penukaran Berhasil! Paket ${sel.label} Telah Aktif.`, points: user.points });
+    }
+
+    if (endpoint === 'order' || endpoint === 'deposit') {
+      const userId = body.user_id || query.user_id;
+      const days = Number(body.days || query.days);
+
+      if (!userId || isSuspiciousId(userId) || !days || isNaN(days)) {
+        return res.status(400).json({ ok: false, message: 'Parameter Pemesanan Tidak Lengkap' });
+      }
+
+      let user = ensureUserInDB(db, userId);
+
+      const userInvoices = Object.values(db.payments).filter(p => String(p.userId) === String(userId));
+      const hasActive = userInvoices.some(p => p.status === 'pending' || p.status === 'waiting_approval' || p.status === 'waiting_payment');
+
+      if (hasActive) {
+        return res.json({ ok: false, message: 'Anda masih memiliki transaksi invoice yang aktif! Batalkan atau selesaikan terlebih dahulu.' });
+      }
+
+      const prices = { 3: 7000, 5: 10000, 7: 15000, 14: 25000, 30: 45000 };
+      const amount = Number(body.amount || query.amount) || prices[days] || days * 2500;
+
+      const invoice = genInvoiceID();
+      const payData = {
+        id: invoice,
+        invoice,
+        userId: String(userId),
+        days,
+        amount,
+        amountFormatted: 'Rp ' + amount.toLocaleString('id-ID'),
+        status: 'pending',
+        proofImage: null,
+        createdAt: Date.now()
+      };
+
+      db.payments[invoice] = payData;
+      user.pendingDeposit = invoice;
+
+      await saveDB(db);
+      clearCache();
+
+      return res.json({
+        ok: true,
+        message: 'Invoice Pesanan Berhasil Dibuat',
+        invoice: payData
+      });
+    }
+
+    if (endpoint === 'cancel_order') {
+      const userId = body.user_id || query.user_id;
+      const invoiceId = body.invoice || query.invoice;
+
+      if (!userId || !invoiceId) return res.status(400).json({ ok: false, message: 'Parameter Tidak Lengkap' });
+
+      let user = ensureUserInDB(db, userId);
+      const pay = db.payments[invoiceId];
+
+      if (pay) pay.status = 'cancelled';
+      user.pendingDeposit = null;
+
+      await saveDB(db);
+      clearCache();
+
+      return res.json({ ok: true, message: 'Pembelian Invoice Berhasil Dibatalkan' });
+    }
+
+    if (endpoint === 'upload_proof') {
+      const userId = body.user_id || query.user_id;
+      const invoiceId = body.invoice || query.invoice;
+      const imageData = body.image_data;
+
+      if (!userId || !invoiceId || !imageData) return res.status(400).json({ ok: false, message: 'Bukti Foto Tidak Ditemukan' });
+
+      const pay = db.payments[invoiceId];
+      if (!pay) return res.status(404).json({ ok: false, message: 'Invoice Tidak Ditemukan' });
+
+      pay.proofImage = imageData;
+      pay.status = 'waiting_approval';
+
+      await saveDB(db);
+      clearCache();
+
+      return res.json({ ok: true, message: 'Bukti pembayaran berhasil diunggah! Menunggu konfirmasi owner.' });
     }
 
     if (endpoint === 'redeem') {
       const userId = body.user_id || query.user_id;
-      const itemKey = body.item_key || query.item_key;
+      const code = String(body.code || query.code || '').trim().toUpperCase();
 
-      const u = ensureUserInDB(db, userId);
-      const store = {
-        quota1: { cost: 100, act: () => { u.quota += 1; } },
-        quota3: { cost: 250, act: () => { u.quota += 3; } },
-        spin: { cost: 150, act: () => { u.lastSpinDate = ''; } },
-        vip1: { cost: 500, act: () => { u.premiumUntil = (u.premiumUntil > Date.now() ? u.premiumUntil : Date.now()) + 86400000; } },
-        vip3: { cost: 1200, act: () => { u.premiumUntil = (u.premiumUntil > Date.now() ? u.premiumUntil : Date.now()) + (3 * 86400000); } },
-        bonus200: { cost: 300, act: () => { u.points += 200; } }
-      };
+      if (!userId || !code) return res.status(400).json({ ok: false, message: 'Kode Voucher & User ID Wajib Diisi' });
 
-      const target = store[itemKey];
-      if (!target) return res.status(400).json({ status: false, message: 'Item tidak valid' });
-      if (u.points < target.cost) return res.status(400).json({ status: false, message: 'Poin tidak cukup' });
+      let user = ensureUserInDB(db, userId);
+      const vCode = db.codes[code];
 
-      u.points -= target.cost;
-      target.act();
+      if (!vCode) return res.json({ ok: false, message: 'Kode Voucher Tidak Valid' });
+
+      const days = typeof vCode === 'object' ? vCode.days : vCode;
+      const quota = typeof vCode === 'object' ? (vCode.quota || 0) : 0;
+      const used = typeof vCode === 'object' ? (vCode.used || 0) : 0;
+
+      if (quota > 0 && used >= quota) {
+        return res.json({ ok: false, message: 'Kuota Voucher Telah Habis' });
+      }
+
+      user.premiumUntil = Math.max(Date.now(), user.premiumUntil || 0) + (days * 86400000);
+
+      if (typeof vCode === 'object') {
+        vCode.used = (vCode.used || 0) + 1;
+        if (vCode.type === 'private' && (quota === 1 || vCode.quota === 1)) delete db.codes[code];
+      } else {
+        delete db.codes[code];
+      }
+
       await saveDB(db);
-      return res.json({ status: true, message: 'Redeem Sukses!' });
+      clearCache();
+
+      return res.json({ ok: true, message: `Voucher Diklaim: +${days} Hari Akses VIP` });
     }
 
     if (endpoint === 'stats') {
-      const usersArr = Object.values(db.users);
-      const now = Date.now();
-      const pendingOrders = db.orders.filter(o => o.status === 'waiting_approval' || o.status === 'pending');
-      const paidOrders = db.orders.filter(o => o.status === 'paid');
+      const userId = query.user_id || body.user_id;
+      const ownerCheck = userId ? isOwner(userId) : false;
+      const validUsers = getUniqueUsers(db.users);
+      const premiumUsers = validUsers.filter(u => isPremium(u)).length;
+      const allPayments = Object.values(db.payments || {});
+      const pending = allPayments.filter(p => p.status === 'waiting_approval' || p.status === 'pending');
+      const paid = allPayments.filter(p => p.status === 'paid' || p.status === 'approved');
 
       return res.json({
-        status: true,
-        data: {
-          revenue: db.stats.revenue || 0,
-          totalUsers: usersArr.length,
-          pendingCount: pendingOrders.length,
-          vipCount: usersArr.filter(u => u.premiumUntil > now).length,
-          totalFix: db.stats.totalFix || 0,
-          voucherCount: db.codes.length,
-          recentUsers: usersArr.slice(-30).reverse(),
-          pendingOrders,
-          paidOrders,
-          codes: db.codes
-        }
+        ok: true,
+        isOwner: ownerCheck,
+        usersValid: validUsers.length,
+        premium: premiumUsers,
+        totalFix: db.stats.totalFix || 0,
+        pendingPayments: pending.slice(-30).reverse(),
+        paidPayments: ownerCheck ? paid.slice(-30).reverse() : [],
+        recentUsers: ownerCheck ? validUsers.slice(-50).reverse() : [],
+        codes: ownerCheck ? Object.values(db.codes).slice(-50) : [],
+        revenue: ownerCheck ? (db.stats.revenue || 0) : 0
       });
     }
 
     if (endpoint === 'owner_action') {
       const ownerId = String(body.owner_id || query.owner_id || '');
-      if (!OWNER_IDS.map(String).includes(ownerId)) {
-        return res.status(403).json({ status: false, message: 'Access denied' });
-      }
+      if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
-      const invoiceId = body.invoice_id || query.invoice_id;
-      const action = body.action || query.action;
-
-      const order = db.orders.find(o => o.invoiceId === invoiceId);
-      if (!order) return res.status(404).json({ status: false, message: 'Invoice not found' });
+      const invoice = body.invoice;
+      const action = body.action;
+      const pay = db.payments[invoice];
+      if (!pay) return res.status(404).json({ ok: false, message: 'Invoice Tidak Ditemukan' });
 
       if (action === 'approve') {
-        order.status = 'paid';
-        const u = ensureUserInDB(db, order.userId);
-        const base = u.premiumUntil > Date.now() ? u.premiumUntil : Date.now();
-        u.premiumUntil = base + (order.days * 86400000);
-        db.stats.revenue = (db.stats.revenue || 0) + order.amount;
+        pay.status = 'paid';
+        const u = db.users[String(pay.userId)];
+        if (u) {
+          u.premiumUntil = Math.max(Date.now(), u.premiumUntil || 0) + (pay.days * 86400000);
+          u.pendingDeposit = null;
+        }
+        db.stats.revenue = (db.stats.revenue || 0) + pay.amount;
+
+        await saveDB(db);
+        clearCache();
 
         try {
           const bot = new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(order.userId, `🟢 <b>PEMBAYARAN DISETUJUI!</b>\nVIP +${order.days} Hari Aktif.`);
+          await bot.sendMessage(pay.userId, `<b>VERIFIKASI TRANSAKSI LUNAS</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n<b>ID Invoice:</b> <code>${invoice}</code>\n<b>Status:</b> 🟢 <b>APPROVED</b>\n<b>Paket:</b> VIP +${pay.days} Hari Berhasil Diaktifkan!\n\n🚀 <i>Terima kasih telah berlangganan di Walzy Store.</i>`, { parse_mode: 'HTML' });
         } catch (e) {}
+
+        return res.json({ ok: true, message: `Invoice ${invoice} Berhasil Disetujui!` });
       } else if (action === 'reject') {
-        order.status = 'rejected';
+        pay.status = 'rejected';
+        const u = db.users[String(pay.userId)];
+        if (u) u.pendingDeposit = null;
+
+        await saveDB(db);
+        clearCache();
+
         try {
           const bot = new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(order.userId, `❌ <b>PEMBAYARAN DITOLAK!</b>\nInvoice: ${invoiceId}`);
+          await bot.sendMessage(pay.userId, `❌ <b>VERIFIKASI DITOLAK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nInvoice <code>${invoice}</code> ditolak oleh Operator Admin. Hubungi Customer Support jika ada pertanyaan.`, { parse_mode: 'HTML' });
         } catch (e) {}
-      }
 
-      await saveDB(db);
-      return res.json({ status: true, message: `Order ${action}d` });
+        return res.json({ ok: true, message: `Invoice ${invoice} Ditolak!` });
+      }
     }
 
     if (endpoint === 'create_code') {
       const ownerId = String(body.owner_id || query.owner_id || '');
-      if (!OWNER_IDS.map(String).includes(ownerId)) return res.status(403).json({ status: false, message: 'Forbidden' });
+      if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
-      const code = body.code;
-      const days = Number(body.days);
-      const quota = Number(body.quota || 0);
+      const code = String(body.code || '').toUpperCase().trim();
+      const days = parseInt(body.days);
+      const quota = parseInt(body.quota) || 0;
 
-      db.codes.push({ code: code.trim(), days, quota, used: 0 });
+      if (!code || code.length < 3) return res.json({ ok: false, message: 'Kode minimal 3 karakter' });
+      if (!days || days <= 0) return res.json({ ok: false, message: 'Durasi hari tidak valid' });
+
+      db.codes[code] = { code, days, quota, used: 0, createdAt: Date.now() };
       await saveDB(db);
-      return res.json({ status: true, message: 'Voucher dibuat' });
+      clearCache();
+      return res.json({ ok: true, message: `Voucher ${code} Berhasil Dibuat` });
     }
 
     if (endpoint === 'delete_code') {
       const ownerId = String(body.owner_id || query.owner_id || '');
-      if (!OWNER_IDS.map(String).includes(ownerId)) return res.status(403).json({ status: false, message: 'Forbidden' });
+      if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
-      const code = body.code;
-      db.codes = db.codes.filter(c => c.code.toLowerCase() !== code.toLowerCase());
+      const code = String(body.code || '').toUpperCase().trim();
+      if (!db.codes[code]) return res.json({ ok: false, message: 'Voucher Tidak Ditemukan' });
+
+      delete db.codes[code];
       await saveDB(db);
-      return res.json({ status: true, message: 'Voucher dihapus' });
+      clearCache();
+      return res.json({ ok: true, message: `Voucher ${code} Dihapus` });
     }
 
     if (endpoint === 'broadcast') {
       const ownerId = String(body.owner_id || query.owner_id || '');
-      if (!OWNER_IDS.map(String).includes(ownerId)) return res.status(403).json({ status: false, message: 'Forbidden' });
+      if (!isOwner(ownerId)) return res.status(403).json({ ok: false, message: 'Akses Ditolak: Bukan Owner' });
 
-      const message = body.message;
-      const usersArr = Object.values(db.users);
+      const text = String(body.text || '').trim();
+      if (!text) return res.json({ ok: false, message: 'Pesan Broadcast Kosong' });
+
+      const validUsers = getUniqueUsers(db.users);
+      let sent = 0;
+      let failed = 0;
 
       try {
         const bot = new TelegramBot(config.BOT_TOKEN);
-        for (let u of usersArr) {
+        for (let u of validUsers) {
           try {
-            await bot.sendMessage(u.id, `📢 <b>BROADCAST</b>\n\n${message}`);
-          } catch (e) {}
+            await bot.sendMessage(u.id, `📢 <b>WALZY ANNOUNCEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n${text}\n\n⚡ <i>Walzy Store Official Broadcast</i>`, { parse_mode: 'HTML' });
+            sent++;
+          } catch (e) {
+            failed++;
+          }
         }
       } catch (e) {}
 
-      return res.json({ status: true, message: 'Broadcast berhasil dikirim' });
+      return res.json({ ok: true, message: `Broadcast Selesai! Berhasil: ${sent}, Gagal: ${failed}`, sent, failed, total: validUsers.length });
     }
 
-    return res.status(404).json({ status: false, message: 'Endpoint not found' });
+    return res.status(404).json({ ok: false, message: 'Endpoint Tidak Ditemukan' });
   } catch (err) {
-    return res.status(500).json({ status: false, message: err.message });
+    console.error('API Error:', err);
+    return res.status(500).json({ ok: false, message: 'Internal Error Server', error: err.message });
   }
 };
