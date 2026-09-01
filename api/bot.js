@@ -97,7 +97,7 @@ function getOwnerMenu(user, chatId, db, webappUrl) {
       { text: '🌐 Buka Mini Web Admin', web_app: { url: webappUrl } }
     ],
     [
-      { text: `📥 Cek Pending (${pendingCount})`, callback_data: 'owner_check_pending' },
+      { text: `📥 Cek Pending ${pendingCount}`, callback_data: 'owner_check_pending' },
       { text: '❓ Pusat Bantuan', callback_data: 'help' }
     ]
   ];
@@ -115,7 +115,7 @@ function getUserMenu(user, chatId, webappUrl) {
 
   const keyboard = [
     [
-      { text: '🛠️ Fix Merah (Utama)', callback_data: 'fix_merah' }
+      { text: '🛠️ Fix Merah', callback_data: 'fix_merah' }
     ],
     [
       { text: '🌐 Buka Mini Web Walzy Store', web_app: { url: webappUrl } }
