@@ -533,8 +533,7 @@ module.exports = async (req, res) => {
 <input type="file" id="proofFileInput" accept="image/*" style="display:none" onchange="submitProofFile(event)">
 
 <script>
-  var tg = window.Telegram ? window.Telegram.WebApp : null;
-  if (tg) { tg.ready(); tg.expand(); }
+  var tg = null;
 
   var currentUserId = null;
   var activeInvoiceId = null;
@@ -602,6 +601,9 @@ module.exports = async (req, res) => {
     setTimeout(hideLoader, 1500);
 
     try {
+      tg = window.Telegram ? window.Telegram.WebApp : null;
+      if (tg) { tg.ready(); tg.expand(); }
+
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         currentUserId = tg.initDataUnsafe.user.id;
       } else {
