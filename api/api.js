@@ -1,3 +1,4 @@
+const TelegramBot = require('node-telegram-bot-api');
 const { loadDB, saveDB, getTodayString, genInvoiceID, getRank } = require('../lib/utils');
 const config = require('../config');
 
@@ -457,7 +458,6 @@ module.exports = async (req, res) => {
         clearCache();
 
         try {
-          const TelegramBot = require('node-telegram-bot-api');
           const bot = new TelegramBot(config.BOT_TOKEN);
           await bot.sendMessage(pay.userId, `<b>VERIFIKASI TRANSAKSI LUNAS</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n<b>ID Invoice:</b> <code>${invoice}</code>\n<b>Status:</b> 🟢 <b>APPROVED</b>\n<b>Paket:</b> VIP +${pay.days} Hari Berhasil Diaktifkan!\n\n🚀 <i>Terima kasih telah berlangganan di Walzy Store.</i>`, { parse_mode: 'HTML' });
         } catch (e) {}
@@ -472,7 +472,6 @@ module.exports = async (req, res) => {
         clearCache();
 
         try {
-          const TelegramBot = require('node-telegram-bot-api');
           const bot = new TelegramBot(config.BOT_TOKEN);
           await bot.sendMessage(pay.userId, `❌ <b>VERIFIKASI DITOLAK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nInvoice <code>${invoice}</code> ditolak oleh Operator Admin. Hubungi Customer Support jika ada pertanyaan.`, { parse_mode: 'HTML' });
         } catch (e) {}
@@ -523,7 +522,6 @@ module.exports = async (req, res) => {
       let failed = 0;
 
       try {
-        const TelegramBot = require('node-telegram-bot-api');
         const bot = new TelegramBot(config.BOT_TOKEN);
         for (let u of validUsers) {
           try {
