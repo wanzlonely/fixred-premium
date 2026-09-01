@@ -120,7 +120,7 @@ function getUserMenu(user, chatId, webappUrl) {
   }
   const remainingQuota = isPrem ? 'Unlimited' : `${Math.max(0, 5 - (user.dailyFix.count || 0))}/5`;
 
-  const text = `⚡ <b>Walzy Store</b>\n\nHalo <b>${dispName}</b>\n\n${rnk.icon} Peringkat: <code>${rnk.name}</code>\n🪙 Poin: <code>${user.points || 0} PTS</code>\n⚡ Kuota Harian: <b>${remainingQuota}</b>\n💎 Status: <b>${statusBadge}</b>`;
+  const text = `⚡ <b>WALZY STORE</b>\n\nHalo <b>${dispName}</b>, selamat datang kembali! 👋\n\n<blockquote>${rnk.icon} Peringkat: <b>${rnk.name}</b>\n🪙 Poin: <b>${user.points || 0} PTS</b>\n⚡ Kuota Harian: <b>${remainingQuota}</b>\n💎 Status: <b>${statusBadge}</b></blockquote>\n\n<blockquote>🔥 <b>Promo Spin Wheel Harian!</b>\nPutar Spin di Mini Web tiap hari, menangkan poin, kuota Fix Merah tambahan, sampai VIP gratis. Jangan lewatkan! 🎡</blockquote>`;
 
   const keyboard = [
     [
@@ -128,10 +128,7 @@ function getUserMenu(user, chatId, webappUrl) {
       { text: '🌐 Mini Web', web_app: { url: webappUrl } }
     ],
     [
-      { text: '🎁 Check-in', callback_data: 'user_checkin_info' },
-      { text: '💬 Support', callback_data: 'contact_owner' }
-    ],
-    [
+      { text: '💬 Support', callback_data: 'contact_owner' },
       { text: '❓ Bantuan', callback_data: 'help' }
     ]
   ];
@@ -183,18 +180,9 @@ module.exports = async (req, res) => {
         return res.status(200).send('OK');
       }
 
-      if (data === 'user_checkin_info') {
-        await bot.answerCallbackQuery(qId, { text: '🎁 Info Check-in', show_alert: false });
-        await bot.sendMessage(uid, `🎁 <b>Daily Check-in</b>\n\nKlaim poin harian melalui Mini Web:\n\nHari 1: +30 · Hari 2: +50 · Hari 3: +75\nHari 4: +100 · Hari 5: +150\nHari 6: +200 · Hari 7: +350\n\nTukarkan poin dengan akses VIP gratis.`, {
-          parse_mode: 'HTML',
-          reply_markup: { inline_keyboard: [[{ text: '🌐 Claim di Mini Web', web_app: { url: webappUrl } }]] }
-        });
-        return res.status(200).send('OK');
-      }
-
       if (data === 'help') {
         await bot.answerCallbackQuery(qId, { text: '✨ Bantuan', show_alert: false });
-        await bot.sendMessage(uid, `❓ <b>Panduan Walzy Store</b>\n\n1. <b>Fix Merah</b> — kirim nomor target lewat tombol utama.\n2. <b>Beli VIP</b> — buka Mini Web, halaman Order VIP.\n3. <b>Redeem Voucher</b> — masukkan kode promo di Mini Web.\n4. <b>Spin & Check-in</b> — putar harian untuk poin gratis.`, {
+        await bot.sendMessage(uid, `❓ <b>PANDUAN WALZY STORE</b>\n\n<blockquote>🛠️ <b>1. Fix Merah</b>\nKirim nomor target lewat tombol utama di menu.</blockquote>\n\n<blockquote>💎 <b>2. Beli VIP</b>\nBuka Mini Web → halaman <b>Order VIP</b>.</blockquote>\n\n<blockquote>🎟️ <b>3. Redeem Voucher</b>\nMasukkan kode promo di Mini Web.</blockquote>\n\n<blockquote>🎡 <b>4. Spin & Check-in</b>\nPutar Spin dan Check-in harian di Mini Web untuk poin gratis.</blockquote>`, {
           parse_mode: 'HTML',
           reply_markup: { inline_keyboard: [[{ text: '🌐 Buka Mini Web', web_app: { url: webappUrl } }]] }
         });
