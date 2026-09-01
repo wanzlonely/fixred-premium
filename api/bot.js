@@ -32,14 +32,17 @@ function checkRateLimit(id) {
   return true;
 }
 
-function getUser(db, id) {
+function getUser(db, id, msgFrom) {
   const k = String(id);
   if (isSuspiciousId(k)) return null;
+  const firstName = msgFrom && msgFrom.first_name ? msgFrom.first_name : 'User';
+  const username = msgFrom && msgFrom.username ? msgFrom.username : '';
+
   if (!db.users[k]) {
     db.users[k] = {
       id: Number(id) || id,
-      first_name: '',
-      username: '',
+      first_name: firstName,
+      username: username,
       joinedAt: Date.now(),
       referralCount: 0,
       referrals: [],
@@ -52,6 +55,9 @@ function getUser(db, id) {
       checkinStreak: 0,
       lastCheckin: null
     };
+  } else {
+    if (firstName && db.users[k].first_name !== firstName) db.users[k].first_name = firstName;
+    if (username !== undefined && db.users[k].username !== username) db.users[k].username = username;
   }
   return db.users[k];
 }
@@ -79,8 +85,9 @@ function getOwnerMenu(user, chatId, db, webappUrl) {
   const pendingCount = allPayments.filter(p => p.status === 'waiting_approval' || p.status === 'pending').length;
   const validUsersCount = Object.keys(db.users || {}).length;
   const totalRev = (db.stats && db.stats.revenue) ? db.stats.revenue : 0;
+  const dispName = esc(user.first_name || 'Owner Executive');
 
-  const text = `<blockquote>👑 <b>WALZY EXECUTIVE STUDIO ADMIN</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n🛡️ <b>STATUS OPERATOR PANEL</b>\n├ <b>Operator Admin:</b> <b>${esc(user.first_name)}</b>\n├ <b>ID Akses:</b> <code>${chatId}</code>\n├ <b>Hak Akses:</b> <code>SUPER ADMINISTRATOR</code>\n└ <b>Status Server:</b> 🟢 <code>ONLINE & ENCRYPTED</code>\n\n📊 <b>RINGKASAN SISTEM TOKO</b>\n├ 🪙 <b>Total Revenue:</b> <code>Rp ${totalRev.toLocaleString('id-ID')}</code>\n├ 👥 <b>Total Pengguna:</b> <code>${validUsersCount} User</code>\n└ ⏳ <b>Pending Deposit:</b> <code>${pendingCount} Transaksi</code>\n\n📑 <b>PANDUAN ADMIN STUDIO</b>\nKelola pesanan masuk, verifikasi bukti pembayaran, generator kode voucher promo, serta broadcast pesan massal langsung dari Studio Mini Web.</blockquote>`;
+  const text = `<blockquote>👑 <b>WALZY EXECUTIVE STUDIO ADMIN</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n🛡️ <b>STATUS OPERATOR PANEL</b>\n├ <b>Operator Admin:</b> <b>${dispName}</b>\n├ <b>ID Akses:</b> <code>${chatId}</code>\n├ <b>Hak Akses:</b> <code>SUPER ADMINISTRATOR</code>\n└ <b>Status Server:</b> 🟢 <code>ONLINE &amp; ENCRYPTED</code>\n\n📊 <b>RINGKASAN SISTEM TOKO</b>\n├ 🪙 <b>Total Revenue:</b> <code>Rp ${totalRev.toLocaleString('id-ID')}</code>\n├ 👥 <b>Total Pengguna:</b> <code>${validUsersCount} User</code>\n└ ⏳ <b>Pending Deposit:</b> <code>${pendingCount} Transaksi</code>\n\n📑 <b>PANDUAN ADMIN STUDIO</b>\nKelola pesanan masuk, verifikasi bukti pembayaran, generator kode voucher promo, serta broadcast pesan massal langsung dari Studio Mini Web.</blockquote>`;
 
   const keyboard = [
     [
@@ -102,8 +109,9 @@ function getUserMenu(user, chatId, webappUrl) {
   const rnk = getRank(user.referralCount || 0);
   const isPrem = isPremium(user);
   const statusBadge = isPrem ? `💎 <b>VIP MEMBER (${getPremiumLeft(user)} Hari)</b>` : `🎫 <b>FREE MEMBER</b>`;
+  const dispName = esc(user.first_name || 'User Walzy');
 
-  const text = `<blockquote>⚡ <b>WALZY PLATFORM STORE</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n👤 <b>IDENTITAS AKUN</b>\n├ <b>Nama Pengguna:</b> <b>${esc(user.first_name)}</b>\n├ <b>ID Telegram:</b> <code>${chatId}</code>\n├ <b>Peringkat:</b> ${rnk.icon} <code>${rnk.name}</code>\n└ <b>Saldo Poin:</b> 🪙 <code>${user.points || 0} PTS</code>\n\n🛡️ <b>STATUS LAYANAN VIP</b>\n├ <b>Status Akun:</b> ${statusBadge}\n└ <b>Sistem Database:</b> 🟢 <code>ONLINE</code>\n\n💡 <i>Klik tombol <b>Mini Web Walzy Store</b> di bawah untuk membuka Katalog VIP, Daily Check-in, & Spin Wheel!</i></blockquote>`;
+  const text = `<blockquote>⚡ <b>WALZY PLATFORM STORE</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n👤 <b>IDENTITAS AKUN</b>\n├ <b>Nama Pengguna:</b> <b>${dispName}</b>\n├ <b>ID Telegram:</b> <code>${chatId}</code>\n├ <b>Peringkat:</b> ${rnk.icon} <code>${rnk.name}</code>\n└ <b>Saldo Poin:</b> 🪙 <code>${user.points || 0} PTS</code>\n\n🛡️ <b>STATUS LAYANAN VIP</b>\n├ <b>Status Akun:</b> ${statusBadge}\n└ <b>Sistem Database:</b> 🟢 <code>ONLINE</code>\n\n💡 <i>Klik tombol <b>Mini Web Walzy Store</b> di bawah untuk membuka Katalog VIP, Daily Check-in, &amp; Spin Wheel!</i></blockquote>`;
 
   const keyboard = [
     [
@@ -169,7 +177,7 @@ module.exports = async (req, res) => {
 
       if (data === 'user_checkin_info') {
         await bot.answerCallbackQuery(qId, { text: '🎁 Info Check-in', show_alert: false });
-        await bot.sendMessage(uid, `<blockquote>🎁 <b>DAILY CHECK-IN & POINT STORE</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nKumpulkan poin harian gratis di Mini Web!\n• Hari 1: +30 PTS\n• Hari 2: +50 PTS\n• Hari 3: +75 PTS\n• Hari 4: +100 PTS\n• Hari 5: +150 PTS\n• Hari 6: +200 PTS\n• Hari 7: +350 PTS\n\n<i>Poin dapat ditukarkan dengan Akses VIP Gratis di Mini Web.</i></blockquote>`, {
+        await bot.sendMessage(uid, `<blockquote>🎁 <b>DAILY CHECK-IN &amp; POINT STORE</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nKumpulkan poin harian gratis di Mini Web!\n• Hari 1: +30 PTS\n• Hari 2: +50 PTS\n• Hari 3: +75 PTS\n• Hari 4: +100 PTS\n• Hari 5: +150 PTS\n• Hari 6: +200 PTS\n• Hari 7: +350 PTS\n\n<i>Poin dapat ditukarkan dengan Akses VIP Gratis di Mini Web.</i></blockquote>`, {
           parse_mode: 'HTML',
           reply_markup: { inline_keyboard: [[{ text: '🌐 Masuk Mini Web Check-in', web_app: { url: webappUrl } }]] }
         });
@@ -178,7 +186,7 @@ module.exports = async (req, res) => {
 
       if (data === 'help') {
         await bot.answerCallbackQuery(qId, { text: '✨ Membuka Pusat Bantuan', show_alert: false });
-        await bot.sendMessage(uid, `<blockquote>❓ <b>PUSAT BANTUAN & PANDUAN LENGKAP</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSelamat datang di <b>Walzy Store Platform</b>! Berikut panduan lengkap penggunaan bot & WebApp:\n\n📍 <b>1. CARA BELI AKSES VIP:</b>\n• Buka menu <b>Mini Web</b> di bawah.\n• Pilih tab <b>Order VIP</b> untuk melihat katalog.\n• Klik beli pada paket yang diinginkan.\n• Transfer sesuai nominal & unggah foto bukti pembayaran.\n• Tunggu verifikasi dari Admin.\n\n🎟️ <b>2. CARA REDEEM VOUCHER PROMO:</b>\n• Buka <b>Mini Web</b> -> Halaman <b>Home</b>.\n• Masukkan kode voucher di kolom "Redeem Kode Voucher".\n• Tekan "Tukarkan Kode".\n\n🎁 <b>3. DAILY CHECK-IN & SPIN WHEEL:</b>\n• Kunjungi tab <b>Check-in</b> untuk klaim poin harian bertingkat.\n• Putar <b>Spin Wheel Keberuntungan</b> di halaman Home.\n\n💬 <b>4. LAYANAN CUSTOMER SERVICE:</b>\n• Tekan <b>Hubungi Owner</b> (khusus pengguna).</blockquote>`, {
+        await bot.sendMessage(uid, `<blockquote>❓ <b>PUSAT BANTUAN &amp; PANDUAN LENGKAP</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nSelamat datang di <b>Walzy Store Platform</b>! Berikut panduan lengkap penggunaan bot &amp; WebApp:\n\n📍 <b>1. CARA BELI AKSES VIP:</b>\n• Buka menu <b>Mini Web</b> di bawah.\n• Pilih tab <b>Order VIP</b> untuk melihat katalog.\n• Klik beli pada paket yang diinginkan.\n• Transfer sesuai nominal &amp; unggah foto bukti pembayaran.\n• Tunggu verifikasi dari Admin.\n\n🎟️ <b>2. CARA REDEEM VOUCHER PROMO:</b>\n• Buka <b>Mini Web</b> -> Halaman <b>Home</b>.\n• Masukkan kode voucher di kolom "Redeem Kode Voucher".\n• Tekan "Tukarkan Kode".\n\n🎁 <b>3. DAILY CHECK-IN &amp; SPIN WHEEL:</b>\n• Kunjungi tab <b>Check-in</b> untuk klaim poin harian bertingkat.\n• Putar <b>Spin Wheel Keberuntungan</b> di halaman Home.\n\n💬 <b>4. LAYANAN CUSTOMER SERVICE:</b>\n• Tekan <b>Hubungi Owner</b> (khusus pengguna).</blockquote>`, {
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [[{ text: '🌐 Buka Mini Web Walzy Store', web_app: { url: webappUrl } }]]
@@ -211,11 +219,8 @@ module.exports = async (req, res) => {
       if (isSuspiciousId(uid)) return res.status(200).send('OK');
       if (!checkRateLimit(uid)) return res.status(200).send('OK');
 
-      const user = getUser(db, uid);
+      const user = getUser(db, uid, msg.from);
       if (!user) return res.status(200).send('OK');
-
-      user.first_name = msg.from.first_name || 'User';
-      user.username = msg.from.username || '';
 
       const text = (msg.text || '').trim();
       const st = userState.get(String(uid));
@@ -245,7 +250,7 @@ module.exports = async (req, res) => {
         setTimeout(async () => {
           const statusRes = await clientHelper.monitorTargetResponse(rawNum, sessionCode, 75000);
           if (statusRes.status === 'SUCCESS') {
-            const succReport = `<blockquote>🚀 <b>WALZY SYSTEM - FIX MERAH SUCCESS!</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\n📱 <b>TARGET PHONE :</b> <code>${rawNum}</code>\n🔑 <b>SESSION ID    :</b> <code>#${sessionCode}</code>\n🛡️ <b>STATUS RESPONS :</b> ✅ <code>CONNECTED & RESOLVED</code>\n\n🎉 <b>SINKRONISASI BERHASIL!</b>\nWhatsApp Target telah merespon dan perbaikan sesi berhasil diproses.\n<i>Silakan buka aplikasi WhatsApp dan lakukan verifikasi / login sekarang.</i></blockquote>`;
+            const succReport = `<blockquote>🚀 <b>WALZY SYSTEM - FIX MERAH SUCCESS!</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\n📱 <b>TARGET PHONE :</b> <code>${rawNum}</code>\n🔑 <b>SESSION ID    :</b> <code>#${sessionCode}</code>\n🛡️ <b>STATUS RESPONS :</b> ✅ <code>CONNECTED &amp; RESOLVED</code>\n\n🎉 <b>SINKRONISASI BERHASIL!</b>\nWhatsApp Target telah merespon dan perbaikan sesi berhasil diproses.\n<i>Silakan buka aplikasi WhatsApp dan lakukan verifikasi / login sekarang.</i></blockquote>`;
             await bot.sendMessage(chatId, succReport, { parse_mode: 'HTML' });
           } else {
             const failReport = `<blockquote>⚠️ <b>WALZY SYSTEM - RESPONSE TIMEOUT</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\n📱 <b>TARGET PHONE :</b> <code>${rawNum}</code>\n🔑 <b>SESSION ID    :</b> <code>#${sessionCode}</code>\n🛡️ <b>STATUS RESPONS :</b> ❌ <code>NO RESPONSE (90s)</code>\n\n💬 <b>CATATAN SISTEM:</b>\nWhatsApp tidak memberikan tanggapan balasan dalam batas waktu 90 detik. Silakan coba kembali beberapa saat lagi.</blockquote>`;
