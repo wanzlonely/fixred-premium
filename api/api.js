@@ -1,274 +1,424 @@
 const TelegramBot = require('node-telegram-bot-api');
-const { loadDB, saveDB, getTodayString, genInvoiceID, getRank } = require('../lib/utils');
+const { loadDB, saveDB, getTodayString } = require('../lib/utils');
 const config = require('../config');
-const rateCache = new Map();
-function isOwner(id){try{if(config && config.OWNER_IDS) return config.OWNER_IDS.map(String).includes(String(id));}catch(e){}return false;}
-function isSuspiciousId(id){if(!id) return true;const s=String(id);const n=Number(id);if(!n || n<=0 || s.startsWith('-') || s.length>20 || s.includes('.')) return true;return false;}
-function getUniqueUsers(usersObj){const map=new Map();for(let u of Object.values(usersObj||{})){if(!u || isSuspiciousId(u.id)) continue;const key=String(u.id);if(!map.has(key)) map.set(key,u);}return Array.from(map.values());}
-function isPremium(u){return u && u.premiumUntil && u.premiumUntil>Date.now();}
-function checkRate(ip){const now=Date.now();const key=ip||'unknown';const entry=rateCache.get(key);if(!entry){rateCache.set(key,{count:1,ts:now});return true;}if(now-entry.ts>60000){rateCache.set(key,{count:1,ts:now});return true;}if(entry.count>200) return false;entry.count++;return true;}
-function ensureUserInDB(db, userId, nameData, usernameData){
-const k=String(userId);
-if(!db.users[k]){
-db.users[k]={id:Number(userId)||userId,first_name:nameData||'User',username:usernameData||'',joinedAt:Date.now(),referralCount:0,referrals:[],referredBy:null,totalFix:0,dailyFix:{date:getTodayString(),count:0},premiumUntil:0,lastSpin:null,points:0,checkinStreak:0,lastCheckin:null};
-}else{
-if(nameData && db.users[k].first_name!==nameData) db.users[k].first_name=nameData;
-if(usernameData!==undefined && db.users[k].username!==usernameData) db.users[k].username=usernameData;
+
+const OWNER_IDS = config.OWNER_IDS || ['123456789'];
+const DANA_NUMBER = config.DANA_NUMBER || '081234567890';
+
+function getJakartaISO() {
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+  return new Date(utc + (3600000 * 7)).toISOString().split('T')[0];
 }
-if(Array.isArray(db.users[k].referrals)){db.users[k].referralCount=db.users[k].referrals.length;}
-const paid=Object.values(db.payments||{}).filter(p=>String(p.userId)===k && (p.status==='paid' || p.status==='approved'));
-db.users[k].totalFix=paid.length;
-return db.users[k];
+
+function getWeekOfMonth() {
+  const date = new Date();
+  const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+  const day = new Date(utc + (3600000 * 7)).getDate();
+  if (day <= 7) return 1;
+  if (day <= 14) return 2;
+  if (day <= 21) return 3;
+  return 4;
 }
-function getWeeklyPoints(){return [[10,15,20,25,30,50,100],[15,20,25,30,40,60,120],[20,25,30,40,50,70,140],[25,30,40,50,60,80,160]];}
-function getWeekIndex(){return Math.floor(Date.now()/(7*24*3600*1000))%4;}
+
+function getUserRank(points) {
+  if (points >= 1000) return 'Legend';
+  if (points >= 500) return 'Pro';
+  if (points >= 200) return 'Advanced';
+  return 'Beginner';
+}
+
+function getPremiumLeft(untilTimestamp) {
+  if (!untilTimestamp) return 'Non-Aktif';
+  const diff = untilTimestamp - Date.now();
+  if (diff <= 0) return 'Expired';
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  if (days > 0) return `${days} Hari ${hours} Jam`;
+  return `${hours} Jam`;
+}
+
+function ensureUserInDB(db, userId, name = '') {
+  const today = getJakartaISO();
+  if (!db.users) db.users = {};
+  if (!db.users[userId]) {
+    db.users[userId] = {
+      id: String(userId),
+      name: name || `User_${userId}`,
+      quota: 5,
+      totalFix: 0,
+      points: 0,
+      referrals: 0,
+      streak: 0,
+      lastCheckin: '',
+      lastDailyReset: today,
+      lastSpinDate: '',
+      premiumUntil: 0,
+      referredBy: ''
+    };
+  }
+  const u = db.users[userId];
+  if (name && u.name !== name) u.name = name;
+  if (u.lastDailyReset !== today) {
+    u.quota = 5;
+    u.lastDailyReset = today;
+  }
+  return u;
+}
+
+const PRODUCTS = {
+  trial: { days: 3, price: 7000, name: 'Trial 3H' },
+  hemat: { days: 5, price: 10000, name: 'Hemat 5H' },
+  starter: { days: 7, price: 15000, name: 'Starter 7H' },
+  pro: { days: 14, price: 25000, name: 'Pro 14H' },
+  sultan: { days: 30, price: 40000, name: 'Sultan 30H' }
+};
+
 module.exports = async (req, res) => {
-res.setHeader('Access-Control-Allow-Origin','*');
-res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
-res.setHeader('Access-Control-Allow-Headers','Content-Type');
-res.setHeader('Content-Type','application/json; charset=utf-8');
-res.setHeader('Cache-Control','no-store, no-cache, must-revalidate');
-if(req.method==='OPTIONS') return res.status(200).json({ok:true});
-const clientIp=req.headers['x-forwarded-for']||req.headers['x-real-ip']||'unknown';
-if(!checkRate(clientIp)) return res.status(200).json({ok:false,message:'Batas'});
-const fullUrl=req.url||'';
-const queryString=fullUrl.includes('?') ? fullUrl.split('?').slice(1).join('?') : '';
-const parsedParams=new URLSearchParams(queryString);
-const query={};
-for(const [k,v] of parsedParams.entries()) query[k]=v;
-if(req.query) Object.assign(query, req.query);
-let body=req.body||{};
-if(typeof body==='string'){try{body=JSON.parse(body);}catch(e){body={};}}
-const endpoint=query.endpoint||body.endpoint||'';
-try{
-const db=await loadDB();
-if(!db.users) db.users={};
-if(!db.payments) db.payments={};
-if(!db.codes) db.codes={};
-if(!db.stats) db.stats={totalFix:0,totalSuccess:0,totalFailed:0,revenue:0,revenueHistory:[],lastReset:Date.now()};
-if(endpoint==='health'){return res.status(200).json({ok:true,message:'WALZY API V8 REALTIME ONLINE',users:Object.keys(db.users).length});}
-if(endpoint==='user'){
-const userId=query.user_id||body.user_id;
-const firstName=query.first_name||body.first_name||null;
-const userName=query.username||body.username||null;
-if(!userId || isSuspiciousId(userId)){return res.status(200).json({ok:true,user:{id:userId||0,first_name:firstName||'User',username:userName||'',referralCount:0,totalFix:0,points:0,checkinStreak:0,dailyFixRemaining:'5/5',isPremium:false,premiumLeftDays:0,canSpin:true,canCheckin:true,rank:{name:'Pemula',icon:'🌱'},referralLink:`https://t.me/${config.BOT_USERNAME||'walzystore_bot'}`,isOwner:false,weekIndex:getWeekIndex()},currentInvoice:null,invoices:[],dana:{number:config.DANA_NUMBER||'083124469855',name:config.DANA_NAME||'WALZY'}});}
-let user=ensureUserInDB(db,userId,firstName,userName);
-const isPrem=isPremium(user);
-const premiumLeft=isPrem ? Math.ceil((user.premiumUntil-Date.now())/86400000) : 0;
-if(!user.dailyFix || user.dailyFix.date!==getTodayString()){user.dailyFix={date:getTodayString(),count:0};}
-const canSpin=!user.lastSpin || user.lastSpin!==getTodayString();
-const canCheckin=!user.lastCheckin || user.lastCheckin!==getTodayString();
-const rankInfo=getRank(user.referralCount||0);
-const userInvoices=Object.values(db.payments).filter(p=>String(p.userId)===String(userId));
-const activeInvoice=userInvoices.find(p=>p.status==='pending' || p.status==='waiting_approval')||null;
-const remainingQuota=isPrem ? 'Unlimited ♾️' : `${Math.max(0,5-(user.dailyFix.count||0))}/5`;
-await saveDB(db);
-return res.status(200).json({ok:true,user:{id:user.id,first_name:user.first_name||'User',username:user.username||'',referralCount:user.referralCount||0,totalFix:user.totalFix||0,points:user.points||0,checkinStreak:user.checkinStreak||0,dailyFixRemaining:remainingQuota,isPremium:isPrem,premiumLeftDays:premiumLeft,canSpin:canSpin,canCheckin:canCheckin,rank:rankInfo,referralLink:`https://t.me/${config.BOT_USERNAME||'walzystore_bot'}?start=ref_${user.id}`,isOwner:isOwner(userId),weekIndex:getWeekIndex()},currentInvoice:activeInvoice,invoices:userInvoices,dana:{number:config.DANA_NUMBER||'083124469855',name:config.DANA_NAME||'WALZY'},weeklyPoints:getWeeklyPoints()});
-}
-if(endpoint==='spin'){
-const userId=String(body.user_id||query.user_id||'');
-const firstName=body.first_name||query.first_name||null;
-if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User ID tidak valid'});
-let dbUser=db.users[userId];
-if(!dbUser){dbUser=ensureUserInDB(db,userId,firstName,null);}
-if(dbUser.lastSpin===getTodayString()) return res.status(200).json({ok:false,message:'Spin sudah digunakan'});
-const prizes=[{label:'+50 PTS',type:'points',value:50,weight:28},{label:'ZONK',type:'zonk',value:0,weight:12},{label:'+25 PTS',type:'points',value:25,weight:24},{label:'+100 PTS',type:'points',value:100,weight:10},{label:'+3 KUOTA',type:'quota',value:3,weight:16},{label:'VIP 1H',type:'vip',value:1,weight:10}];
-const totalWeight=prizes.reduce((a,b)=>a+b.weight,0);
-let r=Math.random()*totalWeight;
-let selected=prizes[0];
-let idx=0;
-for(let i=0;i<prizes.length;i++){if(r<prizes[i].weight){selected=prizes[i];idx=i;break;}r-=prizes[i].weight;}
-dbUser.lastSpin=getTodayString();
-if(selected.type==='points'){dbUser.points=(dbUser.points||0)+selected.value;}else if(selected.type==='quota'){if(!dbUser.dailyFix || dbUser.dailyFix.date!==getTodayString()) dbUser.dailyFix={date:getTodayString(),count:0};dbUser.dailyFix.count=Math.max(0,(dbUser.dailyFix.count||0)-selected.value);}else if(selected.type==='vip'){dbUser.premiumUntil=Math.max(Date.now(),dbUser.premiumUntil||0)+86400000*selected.value;}
-db.stats.totalFix=(db.stats.totalFix||0)+1;
-await saveDB(db);
-return res.status(200).json({ok:true,message:`Dapat ${selected.label}`,prize:selected,prizeIndex:idx});
-}
-if(endpoint==='checkin'){
-const userId=String(body.user_id||query.user_id||'');
-const firstName=body.first_name||query.first_name||null;
-if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User ID tidak valid'});
-let user=db.users[userId];
-if(!user){user=ensureUserInDB(db,userId,firstName,null);}
-if(user.lastCheckin===getTodayString()) return res.status(200).json({ok:false,message:'Sudah check-in'});
-const today=getTodayString();
-const yesterdayJakarta=new Date(Date.now()-86400000).toLocaleString('en-US',{timeZone:'Asia/Jakarta'}).slice(0,10);
-const yesterdayISO=new Date(Date.now()-86400000).toISOString().slice(0,10);
-if(user.lastCheckin===yesterdayJakarta || user.lastCheckin===yesterdayISO){user.checkinStreak=(user.checkinStreak||0)+1;}else{user.checkinStreak=1;}
-if(user.checkinStreak>7) user.checkinStreak=1;
-user.lastCheckin=today;
-const weekIdx=getWeekIndex();
-const weekly=getWeeklyPoints();
-const bonus=weekly[weekIdx][user.checkinStreak-1]||10;
-user.points=(user.points||0)+bonus;
-await saveDB(db);
-return res.status(200).json({ok:true,message:`Check-in Day ${user.checkinStreak} +${bonus} PTS`,bonus:bonus,streak:user.checkinStreak,week:weekIdx+1});
-}
-if(endpoint==='redeem'){
-const userId=String(body.user_id||query.user_id||'');
-const option=body.option||query.option;
-if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User tidak valid'});
-let user=db.users[userId];
-if(!user) user=ensureUserInDB(db,userId,null,null);
-if(option==='quota1'){if((user.points||0)<100) return res.status(200).json({ok:false,message:'Butuh 100 PTS'});user.points-=100;if(!user.dailyFix || user.dailyFix.date!==getTodayString()) user.dailyFix={date:getTodayString(),count:0};user.dailyFix.count=Math.max(0,(user.dailyFix.count||0)-1);await saveDB(db);return res.status(200).json({ok:true,message:'+1 Kuota'});}
-else if(option==='quota3'){if((user.points||0)<250) return res.status(200).json({ok:false,message:'Butuh 250 PTS'});user.points-=250;if(!user.dailyFix || user.dailyFix.date!==getTodayString()) user.dailyFix={date:getTodayString(),count:0};user.dailyFix.count=Math.max(0,(user.dailyFix.count||0)-3);await saveDB(db);return res.status(200).json({ok:true,message:'+3 Kuota'});}
-else if(option==='spin'){if((user.points||0)<150) return res.status(200).json({ok:false,message:'Butuh 150 PTS'});user.points-=150;user.lastSpin=null;await saveDB(db);return res.status(200).json({ok:true,message:'Spin reset'});}
-else if(option==='vip1'){if((user.points||0)<500) return res.status(200).json({ok:false,message:'Butuh 500 PTS'});user.points-=500;user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+86400000;await saveDB(db);return res.status(200).json({ok:true,message:'VIP 1H aktif'});}
-else if(option==='vip3'){if((user.points||0)<1200) return res.status(200).json({ok:false,message:'Butuh 1200 PTS'});user.points-=1200;user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+86400000*3;await saveDB(db);return res.status(200).json({ok:true,message:'VIP 3H aktif'});}
-else if(option==='bonus200'){if((user.points||0)<300) return res.status(200).json({ok:false,message:'Butuh 300 PTS'});user.points-=300;user.points+=500;await saveDB(db);return res.status(200).json({ok:true,message:'300->500'});}
-return res.status(200).json({ok:false,message:'Opsi tidak valid'});
-}
-if(endpoint==='create_order'){
-const userId=String(body.user_id||query.user_id||'');
-const days=parseInt(body.days||query.days)||0;
-const amount=parseInt(body.amount||query.amount)||0;
-if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User ID tidak valid'});
-if(!days || days<=0) return res.status(200).json({ok:false,message:'Durasi tidak valid'});
-let user=db.users[userId];
-if(!user) user=ensureUserInDB(db,userId,null,null);
-const existingPending=Object.values(db.payments||{}).find(p=>String(p.userId)===userId && (p.status==='pending' || p.status==='waiting_approval'));
-if(existingPending){return res.status(200).json({ok:false,message:'Ada pending: '+existingPending.id});}
-const invoiceId=genInvoiceID();
-const invoice={id:invoiceId,invoice:invoiceId,userId:userId,days:days,amount:amount,status:'pending',proofImage:null,createdAt:Date.now()};
-db.payments[invoiceId]=invoice;
-await saveDB(db);
-return res.status(200).json({ok:true,message:'Invoice dibuat',invoice:invoice});
-}
-if(endpoint==='cancel_order'){
-const userId=String(body.user_id||query.user_id||'');
-const invoiceId=String(body.invoice||query.invoice||'');
-if(!userId || !invoiceId) return res.status(200).json({ok:false,message:'Data tidak lengkap'});
-const pay=db.payments[invoiceId];
-if(!pay) return res.status(200).json({ok:false,message:'Invoice tidak ditemukan'});
-if(String(pay.userId)!==userId && !isOwner(userId)) return res.status(200).json({ok:false,message:'Akses ditolak'});
-if(pay.status==='paid' || pay.status==='approved') return res.status(200).json({ok:false,message:'Sudah lunas'});
-delete db.payments[invoiceId];
-await saveDB(db);
-return res.status(200).json({ok:true,message:'Dibatalkan'});
-}
-if(endpoint==='upload_proof'){
-const userId=String(body.user_id||query.user_id||'');
-const invoiceId=String(body.invoice||query.invoice||'');
-const imageData=body.image_data||'';
-if(!userId || !invoiceId || !imageData) return res.status(200).json({ok:false,message:'Data tidak lengkap'});
-const pay=db.payments[invoiceId];
-if(!pay) return res.status(200).json({ok:false,message:'Invoice tidak ditemukan'});
-if(String(pay.userId)!==userId) return res.status(200).json({ok:false,message:'Akses ditolak'});
-pay.proofImage=imageData;
-pay.status='waiting_approval';
-pay.proofAt=Date.now();
-await saveDB(db);
-try{
-const bot=new TelegramBot(config.BOT_TOKEN);
-for(let oid of (config.OWNER_IDS||[])){
-try{await bot.sendMessage(oid, `📥 <b>BUKTI MASUK</b>\n\nInvoice: <code>${invoiceId}</code>\nUser: <code>${userId}</code>\nRp ${pay.amount} • ${pay.days}H`, {parse_mode:'HTML'});}catch(e){}
-}
-}catch(e){}
-return res.status(200).json({ok:true,message:'Bukti diupload'});
-}
-if(endpoint==='claim_code'){
-const userId=String(body.user_id||query.user_id||'');
-const rawCode=String(body.code||query.code||'').trim();
-const code=rawCode.toUpperCase();
-if(!userId || !code) return res.status(200).json({ok:false,message:'Data tidak lengkap'});
-let user=db.users[userId];
-if(!user){user=ensureUserInDB(db,userId,null,null);}
-let vCode=db.codes[code];
-let actualKey=code;
-if(!vCode){const foundKey=Object.keys(db.codes).find(k=>k.toUpperCase()===code);if(foundKey){vCode=db.codes[foundKey];actualKey=foundKey;}}
-if(!vCode) return res.status(200).json({ok:false,message:'Kode Tidak Valid'});
-const days=typeof vCode==='object' ? (vCode.days||0) : (typeof vCode==='number' ? vCode : 0);
-const quota=typeof vCode==='object' ? (vCode.quota||0) : 0;
-const used=typeof vCode==='object' ? (vCode.used||0) : 0;
-if(days<=0) return res.status(200).json({ok:false,message:'Voucher tidak valid'});
-if(quota>0 && used>=quota){return res.status(200).json({ok:false,message:'Kuota Habis'});}
-user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+(days*86400000);
-if(typeof vCode==='object'){vCode.used=(vCode.used||0)+1;if(quota>0 && vCode.used>=quota){vCode.expired=true;}}else{delete db.codes[actualKey];}
-await saveDB(db);
-return res.status(200).json({ok:true,message:`Voucher +${days}H VIP`,days:days});
-}
-if(endpoint==='stats'){
-const userId=query.user_id||body.user_id;
-const ownerCheck=userId ? isOwner(userId) : false;
-const validUsers=getUniqueUsers(db.users);
-const premiumUsers=validUsers.filter(u=>isPremium(u)).length;
-const allPayments=Object.values(db.payments||{});
-const pending=allPayments.filter(p=>p.status==='waiting_approval' || p.status==='pending');
-const paid=allPayments.filter(p=>p.status==='paid' || p.status==='approved');
-return res.status(200).json({ok:true,isOwner:ownerCheck,usersValid:validUsers.length,premium:premiumUsers,totalFix:db.stats.totalFix||0,pendingPayments:pending.slice(-50).reverse(),paidPayments:ownerCheck ? paid.slice(-50).reverse() : [],recentUsers:ownerCheck ? validUsers.slice(-50).reverse() : [],codes:ownerCheck ? Object.values(db.codes).slice(-100) : [],revenue:ownerCheck ? (db.stats.revenue||0) : 0});
-}
-if(endpoint==='owner_action'){
-const ownerId=String(body.owner_id||query.owner_id||'');
-if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak'});
-const invoice=body.invoice;
-const action=body.action;
-const pay=db.payments[invoice];
-if(!pay) return res.status(200).json({ok:false,message:'Invoice Tidak Ditemukan'});
-if(action==='approve'){
-pay.status='paid';
-pay.approvedAt=Date.now();
-const u=db.users[String(pay.userId)];
-if(u){u.premiumUntil=Math.max(Date.now(),u.premiumUntil||0)+(pay.days*86400000);}
-db.stats.revenue=(db.stats.revenue||0)+pay.amount;
-db.stats.totalSuccess=(db.stats.totalSuccess||0)+1;
-await saveDB(db);
-try{const bot=new TelegramBot(config.BOT_TOKEN);await bot.sendMessage(pay.userId, `<b>✅ LUNAS</b>\n\nInvoice <code>${invoice}</code>\nVIP +${pay.days}H Aktif`, {parse_mode:'HTML'});}catch(e){}
-return res.status(200).json({ok:true,message:`Disetujui`});
-}else if(action==='reject'){
-pay.status='rejected';
-pay.rejectedAt=Date.now();
-db.stats.totalFailed=(db.stats.totalFailed||0)+1;
-await saveDB(db);
-try{const bot=new TelegramBot(config.BOT_TOKEN);await bot.sendMessage(pay.userId, `❌ <b>DITOLAK</b>\n\nInvoice <code>${invoice}</code> ditolak`, {parse_mode:'HTML'});}catch(e){}
-return res.status(200).json({ok:true,message:`Ditolak`});
-}
-}
-if(endpoint==='create_code'){
-const ownerId=String(body.owner_id||query.owner_id||'');
-if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak'});
-const rawCode=String(body.code||'').trim();
-const code=rawCode.toUpperCase();
-const days=parseInt(body.days);
-const quota=parseInt(body.quota)||0;
-if(!code || code.length<3) return res.status(200).json({ok:false,message:'Kode minimal 3'});
-if(!days || days<=0) return res.status(200).json({ok:false,message:'Durasi tidak valid'});
-if(db.codes[code] && !body.force){const existing=db.codes[code];const used=typeof existing==='object' ? (existing.used||0) : 0;const q=typeof existing==='object' ? (existing.quota||0) : 0;if(q===0 || used<q){return res.status(200).json({ok:false,message:'Kode sudah ada aktif'});}}
-db.codes[code]={code:code,days:days,quota:quota,used:0,createdAt:Date.now(),createdBy:ownerId};
-await saveDB(db);
-return res.status(200).json({ok:true,message:`Voucher ${code} dibuat`});
-}
-if(endpoint==='delete_code'){
-const ownerId=String(body.owner_id||query.owner_id||'');
-if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak'});
-const rawCode=String(body.code||'').trim();
-const code=rawCode.toUpperCase();
-let keyToDelete=code;
-if(!db.codes[keyToDelete]){const found=Object.keys(db.codes).find(k=>k.toUpperCase()===code);if(found) keyToDelete=found;}
-if(!db.codes[keyToDelete]) return res.status(200).json({ok:false,message:'Tidak Ditemukan'});
-delete db.codes[keyToDelete];
-await saveDB(db);
-return res.status(200).json({ok:true,message:`Dihapus`});
-}
-if(endpoint==='broadcast'){
-const ownerId=String(body.owner_id||query.owner_id||'');
-if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak'});
-const text=String(body.text||'').trim();
-if(!text) return res.status(200).json({ok:false,message:'Pesan kosong'});
-const validUsers=getUniqueUsers(db.users);
-let sent=0;
-let failed=0;
-try{
-const bot=new TelegramBot(config.BOT_TOKEN);
-for(let u of validUsers){
-try{await bot.sendMessage(u.id, `📢 <b>WALZY STORE</b>\n\n${text}`, {parse_mode:'HTML'});sent++;}catch(e){failed++;}
-await new Promise(r=>setTimeout(r,70));
-}
-}catch(e){}
-return res.status(200).json({ok:true,message:`Broadcast ${sent} berhasil ${failed} gagal`,sent,failed,total:validUsers.length});
-}
-return res.status(200).json({ok:false,message:'Endpoint Tidak Ditemukan'});
-}catch(err){
-console.error('API Error:',err);
-return res.status(200).json({ok:false,message:'Internal Error',error:err.message});
-}
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  if (req.method === 'OPTIONS') return res.status(200).json({ status: true });
+
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const endpoint = url.searchParams.get('endpoint') || req.body?.endpoint || '';
+  const query = Object.fromEntries(url.searchParams.entries());
+  const body = req.body || {};
+
+  try {
+    const db = await loadDB();
+    if (!db.users) db.users = {};
+    if (!db.orders) db.orders = [];
+    if (!db.codes) db.codes = [];
+    if (!db.stats) db.stats = { revenue: 0, totalFix: 0 };
+
+    if (endpoint === 'user') {
+      const userId = query.user_id || body.user_id;
+      const name = query.name || body.name || '';
+      if (!userId) return res.status(400).json({ status: false, message: 'Missing user_id' });
+
+      const user = ensureUserInDB(db, userId, name);
+      await saveDB(db);
+
+      const isVip = user.premiumUntil > Date.now();
+      const rank = getUserRank(user.points);
+      const premiumLeft = getPremiumLeft(user.premiumUntil);
+      const userOrders = db.orders.filter(o => o.userId === String(userId));
+      const isOwner = OWNER_IDS.map(String).includes(String(userId));
+
+      return res.json({
+        status: true,
+        data: {
+          ...user,
+          isVip,
+          rank,
+          premiumLeft,
+          referralLink: `https://t.me/${config.BOT_USERNAME || 'walzystore_bot'}?start=${userId}`,
+          dana: DANA_NUMBER,
+          orders: userOrders,
+          isOwner
+        }
+      });
+    }
+
+    if (endpoint === 'create_order') {
+      const userId = body.user_id || query.user_id;
+      const planId = body.plan_id || query.plan_id;
+
+      if (!userId || !planId || !PRODUCTS[planId]) {
+        return res.status(400).json({ status: false, message: 'Invalid data' });
+      }
+
+      ensureUserInDB(db, userId);
+      const existing = db.orders.find(o => o.userId === String(userId) && o.status === 'pending');
+      if (existing) {
+        return res.json({ status: true, invoice: existing });
+      }
+
+      const prod = PRODUCTS[planId];
+      const invoiceId = 'INV' + Date.now().toString().slice(-6);
+      const newOrder = {
+        invoiceId,
+        userId: String(userId),
+        planId,
+        planName: prod.name,
+        days: prod.days,
+        amount: prod.price,
+        status: 'pending',
+        proof: '',
+        createdAt: new Date().toISOString()
+      };
+
+      db.orders.push(newOrder);
+      await saveDB(db);
+      return res.json({ status: true, invoice: newOrder });
+    }
+
+    if (endpoint === 'cancel_order') {
+      const userId = body.user_id || query.user_id;
+      const invoiceId = body.invoice_id || query.invoice_id;
+
+      const idx = db.orders.findIndex(o => o.invoiceId === invoiceId && o.userId === String(userId) && o.status === 'pending');
+      if (idx === -1) return res.status(404).json({ status: false, message: 'Invoice not found' });
+
+      db.orders.splice(idx, 1);
+      await saveDB(db);
+      return res.json({ status: true, message: 'Invoice dibatalkan' });
+    }
+
+    if (endpoint === 'upload_proof') {
+      const userId = body.user_id || query.user_id;
+      const invoiceId = body.invoice_id || query.invoice_id;
+      const imageBase64 = body.image_base64;
+
+      if (!imageBase64 || imageBase64.length > 8000000) {
+        return res.status(400).json({ status: false, message: 'Bukti maksimal 6MB' });
+      }
+
+      const order = db.orders.find(o => o.invoiceId === invoiceId && o.userId === String(userId));
+      if (!order) return res.status(404).json({ status: false, message: 'Order tidak ditemukan' });
+
+      order.proof = imageBase64;
+      order.status = 'waiting_approval';
+      await saveDB(db);
+
+      try {
+        const bot = new TelegramBot(config.BOT_TOKEN);
+        for (let ownerId of OWNER_IDS) {
+          await bot.sendMessage(ownerId, `📥 <b>BUKTI DEPOSIT BARU</b>\nInvoice: <code>${invoiceId}</code>\nUser: <code>${userId}</code>`);
+        }
+      } catch (e) {}
+
+      return res.json({ status: true, message: 'Bukti terkirim, menunggu verifikasi' });
+    }
+
+    if (endpoint === 'claim_code') {
+      const userId = body.user_id || query.user_id;
+      const code = body.code || query.code;
+
+      if (!code) return res.status(400).json({ status: false, message: 'Kode kosong' });
+
+      const u = ensureUserInDB(db, userId);
+      const cIndex = db.codes.findIndex(c => c.code.toLowerCase() === code.trim().toLowerCase());
+      if (cIndex === -1) return res.status(404).json({ status: false, message: 'Kode voucher salah' });
+
+      const v = db.codes[cIndex];
+      if (v.quota !== 0 && v.used >= v.quota) {
+        return res.status(400).json({ status: false, message: 'Kuota voucher habis' });
+      }
+
+      v.used += 1;
+      const curr = u.premiumUntil > Date.now() ? u.premiumUntil : Date.now();
+      u.premiumUntil = curr + (v.days * 86400000);
+      await saveDB(db);
+
+      return res.json({ status: true, message: `Voucher sukses! +${v.days} Hari VIP` });
+    }
+
+    if (endpoint === 'spin') {
+      const userId = body.user_id || query.user_id;
+      const u = ensureUserInDB(db, userId);
+      const today = getJakartaISO();
+
+      if (u.lastSpinDate === today) {
+        return res.status(400).json({ status: false, message: 'Spin harian sudah dipakai' });
+      }
+
+      const prizes = [
+        { label: '+50 Poin', type: 'points', value: 50, weight: 25 },
+        { label: 'ZONK', type: 'none', value: 0, weight: 20 },
+        { label: '+25 Poin', type: 'points', value: 25, weight: 30 },
+        { label: '+100 Poin', type: 'points', value: 100, weight: 10 },
+        { label: '+3 Kuota', type: 'quota', value: 3, weight: 10 },
+        { label: 'VIP 1H', type: 'vip', value: 1, weight: 5 }
+      ];
+
+      let totalWeight = prizes.reduce((a, b) => a + b.weight, 0);
+      let rnd = Math.floor(Math.random() * totalWeight);
+      let prizeIndex = 0;
+
+      for (let i = 0; i < prizes.length; i++) {
+        if (rnd < prizes[i].weight) {
+          prizeIndex = i;
+          break;
+        }
+        rnd -= prizes[i].weight;
+      }
+
+      const prize = prizes[prizeIndex];
+      u.lastSpinDate = today;
+
+      if (prize.type === 'points') u.points += prize.value;
+      if (prize.type === 'quota') u.quota += prize.value;
+      if (prize.type === 'vip') {
+        const base = u.premiumUntil > Date.now() ? u.premiumUntil : Date.now();
+        u.premiumUntil = base + 86400000;
+      }
+
+      await saveDB(db);
+      return res.json({ status: true, prizeIndex, prize });
+    }
+
+    if (endpoint === 'checkin') {
+      const userId = body.user_id || query.user_id;
+      const u = ensureUserInDB(db, userId);
+      const today = getJakartaISO();
+
+      if (u.lastCheckin === today) {
+        return res.status(400).json({ status: false, message: 'Hari ini sudah check-in' });
+      }
+
+      const yesterday = new Date(Date.now() + (7 * 3600000) - 86400000).toISOString().split('T')[0];
+      if (u.lastCheckin === yesterday) {
+        u.streak = u.streak >= 7 ? 1 : u.streak + 1;
+      } else {
+        u.streak = 1;
+      }
+
+      u.lastCheckin = today;
+      const weekRewards = {
+        1: [10, 15, 20, 25, 30, 50, 100],
+        2: [15, 20, 25, 30, 40, 60, 120],
+        3: [20, 25, 30, 40, 50, 70, 140],
+        4: [25, 30, 40, 50, 60, 80, 160]
+      };
+
+      const week = getWeekOfMonth();
+      const earned = weekRewards[week][u.streak - 1];
+      u.points += earned;
+      await saveDB(db);
+
+      return res.json({ status: true, message: `Check-in Berhasil! +${earned} PTS`, streak: u.streak, points: u.points });
+    }
+
+    if (endpoint === 'redeem') {
+      const userId = body.user_id || query.user_id;
+      const itemKey = body.item_key || query.item_key;
+
+      const u = ensureUserInDB(db, userId);
+      const store = {
+        quota1: { cost: 100, act: () => { u.quota += 1; } },
+        quota3: { cost: 250, act: () => { u.quota += 3; } },
+        spin: { cost: 150, act: () => { u.lastSpinDate = ''; } },
+        vip1: { cost: 500, act: () => { u.premiumUntil = (u.premiumUntil > Date.now() ? u.premiumUntil : Date.now()) + 86400000; } },
+        vip3: { cost: 1200, act: () => { u.premiumUntil = (u.premiumUntil > Date.now() ? u.premiumUntil : Date.now()) + (3 * 86400000); } },
+        bonus200: { cost: 300, act: () => { u.points += 200; } }
+      };
+
+      const target = store[itemKey];
+      if (!target) return res.status(400).json({ status: false, message: 'Item tidak valid' });
+      if (u.points < target.cost) return res.status(400).json({ status: false, message: 'Poin tidak cukup' });
+
+      u.points -= target.cost;
+      target.act();
+      await saveDB(db);
+      return res.json({ status: true, message: 'Redeem Sukses!' });
+    }
+
+    if (endpoint === 'stats') {
+      const usersArr = Object.values(db.users);
+      const now = Date.now();
+      const pendingOrders = db.orders.filter(o => o.status === 'waiting_approval' || o.status === 'pending');
+      const paidOrders = db.orders.filter(o => o.status === 'paid');
+
+      return res.json({
+        status: true,
+        data: {
+          revenue: db.stats.revenue || 0,
+          totalUsers: usersArr.length,
+          pendingCount: pendingOrders.length,
+          vipCount: usersArr.filter(u => u.premiumUntil > now).length,
+          totalFix: db.stats.totalFix || 0,
+          voucherCount: db.codes.length,
+          recentUsers: usersArr.slice(-30).reverse(),
+          pendingOrders,
+          paidOrders,
+          codes: db.codes
+        }
+      });
+    }
+
+    if (endpoint === 'owner_action') {
+      const ownerId = String(body.owner_id || query.owner_id || '');
+      if (!OWNER_IDS.map(String).includes(ownerId)) {
+        return res.status(403).json({ status: false, message: 'Access denied' });
+      }
+
+      const invoiceId = body.invoice_id || query.invoice_id;
+      const action = body.action || query.action;
+
+      const order = db.orders.find(o => o.invoiceId === invoiceId);
+      if (!order) return res.status(404).json({ status: false, message: 'Invoice not found' });
+
+      if (action === 'approve') {
+        order.status = 'paid';
+        const u = ensureUserInDB(db, order.userId);
+        const base = u.premiumUntil > Date.now() ? u.premiumUntil : Date.now();
+        u.premiumUntil = base + (order.days * 86400000);
+        db.stats.revenue = (db.stats.revenue || 0) + order.amount;
+
+        try {
+          const bot = new TelegramBot(config.BOT_TOKEN);
+          await bot.sendMessage(order.userId, `🟢 <b>PEMBAYARAN DISETUJUI!</b>\nVIP +${order.days} Hari Aktif.`);
+        } catch (e) {}
+      } else if (action === 'reject') {
+        order.status = 'rejected';
+        try {
+          const bot = new TelegramBot(config.BOT_TOKEN);
+          await bot.sendMessage(order.userId, `❌ <b>PEMBAYARAN DITOLAK!</b>\nInvoice: ${invoiceId}`);
+        } catch (e) {}
+      }
+
+      await saveDB(db);
+      return res.json({ status: true, message: `Order ${action}d` });
+    }
+
+    if (endpoint === 'create_code') {
+      const ownerId = String(body.owner_id || query.owner_id || '');
+      if (!OWNER_IDS.map(String).includes(ownerId)) return res.status(403).json({ status: false, message: 'Forbidden' });
+
+      const code = body.code;
+      const days = Number(body.days);
+      const quota = Number(body.quota || 0);
+
+      db.codes.push({ code: code.trim(), days, quota, used: 0 });
+      await saveDB(db);
+      return res.json({ status: true, message: 'Voucher dibuat' });
+    }
+
+    if (endpoint === 'delete_code') {
+      const ownerId = String(body.owner_id || query.owner_id || '');
+      if (!OWNER_IDS.map(String).includes(ownerId)) return res.status(403).json({ status: false, message: 'Forbidden' });
+
+      const code = body.code;
+      db.codes = db.codes.filter(c => c.code.toLowerCase() !== code.toLowerCase());
+      await saveDB(db);
+      return res.json({ status: true, message: 'Voucher dihapus' });
+    }
+
+    if (endpoint === 'broadcast') {
+      const ownerId = String(body.owner_id || query.owner_id || '');
+      if (!OWNER_IDS.map(String).includes(ownerId)) return res.status(403).json({ status: false, message: 'Forbidden' });
+
+      const message = body.message;
+      const usersArr = Object.values(db.users);
+
+      try {
+        const bot = new TelegramBot(config.BOT_TOKEN);
+        for (let u of usersArr) {
+          try {
+            await bot.sendMessage(u.id, `📢 <b>BROADCAST</b>\n\n${message}`);
+          } catch (e) {}
+        }
+      } catch (e) {}
+
+      return res.json({ status: true, message: 'Broadcast berhasil dikirim' });
+    }
+
+    return res.status(404).json({ status: false, message: 'Endpoint not found' });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
 };
