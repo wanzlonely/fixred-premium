@@ -5,9 +5,20 @@
   ],
   "routes": [
     { "src": "/webapp", "dest": "/api/webapp.js" },
-    { "src": "/webapp/(.*)", "dest": "/api/webapp.js" },
     { "src": "/api/bot", "dest": "/api/bot.js" },
-    { "src": "/api/api", "dest": "/api/api.js" },
-    { "src": "/api/api/(.*)", "dest": "/api/api.js" }
+    { "src": "/api/user", "dest": "/api/api.js?endpoint=user" },
+    { "src": "/api/spin", "dest": "/api/api.js?endpoint=spin" },
+    { "src": "/api/checkin", "dest": "/api/api.js?endpoint=checkin" },
+    { "src": "/api/redeem_points", "dest": "/api/api.js?endpoint=redeem_points" },
+    { "src": "/api/order", "dest": "/api/api.js?endpoint=order" },
+    { "src": "/api/cancel_order", "dest": "/api/api.js?endpoint=cancel_order" },
+    { "src": "/api/upload_proof", "dest": "/api/api.js?endpoint=upload_proof" },
+    { "src": "/api/redeem", "dest": "/api/api.js?endpoint=redeem" },
+    { "src": "/api/stats", "dest": "/api/api.js?endpoint=stats" },
+    { "src": "/api/owner_action", "dest": "/api/api.js?endpoint=owner_action" },
+    { "src": "/api/create_code", "dest": "/api/api.js?endpoint=create_code" },
+    { "src": "/api/delete_code", "dest": "/api/api.js?endpoint=delete_code" },
+    { "src": "/api/broadcast", "dest": "/api/api.js?endpoint=broadcast" },
+    { "src": "/api/(.*)", "dest": "/api/api.js" }
   ]
 }
