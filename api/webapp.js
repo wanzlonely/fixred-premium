@@ -149,7 +149,7 @@ module.exports = async (req, res) => {
   .zoom-btn-overlay { position: absolute; bottom: 10px; right: 10px; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); color: var(--text-primary); padding: 7px 16px; border-radius: 14px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px; cursor: pointer; }
 </style>
 </head>
-<body>
+<body onload="if(typeof hideLoader==='function'){hideLoader();}else{var l=document.getElementById('loader');if(l)l.style.display='none';}">
 <div class="loader-screen" id="loader">
   <div class="brand-icon float" style="width:72px;height:72px;border-radius:24px;">
     <svg class="icon-svg spin-slow" style="width:40px;height:40px" viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
@@ -1106,12 +1106,13 @@ module.exports = async (req, res) => {
     }
   }
 
-  if (document.readyState === 'complete') {
-    initApp();
-  } else {
-    window.addEventListener('load', initApp);
-    setTimeout(initApp, 2500);
-  }
+  // Script ini posisinya di akhir <body>, jadi seluruh DOM di atasnya
+  // sudah pasti ter-parse. Jalankan langsung tanpa menunggu event apapun
+  // (load/DOMContentLoaded bisa telat atau tidak fire di sebagian browser/network).
+  initApp();
+  window.addEventListener('load', initApp);
+  setTimeout(initApp, 800);
+  setTimeout(hideLoader, 2000);
 </script>
 </body>
 </html>`;
