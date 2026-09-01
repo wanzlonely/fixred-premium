@@ -189,6 +189,8 @@ module.exports = async (req, res) => {
   </div>
 </div>
 
+<div id="debugPanel" style="background:#111827;color:#4ade80;font-family:monospace;font-size:10px;padding:8px 12px;word-break:break-all;"></div>
+
 <div class="container">
   <div id="viewUserArea">
     <div id="viewHome" class="view active">
@@ -547,6 +549,11 @@ module.exports = async (req, res) => {
     }
   }
 
+  function setDebug(msg) {
+    var d = document.getElementById('debugPanel');
+    if (d) d.textContent = msg;
+  }
+
   var initAttempts = 0;
   setTimeout(hideLoader, 3000);
 
@@ -567,6 +574,8 @@ module.exports = async (req, res) => {
         currentFirstName = sp.get('first_name') || '';
         currentUsername = sp.get('username') || '';
       }
+
+      setDebug('tg=' + (tg ? 'yes' : 'no') + ' | initDataUnsafe.user=' + (tg && tg.initDataUnsafe ? JSON.stringify(tg.initDataUnsafe.user) : 'n/a') + ' | userId=' + currentUserId + ' | attempt=' + initAttempts);
 
       drawWheel();
 
@@ -606,6 +615,7 @@ module.exports = async (req, res) => {
         clearTimeout(timeoutId);
       }
       var data = await res.json();
+      setDebug('fetch status=' + res.status + ' | data.ok=' + data.ok + ' | msg=' + (data.message || '-'));
 
       if (data.ok) {
         var u = data.user;
@@ -689,6 +699,7 @@ module.exports = async (req, res) => {
         showToast('Error', data.message || 'Gagal memuat profil', 'error');
       }
     } catch (e) {
+      setDebug('CATCH ERROR: ' + e.message);
       if (!isSilent) showToast('Error', 'Gagal memuat data dari server', 'error');
       var box = document.getElementById('debugErrorBox');
       if (box) {
