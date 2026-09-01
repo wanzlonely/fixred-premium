@@ -107,7 +107,7 @@ module.exports = async (req, res) => {
     if(!db.codes) db.codes={};
     if(!db.stats) db.stats={totalFix:0,totalSuccess:0,totalFailed:0,revenue:0,revenueHistory:[],lastReset:Date.now()};
     if(endpoint==='health'){
-      return res.status(200).json({ok:true,message:'WALZY API ONLINE',timestamp:Date.now(),users:Object.keys(db.users).length});
+      return res.status(200).json({ok:true,message:'WALZY API ONLINE LIGHT',timestamp:Date.now(),users:Object.keys(db.users).length});
     }
     if(endpoint==='user'){
       const userId=query.user_id||body.user_id;
@@ -178,8 +178,11 @@ module.exports = async (req, res) => {
     if(endpoint==='spin'){
       const userId=String(body.user_id||query.user_id||'');
       if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User ID tidak valid'});
-      const dbUser=db.users[userId];
-      if(!dbUser) return res.status(200).json({ok:false,message:'User tidak ditemukan'});
+      let dbUser=db.users[userId];
+      if(!dbUser){
+        dbUser=ensureUserInDB(db,userId,null,null);
+        await saveDB(db);
+      }
       if(dbUser.lastSpin===getTodayString()) return res.status(200).json({ok:false,message:'Spin harian sudah digunakan hari ini!'});
       const prizes=[
         {label:'+50 PTS',type:'points',value:50,weight:30},
@@ -212,8 +215,10 @@ module.exports = async (req, res) => {
     if(endpoint==='checkin'){
       const userId=String(body.user_id||query.user_id||'');
       if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User ID tidak valid'});
-      const user=db.users[userId];
-      if(!user) return res.status(200).json({ok:false,message:'User tidak ditemukan'});
+      let user=db.users[userId];
+      if(!user){
+        user=ensureUserInDB(db,userId,null,null);
+      }
       if(user.lastCheckin===getTodayString()) return res.status(200).json({ok:false,message:'Kamu sudah check-in hari ini!'});
       const lastDate=user.lastCheckin;
       const today=getTodayString();
@@ -234,8 +239,8 @@ module.exports = async (req, res) => {
       const userId=String(body.user_id||query.user_id||'');
       const option=body.option||query.option;
       if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User tidak valid'});
-      const user=db.users[userId];
-      if(!user) return res.status(200).json({ok:false,message:'User tidak ditemukan'});
+      let user=db.users[userId];
+      if(!user) user=ensureUserInDB(db,userId,null,null);
       if(option==='quota'){
         if((user.points||0)<100) return res.status(200).json({ok:false,message:'Poin tidak cukup! Butuh 100 PTS'});
         user.points-=100;
@@ -248,9 +253,9 @@ module.exports = async (req, res) => {
         user.points-=150;
         user.lastSpin=null;
         await saveDB(db);
-        return res.status(200).json({ok:true,message:'Redeem berhasil! Spin direset, silakan spin lagi!'});
+        return res.status(200).json({ok:true,message:'Redeem berhasil! Spin direset!'});
       }
-      return res.status(200).json({ok:false,message:'Opsi redeem tidak valid'});
+      return res.status(200).json({ok:false,message:'Opsi tidak valid'});
     }
     if(endpoint==='create_order'){
       const userId=String(body.user_id||query.user_id||'');
@@ -258,10 +263,10 @@ module.exports = async (req, res) => {
       const amount=parseInt(body.amount||query.amount)||0;
       if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User ID tidak valid'});
       if(!days || days<=0) return res.status(200).json({ok:false,message:'Durasi tidak valid'});
-      const user=db.users[userId];
-      if(!user) return res.status(200).json({ok:false,message:'User tidak ditemukan'});
+      let user=db.users[userId];
+      if(!user) user=ensureUserInDB(db,userId,null,null);
       const existingPending=Object.values(db.payments).find(p=>String(p.userId)===userId && (p.status==='pending' || p.status==='waiting_approval'));
-      if(existingPending) return res.status(200).json({ok:false,message:'Masih ada invoice pending! Selesaikan dulu.'});
+      if(existingPending) return res.status(200).json({ok:false,message:'Masih ada invoice pending!'});
       const invoiceId=genInvoiceID();
       const invoice={
         id:invoiceId,
@@ -275,7 +280,7 @@ module.exports = async (req, res) => {
       };
       db.payments[invoiceId]=invoice;
       await saveDB(db);
-      return res.status(200).json({ok:true,message:'Invoice berhasil dibuat',invoice:invoice});
+      return res.status(200).json({ok:true,message:'Invoice dibuat',invoice:invoice});
     }
     if(endpoint==='cancel_order'){
       const userId=String(body.user_id||query.user_id||'');
@@ -284,7 +289,7 @@ module.exports = async (req, res) => {
       const pay=db.payments[invoiceId];
       if(!pay) return res.status(200).json({ok:false,message:'Invoice tidak ditemukan'});
       if(String(pay.userId)!==userId && !isOwner(userId)) return res.status(200).json({ok:false,message:'Akses ditolak'});
-      if(pay.status==='paid' || pay.status==='approved') return res.status(200).json({ok:false,message:'Invoice sudah lunas, tidak bisa dibatalkan'});
+      if(pay.status==='paid' || pay.status==='approved') return res.status(200).json({ok:false,message:'Invoice sudah lunas'});
       delete db.payments[invoiceId];
       await saveDB(db);
       return res.status(200).json({ok:true,message:'Invoice dibatalkan'});
@@ -304,35 +309,34 @@ module.exports = async (req, res) => {
         const bot=new TelegramBot(config.BOT_TOKEN);
         for(let oid of (config.OWNER_IDS||[])){
           try{
-            await bot.sendMessage(oid, `📥 <b>BUKTI TRANSFER MASUK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n🧾 Invoice: <code>${invoiceId}</code>\n👤 User: <code>${userId}</code>\n💰 Amount: Rp ${pay.amount}\n📦 Paket: ${pay.days} Hari\n\nSegera verifikasi di WebApp Admin!`, {parse_mode:'HTML'});
+            await bot.sendMessage(oid, `📥 <b>BUKTI TRANSFER MASUK</b>\n\n🧾 Invoice: <code>${invoiceId}</code>\n👤 User: <code>${userId}</code>\n💰 Rp ${pay.amount} • ${pay.days} Hari`, {parse_mode:'HTML'});
           }catch(e){}
         }
       }catch(e){}
-      return res.status(200).json({ok:true,message:'Bukti transfer berhasil diupload! Menunggu verifikasi admin.'});
+      return res.status(200).json({ok:true,message:'Bukti berhasil diupload! Menunggu verifikasi.'});
     }
     if(endpoint==='claim_code'){
       const userId=String(body.user_id||query.user_id||'');
       const code=String(body.code||query.code||'').toUpperCase().trim();
       if(!userId || !code) return res.status(200).json({ok:false,message:'Data tidak lengkap'});
-      const user=db.users[userId];
-      if(!user) return res.status(200).json({ok:false,message:'User tidak ditemukan'});
+      let user=db.users[userId];
+      if(!user) user=ensureUserInDB(db,userId,null,null);
       const vCode=db.codes[code];
       if(!vCode) return res.status(200).json({ok:false,message:'Kode Voucher Tidak Valid'});
       const days=typeof vCode==='object' ? vCode.days : vCode;
       const quota=typeof vCode==='object' ? (vCode.quota||0) : 0;
       const used=typeof vCode==='object' ? (vCode.used||0) : 0;
       if(quota>0 && used>=quota){
-        return res.status(200).json({ok:false,message:'Kuota Voucher Telah Habis'});
+        return res.status(200).json({ok:false,message:'Kuota Voucher Habis'});
       }
       user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+(days*86400000);
       if(typeof vCode==='object'){
         vCode.used=(vCode.used||0)+1;
-        if(vCode.type==='private' && (quota===1 || vCode.quota===1)) delete db.codes[code];
       }else{
         delete db.codes[code];
       }
       await saveDB(db);
-      return res.status(200).json({ok:true,message:`Voucher Diklaim: +${days} Hari Akses VIP`});
+      return res.status(200).json({ok:true,message:`Voucher Diklaim: +${days} Hari VIP`});
     }
     if(endpoint==='stats'){
       const userId=query.user_id||body.user_id;
@@ -357,7 +361,7 @@ module.exports = async (req, res) => {
     }
     if(endpoint==='owner_action'){
       const ownerId=String(body.owner_id||query.owner_id||'');
-      if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak: Bukan Owner'});
+      if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak'});
       const invoice=body.invoice;
       const action=body.action;
       const pay=db.payments[invoice];
@@ -373,9 +377,9 @@ module.exports = async (req, res) => {
         await saveDB(db);
         try{
           const bot=new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `<b>✅ VERIFIKASI LUNAS</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n<b>ID Invoice:</b> <code>${invoice}</code>\n<b>Status:</b> 🟢 <b>APPROVED</b>\n<b>Paket:</b> VIP +${pay.days} Hari Aktif!`, {parse_mode:'HTML'});
+          await bot.sendMessage(pay.userId, `<b>✅ VERIFIKASI LUNAS</b>\n\nInvoice: <code>${invoice}</code>\nStatus: APPROVED\nPaket: VIP +${pay.days} Hari Aktif!`, {parse_mode:'HTML'});
         }catch(e){}
-        return res.status(200).json({ok:true,message:`Invoice ${invoice} Berhasil Disetujui!`});
+        return res.status(200).json({ok:true,message:`Invoice ${invoice} Disetujui!`});
       }else if(action==='reject'){
         pay.status='rejected';
         const u=db.users[String(pay.userId)];
@@ -383,26 +387,26 @@ module.exports = async (req, res) => {
         await saveDB(db);
         try{
           const bot=new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `❌ <b>VERIFIKASI DITOLAK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nInvoice <code>${invoice}</code> ditolak oleh Admin.`, {parse_mode:'HTML'});
+          await bot.sendMessage(pay.userId, `❌ <b>VERIFIKASI DITOLAK</b>\n\nInvoice <code>${invoice}</code> ditolak Admin.`, {parse_mode:'HTML'});
         }catch(e){}
         return res.status(200).json({ok:true,message:`Invoice ${invoice} Ditolak!`});
       }
     }
     if(endpoint==='create_code'){
       const ownerId=String(body.owner_id||query.owner_id||'');
-      if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak: Bukan Owner'});
+      if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak'});
       const code=String(body.code||'').toUpperCase().trim();
       const days=parseInt(body.days);
       const quota=parseInt(body.quota)||0;
       if(!code || code.length<3) return res.status(200).json({ok:false,message:'Kode minimal 3 karakter'});
-      if(!days || days<=0) return res.status(200).json({ok:false,message:'Durasi hari tidak valid'});
+      if(!days || days<=0) return res.status(200).json({ok:false,message:'Durasi tidak valid'});
       db.codes[code]={code,days,quota,used:0,createdAt:Date.now()};
       await saveDB(db);
-      return res.status(200).json({ok:true,message:`Voucher ${code} Berhasil Dibuat`});
+      return res.status(200).json({ok:true,message:`Voucher ${code} Dibuat`});
     }
     if(endpoint==='delete_code'){
       const ownerId=String(body.owner_id||query.owner_id||'');
-      if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak: Bukan Owner'});
+      if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak'});
       const code=String(body.code||'').toUpperCase().trim();
       if(!db.codes[code]) return res.status(200).json({ok:false,message:'Voucher Tidak Ditemukan'});
       delete db.codes[code];
@@ -411,9 +415,9 @@ module.exports = async (req, res) => {
     }
     if(endpoint==='broadcast'){
       const ownerId=String(body.owner_id||query.owner_id||'');
-      if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak: Bukan Owner'});
+      if(!isOwner(ownerId)) return res.status(200).json({ok:false,message:'Akses Ditolak'});
       const text=String(body.text||'').trim();
-      if(!text) return res.status(200).json({ok:false,message:'Pesan Broadcast Kosong'});
+      if(!text) return res.status(200).json({ok:false,message:'Pesan kosong'});
       const validUsers=getUniqueUsers(db.users);
       let sent=0;
       let failed=0;
@@ -421,7 +425,7 @@ module.exports = async (req, res) => {
         const bot=new TelegramBot(config.BOT_TOKEN);
         for(let u of validUsers){
           try{
-            await bot.sendMessage(u.id, `📢 <b>WALZY CYBER ANNOUNCEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n${text}\n\n━━━━━━\n<i>Pesan otomatis dari WALZY STORE PREMIUM</i>`, {parse_mode:'HTML'});
+            await bot.sendMessage(u.id, `📢 <b>WALZY ANNOUNCEMENT</b>\n\n${text}`, {parse_mode:'HTML'});
             sent++;
           }catch(e){ failed++; }
           await new Promise(r=>setTimeout(r,80));
@@ -432,6 +436,6 @@ module.exports = async (req, res) => {
     return res.status(200).json({ok:false,message:'Endpoint Tidak Ditemukan'});
   }catch(err){
     console.error('API Error:',err);
-    return res.status(200).json({ok:false,message:'Internal Error Server',error:err.message});
+    return res.status(200).json({ok:false,message:'Internal Error',error:err.message});
   }
 };
