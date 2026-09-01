@@ -11,9 +11,9 @@ module.exports = async (req, res) => {
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
---bg:#f7f8fc;
+--bg:#f7f8fd;
 --bg2:#eef1ff;
---card:rgba(255,255,255,0.92);
+--card:rgba(255,255,255,0.94);
 --card2:#ffffff;
 --bd:rgba(15,23,42,0.06);
 --bd2:rgba(15,23,42,0.10);
@@ -26,39 +26,38 @@ module.exports = async (req, res) => {
 --amber:#f59e0b;
 --pink:#ef4444;
 --shadow:0 8px 24px rgba(15,23,42,0.05), 0 1px 0 rgba(255,255,255,0.9) inset;
---shadow2:0 16px 40px rgba(15,23,42,0.08);
+--shadow2:0 18px 44px rgba(15,23,42,0.10);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;font-family:'Plus Jakarta Sans',sans-serif}
-body{background:var(--bg);background-image:radial-gradient(700px 380px at 15% 0%, rgba(6,182,212,0.09), transparent 60%), radial-gradient(700px 380px at 85% 0%, rgba(139,92,246,0.10), transparent 60%), linear-gradient(180deg, var(--bg), var(--bg2));color:var(--text);min-height:100vh;padding-bottom:110px;overflow-x:hidden}
+body{background:var(--bg);background-image:radial-gradient(700px 360px at 15% 0%, rgba(6,182,212,0.08), transparent 60%), radial-gradient(700px 360px at 85% 0%, rgba(139,92,246,0.09), transparent 60%), linear-gradient(180deg, var(--bg), var(--bg2));color:var(--text);min-height:100vh;padding-bottom:108px;overflow-x:hidden}
 .icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:linear-gradient(180deg,#ffffff,#f7f8fc);transition:opacity .4s ease, visibility .4s ease}
+.loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:linear-gradient(180deg,#ffffff,#f7f8fd);transition:opacity .4s ease, visibility .4s ease}
 .loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
-.loader-logo{width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);box-shadow:0 12px 28px rgba(6,182,212,0.26);display:grid;place-items:center;color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:28px;animation:float 2.6s ease-in-out infinite}
+.loader-logo{width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);box-shadow:0 12px 28px rgba(6,182,212,0.24);display:grid;place-items:center;color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:28px;animation:float 2.6s ease-in-out infinite}
 .loader-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:19px;color:#0f172a}
 .loader-sub{font-size:12px;color:var(--muted);font-weight:600}
 .loader-bar{width:148px;height:4px;border-radius:999px;background:rgba(15,23,42,0.07);overflow:hidden}
 .loader-bar i{display:block;height:100%;width:40%;background:linear-gradient(90deg,#06b6d4,#8b5cf6);border-radius:999px;animation:bar 1.1s ease-in-out infinite}
 @keyframes bar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.9)}}
 @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.header{position:sticky;top:0;z-index:30;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(255,255,255,0.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--bd)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.9)}}
+.header{position:sticky;top:0;z-index:30;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(255,255,255,0.84);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--bd)}
 .brand{display:flex;align-items:center;gap:10px}
-.brand-logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);display:grid;place-items:center;color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;box-shadow:0 6px 16px rgba(6,182,212,0.22)}
+.brand-logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);display:grid;place-items:center;color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;box-shadow:0 6px 16px rgba(6,182,212,0.20)}
 .brand-name{font-family:'Outfit',sans-serif;font-weight:800;font-size:16px}
 .live{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(16,185,129,0.09);border:1px solid rgba(16,185,129,0.16);font-size:10px;font-weight:800;color:var(--emerald)}
 .live b{width:7px;height:7px;border-radius:50%;background:var(--emerald);box-shadow:0 0 8px var(--emerald);animation:pulse 1.6s infinite;display:inline-block}
-.container{max-width:520px;margin:0 auto;padding:16px 14px}
+.container{max-width:520px;margin:0 auto;padding:14px 12px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow);position:relative;overflow:hidden}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg, transparent, rgba(6,182,212,0.28), rgba(139,92,246,0.28), transparent)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg, transparent, rgba(6,182,212,0.26), rgba(139,92,246,0.26), transparent)}
 .badge{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border:1px solid var(--bd);background:rgba(15,23,42,0.04);color:var(--muted)}
 .badge.cyan{background:rgba(6,182,212,0.09);border-color:rgba(6,182,212,0.16);color:var(--cyan)}
 .badge.purple{background:rgba(139,92,246,0.09);border-color:rgba(139,92,246,0.16);color:var(--purple)}
 .badge.emerald{background:rgba(16,185,129,0.09);border-color:rgba(16,185,129,0.16);color:var(--emerald)}
 .badge.amber{background:rgba(245,158,11,0.11);border-color:rgba(245,158,11,0.18);color:var(--amber)}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .stat{background:var(--card2);border:1px solid var(--bd);border-radius:16px;padding:12px 10px;box-shadow:0 4px 12px rgba(15,23,42,0.03)}
 .stat-v{font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;color:#0f172a}
 .stat-l{font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-top:2px}
@@ -70,22 +69,26 @@ body{background:var(--bg);background-image:radial-gradient(700px 380px at 15% 0%
 .btn-purple{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff}
 .btn-pink{background:linear-gradient(135deg,#ef4444,#be123c);color:#fff}
 .btn-ghost{background:rgba(15,23,42,0.05);border:1px solid var(--bd);color:#0f172a}
-.input{width:100%;padding:13px 12px;border-radius:14px;background:rgba(255,255,255,0.9);border:1px solid var(--bd);color:#0f172a;outline:none;font-size:13px;font-weight:600}
-.input:focus{border-color:rgba(6,182,212,0.28);box-shadow:0 0 0 4px rgba(6,182,212,0.08)}
+.btn-amber{background:linear-gradient(135deg,#f59e0b,#ff7a00);color:#fff}
+.input{width:100%;padding:12px 12px;border-radius:14px;background:rgba(255,255,255,0.9);border:1px solid var(--bd);color:#0f172a;outline:none;font-size:13px;font-weight:600}
+.input:focus{border-color:rgba(6,182,212,0.26);box-shadow:0 0 0 4px rgba(6,182,212,0.08)}
 .view{display:none;opacity:0}
 .view.active{display:block;opacity:1;animation:in .32s ease}
-.nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);width:calc(100% - 22px);max-width:500px;background:rgba(255,255,255,0.90);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--bd);border-radius:22px;display:flex;justify-content:space-around;padding:6px;z-index:60;box-shadow:var(--shadow2)}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:16px;color:var(--muted);font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;transition:all .2s ease;border:1px solid transparent}
+.nav{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);width:calc(100% - 18px);max-width:500px;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--bd);border-radius:20px;display:flex;justify-content:space-around;padding:5px;z-index:60;box-shadow:var(--shadow2)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:14px;color:var(--muted);font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;transition:all .2s ease;border:1px solid transparent}
 .tab.active{color:var(--cyan);background:rgba(6,182,212,0.09);border-color:rgba(6,182,212,0.14)}
-.wheel-wrap{position:relative;width:270px;height:270px;margin:0 auto}
-.wheel{width:270px;height:270px;border-radius:50%;border:4px solid #fff;box-shadow:0 8px 24px rgba(15,23,42,0.06), 0 0 0 1px rgba(15,23,42,0.05) inset;transition:transform 4s cubic-bezier(.15,.85,.2,1);overflow:hidden}
+.wheel-wrap{position:relative;width:268px;height:268px;margin:0 auto}
+.wheel{width:268px;height:268px;border-radius:50%;border:4px solid #fff;box-shadow:0 8px 24px rgba(15,23,42,0.06), 0 0 0 1px rgba(15,23,42,0.05) inset;transition:transform 4s cubic-bezier(.15,.85,.2,1);overflow:hidden}
 .wheel-pointer{position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:14px solid var(--cyan);filter:drop-shadow(0 3px 6px rgba(6,182,212,0.3));z-index:2}
 .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.shop-item{background:var(--card2);border:1px solid var(--bd);border-radius:16px;padding:12px;box-shadow:0 4px 10px rgba(15,23,42,0.03);transition:transform .18s ease}
+.shop-item{background:var(--card2);border:1px solid var(--bd);border-radius:16px;padding:12px;box-shadow:0 4px 10px rgba(15,23,42,0.03);transition:transform .18s ease;position:relative;overflow:hidden}
 .shop-item:hover{transform:translateY(-2px)}
 .shop-item.best{border-color:rgba(245,158,11,0.26)}
 .shop-badge{position:absolute;top:7px;right:7px;padding:2px 6px;border-radius:999px;font-size:8px;font-weight:800;background:linear-gradient(135deg,#f59e0b,#ff7a00);color:#fff}
-.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-12px);background:rgba(255,255,255,0.96);border:1px solid var(--bd);border-radius:16px;padding:11px 12px;display:flex;gap:9px;align-items:center;min-width:280px;max-width:92vw;box-shadow:0 12px 28px rgba(15,23,42,0.10);opacity:0;pointer-events:none;transition:all .28s ease;z-index:10000}
+.point-shop{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.point-item{background:var(--card2);border:1px solid var(--bd);border-radius:16px;padding:12px;box-shadow:0 4px 10px rgba(15,23,42,0.03);position:relative}
+.point-item .point-price{font-family:'Outfit',sans-serif;font-weight:800;font-size:12px;color:var(--amber);margin-top:6px}
+.toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-12px);background:rgba(255,255,255,0.96);border:1px solid var(--bd);border-radius:16px;padding:11px 12px;display:flex;gap:9px;align-items:center;min-width:280px;max-width:92vw;box-shadow:0 12px 28px rgba(15,23,42,0.10);opacity:0;pointer-events:none;transition:all .28s ease;z-index:10000}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 .toast-bar{position:absolute;bottom:0;left:0;height:3px;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:0 0 16px 16px;animation:prog 3s linear forwards}
 @keyframes prog{from{width:100%}to{width:0%}}
@@ -99,6 +102,8 @@ body{background:var(--bg);background-image:radial-gradient(700px 380px at 15% 0%
 .invoice{background:linear-gradient(135deg, rgba(6,182,212,0.05), rgba(139,92,246,0.05));border:1px solid var(--bd);border-radius:16px;padding:12px;margin-bottom:8px}
 .avatar{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg, rgba(6,182,212,0.16), rgba(139,92,246,0.16));border:1px solid var(--bd);display:grid;place-items:center;color:var(--cyan)}
 .section-title{font-family:'Outfit',sans-serif;font-weight:800;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.owner-stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+@media (max-width:360px){.owner-stat-grid{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr 1fr}.shop-grid{grid-template-columns:1fr}.point-shop{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -118,172 +123,173 @@ body{background:var(--bg);background-image:radial-gradient(700px 380px at 15% 0%
 <div class="modal" id="imageZoomModal" onclick="closeZoomModal()"><div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:12px;align-items:center"><img id="zoomedImageSrc" src="" style="max-width:92vw;max-height:76vh;object-fit:contain;border-radius:16px;box-shadow:0 16px 40px rgba(15,23,42,0.14)"><button class="btn btn-ghost" style="width:auto;padding:9px 22px" onclick="closeZoomModal()">Tutup</button></div></div>
 
 <div class="header">
-  <div class="brand"><div class="brand-logo">W</div><div class="brand-name">WALZY</div></div>
+  <div class="brand"><div class="brand-logo">W</div><div class="brand-name">WALZY STORE</div></div>
   <div class="live"><b></b> <span id="liveText">REALTIME</span></div>
 </div>
 
 <div class="container">
   <div id="viewUserArea">
-    <div id="viewHome" class="view active">
+    <div id="viewBeranda" class="view active">
       <div class="card">
         <div style="display:flex;align-items:center;gap:12px">
           <div class="avatar"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
           <div style="flex:1">
             <div id="uName" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:16px">Memuat...</div>
-            <div id="uIdText" style="font-size:11px;color:var(--muted);font-weight:600;margin-top:1px">ID: --</div>
-            <div style="display:flex;gap:5px;margin-top:7px"><span class="badge cyan" id="uRankBadge">BASIC</span><span class="badge purple" id="uStatusBadge">Gratis</span><span class="badge emerald" id="uPremiumBadge" style="display:none"></span></div>
+            <div id="uIdText" style="font-size:11px;color:var(--muted);font-weight:700;margin-top:1px">ID: --</div>
+            <div style="display:flex;gap:5px;margin-top:7px;flex-wrap:wrap"><span class="badge cyan" id="uRankBadge">BASIC</span><span class="badge purple" id="uStatusBadge">Gratis</span><span class="badge emerald" id="uPremiumBadge" style="display:none"></span><span class="badge amber" id="uWeekBadge">Minggu 1</span></div>
           </div>
         </div>
-      </div>
-      <div class="grid3">
-        <div class="stat"><div class="stat-v" style="color:var(--cyan)" id="sQuota">5/5</div><div class="stat-l">Kuota Fix</div></div>
-        <div class="stat"><div class="stat-v" id="sRefs">0</div><div class="stat-l">Referral</div></div>
-        <div class="stat"><div class="stat-v" style="color:var(--amber)" id="sPoints">0</div><div class="stat-l">Poin</div></div>
-      </div>
-      <div class="card">
-        <div class="section-title">🚀 Akses Cepat</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button class="btn btn-primary" onclick="switchTab('viewProduk', document.querySelectorAll('#userNavBar .tab')[1])">🛒 Beli VIP</button>
-          <button class="btn btn-ghost" onclick="switchTab('viewDaily', document.querySelectorAll('#userNavBar .tab')[2])">🎡 Daily Rewards</button>
+        <div class="grid3">
+          <div class="stat"><div class="stat-v" style="color:var(--cyan)" id="sQuota">5/5</div><div class="stat-l">Kuota Fix</div></div>
+          <div class="stat"><div class="stat-v" id="sTotalFix">0</div><div class="stat-l">Total Fix</div></div>
+          <div class="stat"><div class="stat-v" style="color:var(--amber)" id="sPoints">0</div><div class="stat-l">Poin</div></div>
         </div>
+        <div class="grid3" style="margin-top:0">
+          <div class="stat"><div class="stat-v" id="sRefs">0</div><div class="stat-l">Referral</div></div>
+          <div class="stat"><div class="stat-v" id="sStreak">0</div><div class="stat-l">Streak</div></div>
+          <div class="stat"><div class="stat-v" id="sRank">Pemula</div><div class="stat-l">Rank</div></div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:6px"><span style="font-size:10px;color:var(--muted);font-weight:700">Link Referral:</span><span style="font-size:10px;font-weight:800;color:var(--cyan)" id="sRefLinkShort">-</span></div>
       </div>
+
       <div class="card">
-        <div class="section-title">🎟️ Redeem Voucher</div>
-        <input class="input" id="vCodeInput" placeholder="Masukkan kode voucher">
-        <button class="btn btn-emerald" style="margin-top:8px" onclick="claimVoucher(this)">Tukarkan Sekarang</button>
-        <div id="voucherStatus" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+        <div class="section-title">🔗 Referral & Voucher</div>
+        <input class="input" id="refUrlInput" readonly value="Memuat...">
+        <button class="btn btn-ghost" style="margin-top:8px" onclick="copyRefLink()">Salin Link Referral</button>
+        <div style="height:1px;background:var(--bd);margin:12px 0"></div>
+        <input class="input" id="vCodeInput" placeholder="Kode voucher dari owner">
+        <button class="btn btn-emerald" style="margin-top:8px" onclick="claimVoucher(this)">Tukarkan Voucher</button>
+        <div id="voucherStatus" style="font-size:11px;color:var(--muted);margin-top:8px;font-weight:600"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">🧾 Invoice & Riwayat Real</div>
+        <div id="profileInvoiceList" style="font-size:12px;color:var(--muted)">Memuat...</div>
       </div>
     </div>
 
     <div id="viewProduk" class="view">
       <div style="font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;margin-bottom:2px">Produk VIP</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;font-weight:600">Pilih paket unlimited fix</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600">Pembelian lengkap dengan upload bukti</div>
       <div id="activeInvoiceBox"></div>
       <div class="shop-grid">
-        <div class="shop-item"><div style="font-weight:800;font-size:13px">Trial 3 Hari</div><div style="font-size:10px;color:var(--muted)">Akses 3H</div><div style="font-weight:800;font-size:16px;color:var(--cyan);margin-top:6px">Rp 7.000</div><button class="btn btn-primary btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(3,7000,this)">Beli</button></div>
-        <div class="shop-item"><div style="font-weight:800;font-size:13px">Hemat 5 Hari</div><div style="font-size:10px;color:var(--muted)">5 Hari</div><div style="font-weight:800;font-size:16px;color:var(--cyan);margin-top:6px">Rp 10.000</div><button class="btn btn-primary btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(5,10000,this)">Beli</button></div>
-        <div class="shop-item"><div style="font-weight:800;font-size:13px">Starter 7 Hari</div><div style="font-size:10px;color:var(--muted)">Popular</div><div style="font-weight:800;font-size:16px;color:var(--emerald);margin-top:6px">Rp 15.000</div><button class="btn btn-emerald btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(7,15000,this)">Beli</button></div>
-        <div class="shop-item"><div style="font-weight:800;font-size:13px">Pro 14 Hari</div><div style="font-size:10px;color:var(--muted)">Best Value</div><div style="font-weight:800;font-size:16px;color:var(--purple);margin-top:6px">Rp 25.000</div><button class="btn btn-purple btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(14,25000,this)">Beli</button></div>
-        <div class="shop-item best" style="grid-column:span 2;position:relative"><span class="shop-badge">BEST</span><div style="font-weight:800;font-size:15px">Sultan 30 Hari</div><div style="font-size:11px;color:var(--muted)">Unlimited + Bonus 500 PTS</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div style="font-weight:800;font-size:19px;color:var(--amber)">Rp 40.000</div><button class="btn btn-primary btn-buy-pkg" style="width:auto;padding:9px 16px;background:linear-gradient(135deg,#f59e0b,#ff7a00)" onclick="createOrder(30,40000,this)">Beli Sultan</button></div></div>
+        <div class="shop-item"><div style="font-weight:800;font-size:13px">Trial 3H</div><div style="font-size:10px;color:var(--muted)">3 Hari Akses</div><div style="font-weight:800;font-size:16px;color:var(--cyan);margin-top:6px">Rp 7.000</div><button class="btn btn-primary btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(3,7000,this)">Beli</button></div>
+        <div class="shop-item"><div style="font-weight:800;font-size:13px">Hemat 5H</div><div style="font-size:10px;color:var(--muted)">5 Hari</div><div style="font-weight:800;font-size:16px;color:var(--cyan);margin-top:6px">Rp 10.000</div><button class="btn btn-primary btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(5,10000,this)">Beli</button></div>
+        <div class="shop-item"><div style="font-weight:800;font-size:13px">Starter 7H</div><div style="font-size:10px;color:var(--muted)">Popular 7H</div><div style="font-weight:800;font-size:16px;color:var(--emerald);margin-top:6px">Rp 15.000</div><button class="btn btn-emerald btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(7,15000,this)">Beli</button></div>
+        <div class="shop-item"><div style="font-weight:800;font-size:13px">Pro 14H</div><div style="font-size:10px;color:var(--muted)">Best Value</div><div style="font-weight:800;font-size:16px;color:var(--purple);margin-top:6px">Rp 25.000</div><button class="btn btn-purple btn-buy-pkg" style="padding:9px;font-size:11px;margin-top:8px" onclick="createOrder(14,25000,this)">Beli</button></div>
+        <div class="shop-item best" style="grid-column:span 2;position:relative"><span class="shop-badge">BEST SELLER</span><div style="font-weight:800;font-size:15px">Sultan 30H</div><div style="font-size:11px;color:var(--muted)">Unlimited + Bonus 500 PTS</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div style="font-weight:800;font-size:19px;color:var(--amber)">Rp 40.000</div><button class="btn btn-amber btn-buy-pkg" style="width:auto;padding:9px 16px" onclick="createOrder(30,40000,this)">Beli Sultan</button></div></div>
+      </div>
+      <div class="card" style="margin-top:10px">
+        <div class="section-title">💳 Cara Bayar</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6;font-weight:600">
+          1. Pilih paket & klik Beli<br>
+          2. Invoice akan muncul di atas<br>
+          3. Transfer ke DANA sesuai nominal<br>
+          4. Klik Upload Bukti & upload screenshot<br>
+          5. Tunggu verifikasi owner (realtime)<br>
+          6. VIP otomatis aktif setelah disetujui
+        </div>
+        <div id="paymentInfoBox" style="margin-top:10px;padding:10px;border-radius:12px;background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.12);font-size:11px;font-weight:700">DANA: <span id="danaNumber">Memuat...</span> a.n <span id="danaName">WALZY STORE</span></div>
       </div>
     </div>
 
     <div id="viewDaily" class="view">
       <div class="card">
-        <div class="section-title">📅 Daily Check-in</div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:11px;color:var(--muted);font-weight:600">Streak: <b id="dailyStreakText" style="color:#0f172a">0 Hari</b> • Poin: <b id="checkinPointsVal" style="color:#0f172a">0 PTS</b></div>
+        <div class="section-title">📅 Daily Check-in - Poin Mingguan Berbeda</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:11px;color:var(--muted);font-weight:600">Streak: <b id="dailyStreakText" style="color:#0f172a">0 Hari</b> • <span id="weekText">Minggu 1</span></div>
           <span class="badge emerald" id="dailyStatusBadge">Belum</span>
         </div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-weight:600" id="weeklyInfo">Minggu ini: Day1 10, Day2 15, Day3 20, Day4 25, Day5 30, Day6 50, Day7 100 PTS</div>
         <div class="streak" id="streakContainer">
           <div class="streak-day" id="stDay1">1</div><div class="streak-day" id="stDay2">2</div><div class="streak-day" id="stDay3">3</div><div class="streak-day" id="stDay4">4</div><div class="streak-day" id="stDay5">5</div><div class="streak-day" id="stDay6">6</div><div class="streak-day" id="stDay7">7</div>
         </div>
-        <button class="btn btn-emerald" id="checkinBtn" style="margin-top:12px" onclick="triggerCheckin(this)">Check-in Hari Ini</button>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
-          <button class="btn btn-ghost" style="padding:9px;font-size:10px" onclick="redeemPoints('quota', this)">100 PTS = Kuota</button>
-          <button class="btn btn-ghost" style="padding:9px;font-size:10px" onclick="redeemPoints('spin', this)">150 PTS = Spin</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <div style="font-size:11px;color:var(--muted);font-weight:600">Poin kamu: <b id="checkinPointsVal" style="color:#0f172a">0 PTS</b></div>
+          <div style="font-size:11px;color:var(--muted);font-weight:600">Bonus hari ini: <b id="todayBonus" style="color:var(--emerald)">+0 PTS</b></div>
         </div>
+        <button class="btn btn-emerald" id="checkinBtn" style="margin-top:10px" onclick="triggerCheckin(this)">Check-in Hari Ini</button>
       </div>
 
       <div class="card">
-        <div class="section-title">🎡 Spin Wheel Harian</div>
-        <div class="wheel-wrap"><div class="wheel-pointer"></div><canvas id="spinCanvas" class="wheel" width="270" height="270"></canvas></div>
+        <div class="section-title">🎡 Spin Wheel - Fix Berhenti Sesuai Hadiah</div>
+        <div class="wheel-wrap"><div class="wheel-pointer"></div><canvas id="spinCanvas" class="wheel" width="268" height="268"></canvas></div>
         <button class="btn btn-primary" id="spinBtn" style="margin-top:12px" onclick="triggerSpin(this)">Putar Spin</button>
         <div id="spinResult" style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;font-weight:600"></div>
       </div>
 
       <div class="card">
-        <div class="section-title">👥 Referral</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600">+50 Poin per teman bergabung • Total: <b id="refCountText" style="color:#0f172a">0</b></div>
-        <input class="input" id="refUrlInput" readonly value="Memuat...">
-        <button class="btn btn-ghost" style="margin-top:8px" onclick="copyRefLink()">Salin Link</button>
-      </div>
-    </div>
-
-    <div id="viewProfil" class="view">
-      <div class="card">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="avatar" style="width:60px;height:60px;border-radius:16px"><svg class="icon" style="width:26px;height:26px" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-          <div style="flex:1">
-            <div id="pName" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px">Memuat...</div>
-            <div id="pIdText" style="font-size:11px;color:var(--muted);font-weight:700">ID: --</div>
-            <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap"><span class="badge cyan" id="pRankBadge">BASIC</span><span class="badge purple" id="pStatusBadge">Gratis</span><span class="badge emerald" id="pPremiumLeft">Free</span></div>
-          </div>
+        <div class="section-title">🛍️ Toko Penukaran Poin - Rapi & Keren</div>
+        <div class="point-shop">
+          <div class="point-item"><div style="font-weight:800;font-size:12px">+1 Kuota Fix</div><div style="font-size:10px;color:var(--muted)">Tambah 1 kuota harian</div><div class="point-price">100 PTS</div><button class="btn btn-ghost" style="padding:8px;font-size:10px;margin-top:6px" onclick="redeemPoints('quota1', this)">Tukar</button></div>
+          <div class="point-item"><div style="font-weight:800;font-size:12px">+3 Kuota Fix</div><div style="font-size:10px;color:var(--muted)">Hemat 50 PTS</div><div class="point-price">250 PTS</div><button class="btn btn-ghost" style="padding:8px;font-size:10px;margin-top:6px" onclick="redeemPoints('quota3', this)">Tukar</button></div>
+          <div class="point-item"><div style="font-weight:800;font-size:12px">Reset Spin</div><div style="font-size:10px;color:var(--muted)">Spin lagi hari ini</div><div class="point-price">150 PTS</div><button class="btn btn-ghost" style="padding:8px;font-size:10px;margin-top:6px" onclick="redeemPoints('spin', this)">Tukar</button></div>
+          <div class="point-item"><div style="font-weight:800;font-size:12px">VIP 1 Hari</div><div style="font-size:10px;color:var(--muted)">Unlimited 1 hari</div><div class="point-price">500 PTS</div><button class="btn btn-purple" style="padding:8px;font-size:10px;margin-top:6px" onclick="redeemPoints('vip1', this)">Tukar</button></div>
+          <div class="point-item"><div style="font-weight:800;font-size:12px">VIP 3 Hari</div><div style="font-size:10px;color:var(--muted)">Best value poin</div><div class="point-price">1200 PTS</div><button class="btn btn-purple" style="padding:8px;font-size:10px;margin-top:6px" onclick="redeemPoints('vip3', this)">Tukar</button></div>
+          <div class="point-item"><div style="font-weight:800;font-size:12px">+200 PTS Bonus</div><div style="font-size:10px;color:var(--muted)">Tukar 300 jadi 500</div><div class="point-price">300 PTS</div><button class="btn btn-amber" style="padding:8px;font-size:10px;margin-top:6px" onclick="redeemPoints('bonus200', this)">Tukar</button></div>
         </div>
       </div>
-      <div class="grid3">
-        <div class="stat"><div class="stat-v" id="pQuota">5/5</div><div class="stat-l">Kuota</div></div>
-        <div class="stat"><div class="stat-v" id="pTotalFix">0</div><div class="stat-l">Total Fix</div></div>
-        <div class="stat"><div class="stat-v" style="color:var(--amber)" id="pPoints">0</div><div class="stat-l">Poin</div></div>
-      </div>
-      <div class="grid2">
-        <div class="stat"><div class="stat-v" id="pRefs">0</div><div class="stat-l">Referral</div></div>
-        <div class="stat"><div class="stat-v" id="pStreak">0</div><div class="stat-l">Streak</div></div>
-      </div>
-      <div class="card"><div class="section-title">🔗 Link Referral</div><input class="input" id="pRefUrl" readonly value="Memuat..."><button class="btn btn-ghost" style="margin-top:8px" onclick="copyRefLink2()">Salin Link</button></div>
-      <div class="card"><div class="section-title">🧾 Invoice & Riwayat</div><div id="profileInvoiceList" style="font-size:12px;color:var(--muted)">Memuat...</div></div>
     </div>
   </div>
 
   <div id="viewOwnerArea" style="display:none">
     <div id="viewOwnerDashboard" class="view active">
-      <div class="card"><div class="section-title">👑 Dashboard Owner</div>
-        <div class="grid2">
+      <div class="card">
+        <div class="section-title">👑 Owner Dashboard - Real Clean</div>
+        <div class="owner-stat-grid">
           <div class="stat"><div class="stat-v" style="color:var(--emerald)" id="oRev">Rp 0</div><div class="stat-l">Revenue</div></div>
           <div class="stat"><div class="stat-v" id="oUsers">0</div><div class="stat-l">Total User</div></div>
           <div class="stat"><div class="stat-v" style="color:var(--amber)" id="oPending">0</div><div class="stat-l">Pending</div></div>
           <div class="stat"><div class="stat-v" style="color:var(--cyan)" id="oPremium">0</div><div class="stat-l">VIP Aktif</div></div>
-        </div>
-        <div class="grid2" style="margin-top:8px">
           <div class="stat"><div class="stat-v" id="oTotalFix">0</div><div class="stat-l">Total Fix</div></div>
-          <div class="stat"><div class="stat-v" id="oCodes">0</div><div class="stat-l">Voucher Aktif</div></div>
+          <div class="stat"><div class="stat-v" id="oCodes">0</div><div class="stat-l">Voucher</div></div>
         </div>
       </div>
-      <div class="card"><div class="section-title">💳 Pembayaran Masuk</div><div id="oPendingList"></div></div>
+      <div class="card"><div class="section-title">💳 Pembayaran Masuk - Butuh Verifikasi</div><div id="oPendingList"></div></div>
+      <div class="card"><div class="section-title">📊 Statistik Cepat</div><div id="oQuickStats" style="font-size:11px;color:var(--muted);font-weight:600">Memuat statistik...</div></div>
     </div>
 
     <div id="viewOwnerUsers" class="view">
-      <div class="card"><div class="section-title">👥 Total User</div><div id="oUserList"></div></div>
+      <div class="card"><div class="section-title">👥 Total User - Realtime</div><div id="oUserList"></div></div>
     </div>
 
     <div id="viewOwnerDeposit" class="view">
-      <div class="card"><div class="section-title">📥 Deposit & Invoice</div><div id="oDepositList"></div></div>
+      <div class="card"><div class="section-title">📥 Deposit Masuk</div><div id="oDepositList"></div></div>
       <div class="card"><div class="section-title">✅ Riwayat Lunas</div><div id="oPaidList"></div></div>
     </div>
 
     <div id="viewOwnerVoucher" class="view">
-      <div class="card"><div class="section-title">🎟️ Buat Kode Voucher</div>
+      <div class="card"><div class="section-title">🎟️ Buat Voucher Baru</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-          <input class="input" id="vGenCode" placeholder="KODE (contoh WALZYVIP)" style="grid-column:span 2">
-          <input class="input" id="vGenDays" placeholder="Hari (contoh 7)" type="number">
-          <input class="input" id="vGenQuota" placeholder="Kuota (0=unlimited)" type="number">
+          <input class="input" id="vGenCode" placeholder="KODE (WALZYVIP)" style="grid-column:span 2">
+          <input class="input" id="vGenDays" placeholder="Hari" type="number">
+          <input class="input" id="vGenQuota" placeholder="Kuota 0=∞" type="number">
         </div>
         <button class="btn btn-purple" onclick="createVoucher(this)">Buat Voucher</button>
-        <div id="voucherCreateStatus" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+        <div id="voucherCreateStatus" style="font-size:11px;color:var(--muted);margin-top:8px;font-weight:600"></div>
       </div>
-      <div class="card"><div class="section-title">📋 Daftar Voucher</div><div id="oVoucherList"></div></div>
+      <div class="card"><div class="section-title">📋 Daftar Voucher Aktif</div><div id="oVoucherList"></div></div>
     </div>
 
     <div id="viewOwnerBroadcast" class="view">
-      <div class="card"><div class="section-title">📢 Broadcast</div>
-        <textarea class="input" id="bcTextInput" style="min-height:120px;resize:none" placeholder="Tulis pesan broadcast ke semua user..."></textarea>
+      <div class="card"><div class="section-title">📢 Broadcast ke Semua User</div>
+        <textarea class="input" id="bcTextInput" style="min-height:120px;resize:none" placeholder="Tulis pesan broadcast..."></textarea>
         <button class="btn btn-primary" style="margin-top:8px" onclick="sendBroadcast(this)">Kirim Broadcast Sekarang</button>
-        <div id="broadcastStatus" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+        <div id="broadcastStatus" style="font-size:11px;color:var(--muted);margin-top:8px;font-weight:600"></div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="nav" id="userNavBar">
-  <div class="tab active" onclick="switchTab('viewHome', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Beranda</div>
+  <div class="tab active" onclick="switchTab('viewBeranda', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Beranda</div>
   <div class="tab" onclick="switchTab('viewProduk', this)"><svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Produk</div>
   <div class="tab" onclick="switchTab('viewDaily', this)"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Daily</div>
-  <div class="tab" onclick="switchTab('viewProfil', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</div>
 </div>
 
 <div class="nav" id="ownerNavBar" style="display:none">
   <div class="tab active" onclick="switchOwnerTab('viewOwnerDashboard', this)"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</div>
-  <div class="tab" onclick="switchOwnerTab('viewOwnerUsers', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Users</div>
+  <div class="tab" onclick="switchOwnerTab('viewOwnerUsers', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Users</div>
   <div class="tab" onclick="switchOwnerTab('viewOwnerDeposit', this)"><svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Deposit</div>
   <div class="tab" onclick="switchOwnerTab('viewOwnerVoucher', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h16v5"/><path d="M20 12v5H6a2 2 0 0 0-2 2c0 1.1.9 2 2 2h16v-5"/></svg>Voucher</div>
   <div class="tab" onclick="switchOwnerTab('viewOwnerBroadcast', this)"><svg class="icon" viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>Broadcast</div>
@@ -311,6 +317,18 @@ var wheelPrizes=[
 {label:"+3 KUOTA",color:"#10b981"},
 {label:"VIP 1 HARI",color:"#3b82f6"}
 ];
+
+var weeklyPoints=[
+[10,15,20,25,30,50,100],
+[15,20,25,30,40,60,120],
+[20,25,30,40,50,70,140],
+[25,30,40,50,60,80,160]
+];
+
+function getWeekIndex(){
+  var week=Math.floor(Date.now()/(7*24*3600*1000))%4;
+  return week;
+}
 
 function hideLoader(){
   var ldr=document.getElementById('loader');
@@ -419,7 +437,7 @@ function switchOwnerTab(viewId, el){
   var tabs=document.querySelectorAll('#ownerNavBar .tab');
   tabs.forEach(function(t){ t.classList.remove('active'); });
   if(el) el.classList.add('active');
-  if(viewId==='viewOwnerDashboard' || viewId==='viewOwnerUsers' || viewId==='viewOwnerDeposit' || viewId==='viewOwnerVoucher') loadOwnerData();
+  if(viewId==='viewOwnerDashboard' || viewId==='viewOwnerUsers' || viewId==='viewOwnerDeposit' || viewId==='viewOwnerVoucher' || viewId==='viewOwnerBroadcast') loadOwnerData();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -427,7 +445,7 @@ function initApp(){
   try{
     tg=window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     if(tg){
-      try{ tg.ready(); tg.expand(); if(tg.setHeaderColor) tg.setHeaderColor('#ffffff'); if(tg.setBackgroundColor) tg.setBackgroundColor('#f7f8fc'); }catch(e){}
+      try{ tg.ready(); tg.expand(); if(tg.setHeaderColor) tg.setHeaderColor('#ffffff'); if(tg.setBackgroundColor) tg.setBackgroundColor('#f7f8fd'); }catch(e){}
     }
     if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id){
       currentUserId=tg.initDataUnsafe.user.id;
@@ -458,6 +476,16 @@ function initApp(){
       var el=document.getElementById('uName');
       if(el) el.textContent='Guest Mode';
     }
+    var week=getWeekIndex();
+    var weekText=document.getElementById('weekText');
+    if(weekText) weekText.textContent='Minggu '+(week+1);
+    var weekBadge=document.getElementById('uWeekBadge');
+    if(weekBadge) weekBadge.textContent='Minggu '+(week+1);
+    var weeklyInfo=document.getElementById('weeklyInfo');
+    if(weeklyInfo){
+      var pts=weeklyPoints[week];
+      weeklyInfo.textContent='Minggu ini: D1 '+pts[0]+' | D2 '+pts[1]+' | D3 '+pts[2]+' | D4 '+pts[3]+' | D5 '+pts[4]+' | D6 '+pts[5]+' | D7 '+pts[6]+' PTS';
+    }
   }catch(err){
     hideLoader();
   }
@@ -481,45 +509,44 @@ async function loadUserData(isSilent){
     var u=data.user;
     isUserOwner=!!u.isOwner;
 
-    var map=[
-      ['uName', u.first_name||'User'],
-      ['uIdText', 'ID: '+u.id],
-      ['pName', u.first_name||'User'],
-      ['pIdText', 'ID: '+u.id]
-    ];
-    map.forEach(function(pair){
-      var el=document.getElementById(pair[0]);
-      if(el) el.textContent=pair[1];
-    });
+    var elName=document.getElementById('uName');
+    if(elName) elName.textContent=u.first_name||'User';
+    var elId=document.getElementById('uIdText');
+    if(elId) elId.textContent='ID: '+u.id;
 
     var rankText=u.rank ? u.rank.name : 'BASIC';
     var statusText=u.isPremium ? 'VIP ('+u.premiumLeftDays+'H)' : 'Gratis';
     var premiumText=u.isPremium ? u.premiumLeftDays+' Hari' : 'Free';
 
-    [['uRankBadge', rankText], ['pRankBadge', rankText], ['uStatusBadge', statusText], ['pStatusBadge', u.isPremium ? 'VIP' : 'Gratis'], ['pPremiumLeft', premiumText]].forEach(function(p){
-      var el=document.getElementById(p[0]);
-      if(el) el.textContent=p[1];
-    });
-
-    var premiumBadge=document.getElementById('uPremiumBadge');
-    if(premiumBadge){
-      if(u.isPremium){ premiumBadge.style.display='inline-flex'; premiumBadge.textContent='VIP '+u.premiumLeftDays+'H'; }
-      else premiumBadge.style.display='none';
+    var elRank=document.getElementById('uRankBadge');
+    if(elRank) elRank.textContent=rankText;
+    var elStatus=document.getElementById('uStatusBadge');
+    if(elStatus) elStatus.textContent=statusText;
+    var elPrem=document.getElementById('uPremiumBadge');
+    if(elPrem){
+      if(u.isPremium){ elPrem.style.display='inline-flex'; elPrem.textContent='VIP '+u.premiumLeftDays+'H'; }
+      else elPrem.style.display='none';
     }
 
     var quotaText=u.dailyFixRemaining||'5/5';
-    [['sQuota', quotaText], ['pQuota', quotaText]].forEach(function(p){
-      var el=document.getElementById(p[0]); if(el) el.textContent=p[1];
-    });
+    var elQuota=document.getElementById('sQuota');
+    if(elQuota) elQuota.textContent=quotaText;
+    var elTotal=document.getElementById('sTotalFix');
+    if(elTotal) elTotal.textContent=u.totalFix||0;
+    var elPts=document.getElementById('sPoints');
+    if(elPts) elPts.textContent=u.points||0;
+    var elRefs=document.getElementById('sRefs');
+    if(elRefs) elRefs.textContent=u.referralCount||0;
+    var elStreak=document.getElementById('sStreak');
+    if(elStreak) elStreak.textContent=u.checkinStreak||0;
+    var elRank2=document.getElementById('sRank');
+    if(elRank2) elRank2.textContent=rankText;
 
-    var pointsText=u.points||0;
-    [['sPoints', pointsText], ['pPoints', pointsText]].forEach(function(p){
-      var el=document.getElementById(p[0]); if(el) el.textContent=p[1];
-    });
-
-    [['sRefs', u.referralCount||0], ['pRefs', u.referralCount||0], ['pTotalFix', u.totalFix||0], ['pStreak', u.checkinStreak||0], ['refCountText', u.referralCount||0]].forEach(function(p){
-      var el=document.getElementById(p[0]); if(el) el.textContent=p[1];
-    });
+    var refLink=u.referralLink||'';
+    var refInput=document.getElementById('refUrlInput');
+    if(refInput) refInput.value=refLink;
+    var shortLink=document.getElementById('sRefLinkShort');
+    if(shortLink) shortLink.textContent=refLink ? refLink.slice(-18) : '-';
 
     var chkVal=document.getElementById('checkinPointsVal');
     if(chkVal) chkVal.textContent=(u.points||0)+' PTS';
@@ -531,11 +558,16 @@ async function loadUserData(isSilent){
       dailyBadge.className='badge '+(u.canCheckin ? 'amber' : 'emerald');
     }
 
-    var refLink=u.referralLink||'';
-    var ref1=document.getElementById('refUrlInput');
-    if(ref1) ref1.value=refLink;
-    var ref2=document.getElementById('pRefUrl');
-    if(ref2) ref2.value=refLink;
+    var week=getWeekIndex();
+    var bonusToday=0;
+    if(u.checkinStreak>=0 && u.checkinStreak<7){
+      var nextDay=u.checkinStreak;
+      if(nextDay>=0 && nextDay<7) bonusToday=weeklyPoints[week][nextDay];
+    }else if(u.canCheckin){
+      bonusToday=weeklyPoints[week][0];
+    }
+    var todayBonus=document.getElementById('todayBonus');
+    if(todayBonus) todayBonus.textContent='+'+bonusToday+' PTS';
 
     var spinBtn=document.getElementById('spinBtn');
     if(spinBtn && !isSpinning){
@@ -545,7 +577,7 @@ async function loadUserData(isSilent){
     var chkBtn=document.getElementById('checkinBtn');
     if(chkBtn){
       chkBtn.disabled=!u.canCheckin;
-      chkBtn.textContent=u.canCheckin ? 'Check-in Hari Ini' : 'Sudah Check-in';
+      chkBtn.textContent=u.canCheckin ? 'Check-in Hari Ini (+'+bonusToday+' PTS)' : 'Sudah Check-in';
     }
 
     for(var i=1;i<=7;i++){
@@ -571,13 +603,19 @@ async function loadUserData(isSilent){
 
     var invBox=document.getElementById('activeInvoiceBox');
     var buyBtns=document.querySelectorAll('.btn-buy-pkg');
+    var danaNum=document.getElementById('danaNumber');
+    var danaName=document.getElementById('danaName');
+    if(data.dana){
+      if(danaNum) danaNum.textContent=data.dana.number||'083124469855';
+      if(danaName) danaName.textContent=data.dana.name||'WALZY STORE';
+    }
     if(data.currentInvoice && invBox){
       var inv=data.currentInvoice;
       activeInvoiceId=inv.id||inv.invoice;
       buyBtns.forEach(function(b){ b.disabled=true; });
-      var proofHtml=inv.proofImage ? '<div class="proof"><img src="'+inv.proofImage+'" onclick="openZoomModal(\\''+inv.proofImage+'\\')"></div>' : '<div style="font-size:11px;color:var(--muted);margin-top:6px">Belum upload bukti</div>';
+      var proofHtml=inv.proofImage ? '<div class="proof"><img src="'+inv.proofImage+'" onclick="openZoomModal(\\''+inv.proofImage+'\\')"></div>' : '<div style="font-size:11px;color:var(--muted);margin-top:6px">Belum upload bukti • Transfer ke DANA di bawah</div>';
       var stText=inv.status==='waiting_approval' ? 'Menunggu Verifikasi' : inv.status==='paid' ? 'Lunas' : 'Menunggu Bayar';
-      invBox.innerHTML='<div class="invoice"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:800;font-size:12px">'+(inv.id||inv.invoice)+' • '+inv.days+'H</div><span class="badge cyan">'+stText+'</span></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Rp '+(inv.amount||0).toLocaleString('id-ID')+'</div>'+proofHtml+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><button class="btn btn-primary" style="padding:9px;font-size:11px" onclick="triggerUploadProof()">Upload Bukti</button><button class="btn btn-ghost" style="padding:9px;font-size:11px" onclick="cancelOrder(\\''+(inv.id||inv.invoice)+'\\', this)">Batal</button></div></div>';
+      invBox.innerHTML='<div class="invoice"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:800;font-size:12px">'+(inv.id||inv.invoice)+' • '+inv.days+'H • Rp '+(inv.amount||0).toLocaleString('id-ID')+'</div><span class="badge cyan">'+stText+'</span></div>'+proofHtml+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><button class="btn btn-primary" style="padding:9px;font-size:11px" onclick="triggerUploadProof()">Upload Bukti</button><button class="btn btn-ghost" style="padding:9px;font-size:11px" onclick="cancelOrder(\\''+(inv.id||inv.invoice)+'\\', this)">Batalkan</button></div></div>';
     }else{
       if(invBox) invBox.innerHTML='';
       buyBtns.forEach(function(b){ b.disabled=false; });
@@ -615,21 +653,25 @@ async function triggerSpin(btn){
     var data=await res.json();
     if(data && data.ok){
       var pIndex=data.prizeIndex!==undefined ? data.prizeIndex : Math.floor(Math.random()*wheelPrizes.length);
-      var anglePer=360/wheelPrizes.length;
-      var target=360*6 + (360 - (pIndex*anglePer + anglePer/2));
-      wheelRotation+=target;
+      var slices=wheelPrizes.length;
+      var anglePer=360/slices;
+      var center=pIndex*anglePer + anglePer/2;
+      var target=270 - center;
+      while(target<0) target+=360;
+      var finalRotation=360*6 + target;
+      wheelRotation+=finalRotation;
       var canvas=document.getElementById('spinCanvas');
       if(canvas) canvas.style.transform='rotate('+wheelRotation+'deg)';
       var sr=document.getElementById('spinResult');
-      if(sr) sr.textContent='Memutar...';
+      if(sr) sr.textContent='Memutar ke '+wheelPrizes[pIndex].label+'...';
       setTimeout(function(){
         showToast('Spin Berhadiah', data.message||'Hadiah!', 'success');
         var sr2=document.getElementById('spinResult');
-        if(sr2) sr2.textContent=data.message||'Selamat!';
+        if(sr2) sr2.textContent=data.message||'Selamat! '+wheelPrizes[pIndex].label;
         loadUserData(false);
         if(btn){ btn.disabled=false; btn.textContent='Sudah Spin Hari Ini'; }
         isSpinning=false;
-      }, 3800);
+      }, 4100);
     }else{
       showToast('Gagal Spin', data ? data.message : 'Gagal', 'error');
       var sr3=document.getElementById('spinResult');
@@ -674,9 +716,9 @@ async function createOrder(days, amount, btn){
   try{
     var res=await fetch('/api/api?endpoint=create_order', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:currentUserId, days:days, amount:amount})});
     var data=await res.json();
-    if(data.ok){ showToast('Invoice Dibuat', 'ID: '+(data.invoice.invoice||data.invoice.id), 'success'); await loadUserData(false); }
-    else showToast('Gagal', data.message||'Gagal', 'error');
-  }catch(e){ showToast('Error','Gagal membuat pesanan','error'); }
+    if(data.ok){ showToast('Invoice Dibuat', 'ID: '+(data.invoice.invoice||data.invoice.id)+' - Upload bukti sekarang', 'success'); await loadUserData(false); switchTab('viewProduk', document.querySelectorAll('#userNavBar .tab')[1]); }
+    else showToast('Gagal', data.message||'Gagal - Mungkin ada invoice pending, batalkan dulu', 'error');
+  }catch(e){ showToast('Error','Gagal membuat invoice','error'); }
   finally{ if(btn){ btn.disabled=false; btn.textContent=days===30 ? 'Beli Sultan' : 'Beli'; } }
 }
 
@@ -700,17 +742,17 @@ function triggerUploadProof(){
 async function submitProofFile(event){
   var file=event.target.files && event.target.files[0];
   if(!file) return;
-  if(!activeInvoiceId) return showToast('Error','Tidak ada invoice','error');
-  if(file.size>5*1024*1024) return showToast('Error','Maks 5MB','error');
+  if(!activeInvoiceId) return showToast('Error','Tidak ada invoice aktif','error');
+  if(file.size>6*1024*1024) return showToast('Error','Maks 6MB','error');
   var reader=new FileReader();
   reader.onload=function(e){
     (async function(){
       try{
         var base64=e.target.result;
-        showToast('Uploading','Mengunggah...','info');
+        showToast('Uploading','Mengunggah bukti...','info');
         var res=await fetch('/api/api?endpoint=upload_proof', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:currentUserId, invoice:activeInvoiceId, image_data:base64})});
         var data=await res.json();
-        showToast(data.ok ? 'Sukses' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+        showToast(data.ok ? 'Sukses Upload' : 'Gagal', data.message, data.ok ? 'success' : 'error');
         if(data.ok) await loadUserData(false);
       }catch(err){ showToast('Error','Gagal upload','error'); }
     })();
@@ -738,19 +780,11 @@ async function claimVoucher(btn){
     showToast('Error','Gagal klaim','error');
     if(statusEl) statusEl.textContent='Gagal klaim voucher';
   }
-  finally{ if(btn){ btn.disabled=false; btn.textContent='Tukarkan Sekarang'; } }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='Tukarkan Voucher'; } }
 }
 
 function copyRefLink(){
   var el=document.getElementById('refUrlInput');
-  if(!el||!el.value) return showToast('Error','Link belum ada','warning');
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(el.value).then(function(){ showToast('Berhasil','Link disalin!','success'); }).catch(function(){ el.select(); document.execCommand('copy'); showToast('Berhasil','Link disalin!','success'); });
-  }else{ el.select(); document.execCommand('copy'); showToast('Berhasil','Link disalin!','success'); }
-}
-
-function copyRefLink2(){
-  var el=document.getElementById('pRefUrl');
   if(!el||!el.value) return showToast('Error','Link belum ada','warning');
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(el.value).then(function(){ showToast('Berhasil','Link disalin!','success'); }).catch(function(){ el.select(); document.execCommand('copy'); showToast('Berhasil','Link disalin!','success'); });
@@ -776,13 +810,18 @@ async function loadOwnerData(){
         if(el) el.textContent=els[k];
       });
 
+      var quick=document.getElementById('oQuickStats');
+      if(quick){
+        quick.textContent='Total Fix: '+(d.totalFix||0)+' • Revenue: Rp '+(d.revenue||0).toLocaleString('id-ID')+' • Pending: '+(d.pendingPayments||[]).length+' • VIP: '+(d.premium||0)+' • Users: '+(d.usersValid||0);
+      }
+
       var pendingList=document.getElementById('oPendingList');
       var depositList=document.getElementById('oDepositList');
       var paidList=document.getElementById('oPaidList');
       var pendingHtml='';
       if(d.pendingPayments && d.pendingPayments.length>0){
         pendingHtml=d.pendingPayments.map(function(p){
-          return '<div class="invoice"><div style="display:flex;justify-content:space-between"><div><div style="font-weight:800;font-size:12px">'+p.id+'</div><div style="font-size:10px;color:var(--muted)">User: '+p.userId+' | '+p.days+'H | Rp '+(p.amount||0).toLocaleString('id-ID')+'</div>'+(p.proofImage ? '<div class="proof" style="margin-top:6px"><img src="'+p.proofImage+'" onclick="openZoomModal(\\''+p.proofImage+'\\')"></div>' : '<div style="font-size:10px;color:var(--amber);margin-top:4px">Belum upload bukti</div>')+'</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><button class="btn btn-emerald" style="padding:8px;font-size:10px" onclick="ownerAct(\\''+p.id+'\\', \\'approve\\', this)">Setujui</button><button class="btn btn-pink" style="padding:8px;font-size:10px" onclick="ownerAct(\\''+p.id+'\\', \\'reject\\', this)">Tolak</button></div></div>';
+          return '<div class="invoice"><div style="display:flex;justify-content:space-between"><div><div style="font-weight:800;font-size:12px">'+p.id+' • '+p.days+'H • Rp '+(p.amount||0).toLocaleString('id-ID')+'</div><div style="font-size:10px;color:var(--muted)">User: '+p.userId+' • '+(p.proofImage ? 'Sudah upload bukti' : 'Belum bukti')+'</div>'+(p.proofImage ? '<div class="proof" style="margin-top:6px"><img src="'+p.proofImage+'" onclick="openZoomModal(\\''+p.proofImage+'\\')"></div>' : '')+'</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><button class="btn btn-emerald" style="padding:8px;font-size:10px" onclick="ownerAct(\\''+p.id+'\\', \\'approve\\', this)">Setujui</button><button class="btn btn-pink" style="padding:8px;font-size:10px" onclick="ownerAct(\\''+p.id+'\\', \\'reject\\', this)">Tolak</button></div></div>';
         }).join('');
       }else{
         pendingHtml='<div style="font-size:11px;color:var(--muted)">Tidak ada pending.</div>';
@@ -803,10 +842,10 @@ async function loadOwnerData(){
       var userList=document.getElementById('oUserList');
       if(userList){
         if(d.recentUsers && d.recentUsers.length>0){
-          userList.innerHTML=d.recentUsers.slice(0,20).map(function(u){
+          userList.innerHTML=d.recentUsers.slice(0,30).map(function(u){
             var isVip=u.premiumUntil && u.premiumUntil>Date.now();
             var left=isVip ? Math.ceil((u.premiumUntil-Date.now())/86400000)+'H' : '';
-            return '<div class="card" style="padding:10px;margin-bottom:6px;box-shadow:none"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:800;font-size:12px">'+(u.first_name||'User')+'</div><div style="font-size:10px;color:var(--muted)">ID: '+u.id+' | Fix: '+(u.totalFix||0)+' | Poin: '+(u.points||0)+'</div></div><span class="badge '+(isVip?'emerald':'')+'">'+(isVip ? 'VIP '+left : 'Free')+'</span></div></div>';
+            return '<div class="card" style="padding:10px;margin-bottom:6px;box-shadow:none"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:800;font-size:12px">'+(u.first_name||'User')+' • '+(u.username ? '@'+u.username : '')+'</div><div style="font-size:10px;color:var(--muted)">ID: '+u.id+' | Fix: '+(u.totalFix||0)+' | Poin: '+(u.points||0)+' | Ref: '+(u.referralCount||0)+'</div></div><span class="badge '+(isVip?'emerald':'')+'">'+(isVip ? 'VIP '+left : 'Free')+'</span></div></div>';
           }).join('');
         }else{
           userList.innerHTML='<div style="font-size:11px;color:var(--muted)">Belum ada user.</div>';
@@ -819,7 +858,7 @@ async function loadOwnerData(){
           vList.innerHTML=d.codes.map(function(c){
             var quotaText=c.quota && c.quota>0 ? (c.used||0)+'/'+c.quota : (c.used||0)+'/∞';
             var status=c.quota>0 && (c.used||0)>=c.quota ? 'Habis' : 'Aktif';
-            return '<div class="card" style="padding:10px;margin-bottom:6px;box-shadow:none"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:800;font-size:12px">'+c.code+' <span class="badge '+(status==='Aktif'?'emerald':'amber')+'" style="font-size:8px;margin-left:4px">'+status+'</span></div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+c.days+' Hari | '+quotaText+'</div></div><button class="btn btn-pink" style="width:auto;padding:6px 10px;font-size:10px" onclick="deleteVoucher(\\''+c.code+'\\', this)">Hapus</button></div></div>';
+            return '<div class="card" style="padding:10px;margin-bottom:6px;box-shadow:none"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:800;font-size:12px">'+c.code+' <span class="badge '+(status==='Aktif'?'emerald':'amber')+'" style="font-size:8px;margin-left:4px">'+status+'</span></div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+c.days+' Hari | '+quotaText+' | Dibuat: '+new Date(c.createdAt||Date.now()).toLocaleDateString('id-ID')+'</div></div><button class="btn btn-pink" style="width:auto;padding:6px 10px;font-size:10px" onclick="deleteVoucher(\\''+c.code+'\\', this)">Hapus</button></div></div>';
           }).join('');
         }else{
           vList.innerHTML='<div style="font-size:11px;color:var(--muted)">Belum ada voucher.</div>';
