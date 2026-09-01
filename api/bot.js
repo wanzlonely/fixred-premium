@@ -14,8 +14,8 @@ function getOwnerMenu(user, chatId, db, webappUrl){
 const pendingCount=Object.values(db.payments||{}).filter(p=>p.status==='waiting_approval' || p.status==='pending').length;
 const usersCount=Object.keys(db.users||{}).length;
 const dispName=esc(user.first_name||'Owner');
-const text=`<b>WALZY OWNER</b>\n\nHalo <b>${dispName}</b>\n\n👥 ${usersCount} Users • 📥 ${pendingCount} Pending\n\nKelola dashboard:`;
-const keyboard=[[{text:'⚡ Fix Merah', callback_data:'fix_merah'}],[{text:'Buka Dashboard', callback_data:'open_dashboard'}],[{text:'Web Control', web_app:{url:webappUrl}}]];
+const text=`<b>WALZY OWNER</b>\n\nHalo <b>${dispName}</b>\n\n👥 ${usersCount} Users • 📥 ${pendingCount} Pending\n\nKelola di Web Control:`;
+const keyboard=[[{text:'⚡ Fix Merah', callback_data:'fix_merah'}],[{text:'Web Control', web_app:{url:webappUrl}}]];
 return {text, opts:{parse_mode:'HTML', reply_markup:{inline_keyboard:keyboard}}};
 }
 function getUserMenu(user, chatId, webappUrl){
@@ -30,7 +30,7 @@ const keyboard=[[{text:'⚡ Fix Merah', callback_data:'fix_merah'}],[{text:'Buka
 return {text, opts:{parse_mode:'HTML', reply_markup:{inline_keyboard:keyboard}}};
 }
 module.exports = async (req, res) => {
-if(req.method!=='POST') return res.status(200).send('WALZY BOT V7 TOTAL ONLINE');
+if(req.method!=='POST') return res.status(200).send('WALZY BOT V8 ONLINE');
 const bot=new TelegramBot(config.BOT_TOKEN);
 try{
 const db=await loadDB();
@@ -53,11 +53,6 @@ await saveDB(db);
 await bot.sendMessage(uid, `<b>Fix Merah</b>\n\nKirim nomor WA:\n<code>08123456789</code>`, {parse_mode:'HTML'});
 return res.status(200).send('OK');
 }
-if(data==='open_dashboard'){
-await bot.answerCallbackQuery(qId,{text:'Dashboard'});
-await bot.sendMessage(uid, `<b>Dashboard</b>\n\nBuka Web Control.`, {parse_mode:'HTML', reply_markup:{inline_keyboard:[[{text:'Web Control', web_app:{url:webappUrl}}]]}});
-return res.status(200).send('OK');
-}
 if(data==='contact_owner'){
 await bot.answerCallbackQuery(qId,{text:'Admin'});
 user.state={action:'awaiting_owner_msg'};
@@ -67,7 +62,7 @@ return res.status(200).send('OK');
 }
 if(data==='help'){
 await bot.answerCallbackQuery(qId,{text:'Panduan'});
-const helpText=`<b>Panduan</b>\n\n⚡ Fix Merah: Kirim nomor WA\n🛒 Buka Toko: Beranda profil real, Produk beli VIP + upload bukti, Daily check-in mingguan beda + spin presisi + toko poin`;
+const helpText=`<b>Panduan</b>\n\n⚡ Fix Merah: Kirim nomor WA\n🛒 Buka Toko: Beranda profil real-time, Produk beli VIP + upload bukti, Daily check-in + spin + toko poin`;
 await bot.sendMessage(uid, helpText, {parse_mode:'HTML'});
 return res.status(200).send('OK');
 }
