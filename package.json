@@ -4,6 +4,7 @@
   "private": true,
   "main": "api/bot.js",
   "dependencies": {
+    "dotenv": "^16.4.5",
     "node-telegram-bot-api": "^0.66.0",
     "telegram": "^2.22.2"
   }
