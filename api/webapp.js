@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
     background: #ffffff; border: 1px solid var(--border-card); border-radius: 20px; padding: 16px 14px;
     display: flex; flex-direction: column; gap: 4px; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.02);
   }
-  .stat-val { font-family: var(--font-heading); font-size: 24px; font-weight: 800; color: var(--text-primary); }
+  .stat-val { font-family: var(--font-heading); font-size: 22px; font-weight: 800; color: var(--text-primary); }
   .stat-lbl { font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
   .btn-custom {
@@ -254,8 +254,8 @@ module.exports = async (req, res) => {
 
       <div class="grid3">
         <div class="stat-card">
-          <div class="stat-val" id="sOrders">0</div>
-          <div class="stat-lbl">Total Order</div>
+          <div class="stat-val" style="color:var(--accent-cyan)" id="sQuota">5/5</div>
+          <div class="stat-lbl">Kuota Fix</div>
         </div>
         <div class="stat-card">
           <div class="stat-val" id="sRefs">0</div>
@@ -639,7 +639,7 @@ module.exports = async (req, res) => {
       if (!pollingTimer) {
         pollingTimer = setInterval(function() {
           loadUserData(true);
-        }, 3000);
+        }, 2500);
       }
     } catch (err) {
       hideLoader();
@@ -662,8 +662,8 @@ module.exports = async (req, res) => {
         document.getElementById('uName').textContent = u.first_name || 'User Walzy';
         document.getElementById('uIdText').textContent = 'ID: ' + u.id;
         document.getElementById('uRankBadge').textContent = u.rank ? u.rank.name : 'BASIC';
-        document.getElementById('uStatusBadge').textContent = u.isPremium ? 'VIP (' + u.premiumLeftDays + 'H)' : 'Gratis (' + u.dailyFixRemaining + '/3)';
-        document.getElementById('sOrders').textContent = u.totalFix || 0;
+        document.getElementById('uStatusBadge').textContent = u.isPremium ? 'VIP (' + u.premiumLeftDays + 'H)' : 'Gratis';
+        document.getElementById('sQuota').textContent = u.dailyFixRemaining || '5/5';
         document.getElementById('sRefs').textContent = u.referralCount || 0;
         document.getElementById('sPoints').textContent = u.points || 0;
         document.getElementById('checkinPointsVal').textContent = (u.points || 0) + ' PTS';
