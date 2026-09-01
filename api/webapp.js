@@ -100,7 +100,7 @@ module.exports = async (req, res) => {
   .nav-bar {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 36px); max-width: 480px;
     background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
-    border: 1px solid var(--border-card); border-radius: 28px; display: flex; justify-space-around; padding: 8px; z-index: 80;
+    border: 1px solid var(--border-card); border-radius: 28px; display: flex; justify-content: space-around; padding: 8px; z-index: 80;
     box-shadow: 0 14px 40px rgba(0,0,0,0.08);
   }
   .nav-tab {
@@ -157,7 +157,7 @@ module.exports = async (req, res) => {
     <svg class="icon-svg spin-slow" style="width:40px;height:40px" viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
   </div>
   <div style="font-family:var(--font-heading);font-weight:900;font-size:22px;letter-spacing:1px;color:var(--text-primary)">WALZY STORE HUB</div>
-  <div style="font-size:12px;color:var(--text-secondary);font-weight:600" id="loadText">Memuat aplikasi...</div>
+  <div style="font-size:12px;color:var(--text-secondary);font-weight:600" id="loadText">Memuat antarmuka realtime...</div>
 </div>
 
 <div class="toast" id="toast">
@@ -186,7 +186,7 @@ module.exports = async (req, res) => {
     <div class="brand-title">WALZY STORE</div>
   </div>
   <div class="user-badge" id="liveBadge">
-    <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-emerald)" class="pulse"></span> ONLINE
+    <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-emerald)" class="pulse"></span> ONLINE REALTIME
   </div>
 </div>
 
@@ -198,12 +198,12 @@ module.exports = async (req, res) => {
           <div style="width:60px;height:60px;border-radius:20px;background:rgba(2, 132, 199, 0.1);display:grid;place-items:center;color:var(--accent-cyan);border:1px solid rgba(2, 132, 199, 0.2)">
             <svg class="icon-svg float" style="width:32px;height:32px" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <div style="flex:1">
-            <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--text-primary)" id="uName">User</div>
-            <div style="font-size:12px;color:var(--text-secondary);font-weight:600" id="uIdText">ID: -</div>
-            <div style="display:flex;gap:8px;margin-top:6px">
-              <span class="user-badge" id="uRankBadge">Basic</span>
-              <span class="user-badge" style="background:rgba(219,39,119,0.1);color:var(--accent-pink);border-color:rgba(219,39,119,0.2)" id="uStatusBadge">Gratis</span>
+          <div>
+            <div id="uName" style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--text-primary)">User Walzy</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600" id="uIdText">ID: --</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <span class="user-badge" id="uRankBadge">BASIC</span>
+              <span class="user-badge" id="uStatusBadge" style="color:var(--accent-purple);border-color:rgba(124,58,237,0.3);background:rgba(124,58,237,0.08)">Gratis</span>
             </div>
           </div>
         </div>
@@ -211,56 +211,165 @@ module.exports = async (req, res) => {
 
       <div class="grid3">
         <div class="stat-card">
-          <div class="stat-val" id="sQuota">5/5</div>
-          <div class="stat-lbl">Kuota Harian</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" id="sPoints">0 🪙</div>
-          <div class="stat-lbl">Poin</div>
+          <div class="stat-val" style="color:var(--accent-cyan)" id="sQuota">5/5</div>
+          <div class="stat-lbl">Kuota Fix</div>
         </div>
         <div class="stat-card">
           <div class="stat-val" id="sRefs">0</div>
           <div class="stat-lbl">Referral</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--accent-amber)" id="sPoints">0</div>
+          <div class="stat-lbl">Poin Store</div>
+        </div>
       </div>
 
       <div class="cyber-card">
-        <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;margin-bottom:12px;color:var(--text-primary)">💡 Bantuan Singkat</div>
-        <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">
-          ✅ Gunakan fitur <b>Fix Merah</b> untuk proses nomor target<br/>
-          ✅ Beli <b>VIP</b> untuk kuota unlimited<br/>
-          ✅ Klaim <b>Daily Rewards</b> untuk bonus poin
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;display:flex;align-items:center;gap:10px;color:var(--text-primary)">
+            <svg class="icon-svg spin-slow" style="color:var(--accent-amber)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Spin Wheel Keberuntungan
+          </div>
         </div>
+        <div class="wheel-container">
+          <div class="wheel-pointer"></div>
+          <canvas id="spinCanvas" width="300" height="300"></canvas>
+        </div>
+        <button class="btn-custom" id="spinBtn" style="margin-top:16px" onclick="triggerSpin(this)">Putar Spin Harian</button>
+      </div>
+
+      <div class="cyber-card">
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;color:var(--text-primary)">
+          <svg class="icon-svg" style="color:var(--accent-emerald)" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Redeem Kode Voucher
+        </div>
+        <input class="input-custom" id="vCodeInput" placeholder="Masukkan Kode Voucher Promo">
+        <button class="btn-custom" style="margin-top:14px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="claimVoucher(this)">Tukarkan Kode</button>
+      </div>
+
+      <div class="cyber-card">
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;color:var(--text-primary)">
+          <svg class="icon-svg" style="color:var(--accent-purple)" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Program Referral Undangan
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;font-weight:600">Dapatkan +50 Poin setiap kali ada user baru mendaftar menggunakan link Anda.</div>
+        <input class="input-custom" id="refUrlInput" readonly value="Memuat link...">
+        <button class="btn-custom" style="margin-top:14px" onclick="copyRefLink()">Salin Link Referral</button>
       </div>
     </div>
 
     <div id="viewOrder" class="view">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:16px;color:var(--text-primary)">Order VIP Membership</div>
-      <div id="ordersList" style="display:flex;flex-direction:column;gap:14px"></div>
-    </div>
-
-    <div id="viewCheckin" class="view">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:12px;color:var(--text-primary)">🎁 Daily Check-in</div>
-      <div class="cyber-card">
-        <div style="text-align:center;margin:16px 0">
-          <div style="font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:16px">Klaim reward harian Anda</div>
-          <div class="streak-grid" id="checkinGrid"></div>
-          <div style="margin-top:18px">
-            <button class="btn-custom" onclick="checkinToday()">Klaim Hari Ini</button>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text-primary)">Katalog VIP Store</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Pilih paket langganan VIP dan nikmati akses penuh tanpa batas!</div>
+      <div id="activeInvoiceBox"></div>
+      <div class="product-shop-grid">
+        <div class="shop-item">
+          <div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Trial</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">Akses Full 3 Hari</div>
           </div>
-          <div style="margin-top:12px;font-size:13px;font-weight:600;color:var(--text-primary)">Reward Hari Ini: <span style="color:var(--accent-cyan);font-weight:800" id="checkinPointsVal">0 PTS</span></div>
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-cyan);margin-top:8px">Rp 7.000</div>
+          <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px" onclick="createOrder(3, 7000, this)">Beli VIP 3H</button>
+        </div>
+        <div class="shop-item">
+          <div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Hemat</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">Akses Full 5 Hari</div>
+          </div>
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-cyan);margin-top:8px">Rp 10.000</div>
+          <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px" onclick="createOrder(5, 10000, this)">Beli VIP 5H</button>
+        </div>
+        <div class="shop-item">
+          <div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Starter</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">7 Hari Popular</div>
+          </div>
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-emerald);margin-top:8px">Rp 15.000</div>
+          <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="createOrder(7, 15000, this)">Beli VIP 7H</button>
+        </div>
+        <div class="shop-item">
+          <div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Pro</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">14 Hari Best Value</div>
+          </div>
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-purple);margin-top:8px">Rp 25.000</div>
+          <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #6d28d9)" onclick="createOrder(14, 25000, this)">Beli VIP 14H</button>
+        </div>
+        <div class="shop-item" style="grid-column: span 2;border-color:rgba(217, 119, 6, 0.4)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-family:var(--font-heading);font-weight:800;font-size:17px;color:var(--text-primary)">VIP Sultan 30 Hari</div>
+              <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">Priority Support & Full Unlimited</div>
+            </div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;color:var(--accent-amber)">Rp 45.000</div>
+          </div>
+          <button class="btn-custom btn-buy-pkg" style="margin-top:14px;padding:14px;font-size:13px;background:linear-gradient(135deg, var(--accent-amber), #b45309)" onclick="createOrder(30, 45000, this)">Beli VIP 30 Hari Sultan</button>
         </div>
       </div>
     </div>
 
-    <div id="viewOwnerHome" class="view" style="display:none">
+    <div id="viewCheckin" class="view">
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text-primary)">Daily Check-in Poin</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Check-in harian untuk mendapatkan poin bertingkat setiap minggunya!</div>
+
       <div class="cyber-card">
-        <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;margin-bottom:12px;color:var(--text-primary)">👑 Dashboard Owner</div>
-        <div style="font-size:12px;color:var(--text-secondary);font-weight:600;line-height:1.8">
-          📊 <b>Total Revenue:</b> <code id="oRevTotal">Rp 0</code><br/>
-          👥 <b>Total Users:</b> <code id="oUsersTotal">0</code><br/>
-          💎 <b>VIP Users:</b> <code id="oVipTotal">0</code><br/>
-          🛠️ <b>Total Orders:</b> <code id="oOrdersTotal">0</code>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:12px;color:var(--text-secondary);font-weight:600">Poin Anda saat ini</div>
+            <div style="font-family:var(--font-heading);font-size:28px;font-weight:800;color:var(--accent-amber)" id="checkinPointsVal">0 PTS</div>
+          </div>
+          <button class="btn-custom" id="checkinBtn" style="width:auto;padding:12px 24px" onclick="triggerCheckin(this)">Check-in Hari Ini</button>
+        </div>
+        <div class="streak-grid">
+          <div class="streak-day" id="stDay1"><span>H1</span><b>+30</b></div>
+          <div class="streak-day" id="stDay2"><span>H2</span><b>+50</b></div>
+          <div class="streak-day" id="stDay3"><span>H3</span><b>+75</b></div>
+          <div class="streak-day" id="stDay4"><span>H4</span><b>+100</b></div>
+          <div class="streak-day" id="stDay5"><span>H5</span><b>+150</b></div>
+          <div class="streak-day" id="stDay6"><span>H6</span><b>+200</b></div>
+          <div class="streak-day" id="stDay7"><span>H7</span><b>+350</b></div>
+        </div>
+      </div>
+
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;margin:22px 0 14px;color:var(--text-primary)">Point Shop - Tukar Poin Jadi VIP</div>
+
+      <div class="product-shop-grid">
+        <div class="shop-item">
+          <div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">1 Hari VIP</div>
+            <div style="font-size:12px;color:var(--accent-amber);margin-top:2px;font-weight:700">100 PTS</div>
+          </div>
+          <button class="btn-custom" style="padding:10px;font-size:12px" onclick="redeemPoints(1, this)">Tukarkan</button>
+        </div>
+        <div class="shop-item">
+          <div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">3 Hari VIP</div>
+            <div style="font-size:12px;color:var(--accent-amber);margin-top:2px;font-weight:700">250 PTS</div>
+          </div>
+          <button class="btn-custom" style="padding:10px;font-size:12px" onclick="redeemPoints(2, this)">Tukarkan</button>
+        </div>
+        <div class="shop-item">
+          <div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">7 Hari VIP</div>
+            <div style="font-size:12px;color:var(--accent-amber);margin-top:2px;font-weight:700">500 PTS</div>
+          </div>
+          <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="redeemPoints(3, this)">Tukarkan</button>
+        </div>
+        <div class="shop-item">
+          <div>
+            <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">14 Hari VIP</div>
+            <div style="font-size:12px;color:var(--accent-amber);margin-top:2px;font-weight:700">900 PTS</div>
+          </div>
+          <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #6d28d9)" onclick="redeemPoints(4, this)">Tukarkan</button>
+        </div>
+        <div class="shop-item" style="grid-column: span 2">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">30 Hari VIP Sultan</div>
+              <div style="font-size:12px;color:var(--accent-amber);margin-top:2px;font-weight:700">1.600 PTS</div>
+            </div>
+            <button class="btn-custom" style="width:auto;padding:10px 24px;font-size:12px;background:linear-gradient(135deg, var(--accent-amber), #b45309)" onclick="redeemPoints(5, this)">Tukarkan</button>
+          </div>
         </div>
       </div>
     </div>
@@ -268,28 +377,34 @@ module.exports = async (req, res) => {
 
   <div id="viewOwnerArea" style="display:none">
     <div id="oTabOrders" class="view active">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:16px;color:var(--text-primary)">📋 Daftar Pesanan</div>
-      <div id="oOrderList"></div>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text-primary)">Katalog Order Pembayaran</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Daftar transaksi pending & foto bukti pembayaran terkirim.</div>
+      <div id="oPendingList"></div>
     </div>
     <div id="oTabUsers" class="view">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:16px;color:var(--text-primary)">👥 Pengguna Aktif</div>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text-primary)">Kelola User Valid</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Daftar pengguna terverifikasi.</div>
       <div id="oUserList"></div>
     </div>
     <div id="oTabVouchers" class="view">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:16px;color:var(--text-primary)">🎟️ Kelola Voucher</div>
       <div class="cyber-card">
-        <div style="font-weight:600;color:var(--text-primary);margin-bottom:12px">Buat Voucher Baru</div>
-        <input type="text" class="input-custom" id="vGenCode" placeholder="Kode voucher (misal: VIP2024)" style="margin-bottom:10px">
-        <input type="number" class="input-custom" id="vGenDays" placeholder="Durasi (hari)" style="margin-bottom:10px">
-        <input type="number" class="input-custom" id="vGenQuota" placeholder="Kuota (kosong=unlimited)" style="margin-bottom:14px">
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:14px;color:var(--text-primary)">Generator Voucher Promo</div>
+        <input class="input-custom" id="vGenCode" placeholder="Kode Voucher (cth: SULTAN100)" style="margin-bottom:12px">
+        <div class="grid2" style="margin-bottom:12px">
+          <input class="input-custom" id="vGenDays" type="number" placeholder="Durasi (Hari)">
+          <input class="input-custom" id="vGenQuota" type="number" placeholder="Kuota (0 = ∞)">
+        </div>
         <button class="btn-custom" onclick="createVoucher(this)">Buat Voucher</button>
       </div>
+      <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin:16px 0 12px;color:var(--text-primary)">Voucher Aktif</div>
       <div id="oVoucherList"></div>
     </div>
     <div id="oTabBroadcast" class="view">
-      <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:12px;color:var(--text-primary)">Kirim Broadcast Pesan Massal</div>
-      <textarea class="input-custom" id="bcTextInput" style="height:140px;resize:none;margin-bottom:14px" placeholder="Tuliskan pesan HTML broadcast massal..."></textarea>
-      <button class="btn-custom" id="btnSendBc" onclick="sendBroadcast(this)">Kirim Broadcast Sekarang</button>
+      <div class="cyber-card">
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:12px;color:var(--text-primary)">Kirim Broadcast Pesan Massal</div>
+        <textarea class="input-custom" id="bcTextInput" style="height:140px;resize:none;margin-bottom:14px" placeholder="Tuliskan pesan HTML broadcast massal..."></textarea>
+        <button class="btn-custom" id="btnSendBc" onclick="sendBroadcast(this)">Kirim Broadcast Sekarang</button>
+      </div>
     </div>
     <div id="oTabAnalytics" class="view">
       <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:16px;color:var(--text-primary)">Analitik Pendapatan Studio</div>
@@ -366,8 +481,6 @@ module.exports = async (req, res) => {
   var isSpinning = false;
   var currentWheelRotation = 0;
   var pollingTimer = null;
-  var appInitialized = false;
-  var loadTimeout = null;
 
   var wheelPrizes = [
     { label: "ZONK ❌", color: "#f43f5e" },
@@ -384,16 +497,6 @@ module.exports = async (req, res) => {
       ldr.style.opacity = '0';
       setTimeout(function() { ldr.style.display = 'none'; }, 400);
     }
-  }
-
-  function esc(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
   }
 
   function drawWheel() {
@@ -431,50 +534,11 @@ module.exports = async (req, res) => {
     }
   }
 
-  function switchTab(tabName, event) {
-    if (event) event.preventDefault();
-    document.querySelectorAll('#userNavBar .nav-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('#viewUserArea .view').forEach(v => v.classList.remove('active'));
-    event.target.closest('.nav-tab').classList.add('active');
-    var viewId = 'view' + tabName;
-    var view = document.getElementById(viewId);
-    if (view) view.classList.add('active');
-  }
-
-  function switchOwnerTab(tabName, event) {
-    if (event) event.preventDefault();
-    document.querySelectorAll('#ownerNavBar .nav-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('#viewOwnerArea .view').forEach(v => v.classList.remove('active'));
-    event.target.closest('.nav-tab').classList.add('active');
-    var viewId = 'oTab' + tabName;
-    var view = document.getElementById(viewId);
-    if (view) view.classList.add('active');
-  }
-
-  function showToast(title, msg, type) {
-    var toast = document.getElementById('toast');
-    if (!toast) return;
-    
-    var icon = document.getElementById('toastIcon');
-    icon.style.color = type === 'success' ? 'var(--accent-emerald)' : type === 'error' ? 'var(--accent-pink)' : 'var(--accent-amber)';
-    icon.style.background = type === 'success' ? 'rgba(5, 150, 105, 0.1)' : type === 'error' ? 'rgba(219, 39, 119, 0.1)' : 'rgba(217, 119, 6, 0.1)';
-    
-    document.getElementById('toastTitle').textContent = title;
-    document.getElementById('toastMsg').textContent = msg;
-    
-    toast.classList.add('show');
-    clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3500);
-  }
-
+  var appInitialized = false;
   function initApp() {
     if (appInitialized) return;
     appInitialized = true;
-
-    // Hide loader after 800ms - no waiting for realtime connection
-    setTimeout(hideLoader, 800);
+    setTimeout(hideLoader, 1000);
 
     try {
       tg = window.Telegram ? window.Telegram.WebApp : null;
@@ -495,20 +559,19 @@ module.exports = async (req, res) => {
 
       if (!currentUserId) {
         document.getElementById('loadText').textContent = 'Silakan buka WebApp melalui Telegram Bot!';
+        hideLoader();
         return;
       }
 
-      // Load user data immediately
       loadUserData();
 
-      // Set up polling - every 3 seconds
       if (!pollingTimer) {
         pollingTimer = setInterval(function() {
           loadUserData(true);
-        }, 3000);
+        }, 2500);
       }
     } catch (err) {
-      console.error('Init error:', err);
+      hideLoader();
     }
   }
 
@@ -518,57 +581,207 @@ module.exports = async (req, res) => {
       if (currentFirstName) queryUrl += '&first_name=' + encodeURIComponent(currentFirstName);
       if (currentUsername) queryUrl += '&username=' + encodeURIComponent(currentUsername);
 
-      var res = await fetch(queryUrl);
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+      var res;
+      try {
+        res = await fetch(queryUrl, { signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       var data = await res.json();
 
       if (data.ok) {
         var u = data.user;
         isUserOwner = u.isOwner;
 
+        document.getElementById('uName').textContent = u.first_name || 'User Walzy';
+        document.getElementById('uIdText').textContent = 'ID: ' + u.id;
+        document.getElementById('uRankBadge').textContent = u.rank ? u.rank.name : 'BASIC';
+        document.getElementById('uStatusBadge').textContent = u.isPremium ? 'VIP (' + u.premiumLeftDays + 'H)' : 'Gratis';
+        document.getElementById('sQuota').textContent = u.dailyFixRemaining || '5/5';
+        document.getElementById('sRefs').textContent = u.referralCount || 0;
+        document.getElementById('sPoints').textContent = u.points || 0;
+        document.getElementById('checkinPointsVal').textContent = (u.points || 0) + ' PTS';
+        document.getElementById('refUrlInput').value = u.referralLink || '';
+
+        var spinBtn = document.getElementById('spinBtn');
+        if (spinBtn && !isSpinning) spinBtn.disabled = !u.canSpin;
+
+        var chkBtn = document.getElementById('checkinBtn');
+        if (chkBtn) {
+          chkBtn.disabled = !u.canCheckin;
+          chkBtn.innerHTML = u.canCheckin ? 'Check-in Hari Ini' : 'Sudah Check-in';
+        }
+
+        for (var i = 1; i <= 7; i++) {
+          var el = document.getElementById('stDay' + i);
+          if (el) {
+            if (i <= (u.checkinStreak || 0)) el.classList.add('active');
+            else el.classList.remove('active');
+          }
+        }
+
         if (isUserOwner) {
-          // OWNER VIEW
-          document.getElementById('userNavBar').style.display = 'none';
-          document.getElementById('ownerNavBar').style.display = 'flex';
           document.getElementById('viewUserArea').style.display = 'none';
+          document.getElementById('userNavBar').style.display = 'none';
           document.getElementById('viewOwnerArea').style.display = 'block';
+          document.getElementById('ownerNavBar').style.display = 'flex';
           loadOwnerData();
         } else {
-          // USER VIEW
-          document.getElementById('userNavBar').style.display = 'flex';
-          document.getElementById('ownerNavBar').style.display = 'none';
           document.getElementById('viewUserArea').style.display = 'block';
+          document.getElementById('userNavBar').style.display = 'flex';
           document.getElementById('viewOwnerArea').style.display = 'none';
-
-          document.getElementById('uName').textContent = u.first_name || 'User Walzy';
-          document.getElementById('uIdText').textContent = 'ID: ' + u.id;
-          document.getElementById('uRankBadge').textContent = u.rank ? u.rank.name : 'BASIC';
-          document.getElementById('uStatusBadge').textContent = u.isPremium ? 'VIP (' + u.premiumLeftDays + 'H)' : 'Gratis';
-          document.getElementById('sQuota').textContent = u.dailyFixRemaining || '5/5';
-          document.getElementById('sRefs').textContent = u.referralCount || 0;
-          document.getElementById('sPoints').textContent = (u.points || 0) + ' 🪙';
-          document.getElementById('checkinPointsVal').textContent = (u.checkinReward || 0) + ' PTS';
+          document.getElementById('ownerNavBar').style.display = 'none';
         }
+
+        var invBox = document.getElementById('activeInvoiceBox');
+        var buyBtns = document.querySelectorAll('.btn-buy-pkg');
+
+        if (data.currentInvoice) {
+          var inv = data.currentInvoice;
+          activeInvoiceId = inv.id;
+
+          buyBtns.forEach(function(btn) { btn.disabled = true; });
+
+          var proofHtml = inv.proofImage ? 
+            '<div class="proof-preview-container">' +
+              '<img src="' + inv.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\'' + inv.proofImage + '\')">' +
+              '<div class="zoom-btn-overlay" onclick="openZoomModal(\'' + inv.proofImage + '\')">' +
+                '<svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
+                'Perbesar Foto Fullscreen' +
+              '</div>' +
+            '</div>' : '';
+
+          invBox.innerHTML = 
+            '<div class="cyber-card" style="border-color:var(--accent-amber)">' +
+              '<div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--accent-amber)">Invoice Aktif: ' + inv.id + '</div>' +
+              '<div style="font-size:13px;margin-top:4px;font-weight:700">Paket ' + inv.days + ' Hari - ' + (inv.amountFormatted || ('Rp ' + inv.amount)) + '</div>' +
+              '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;font-weight:600">Status: <b>' + (inv.status === 'waiting_approval' ? 'Menunggu Konfirmasi Owner' : 'Belum Dibayar / Upload Bukti') + '</b></div>' +
+              proofHtml +
+              '<div style="display:flex;gap:10px;margin-top:14px">' +
+                '<button class="btn-custom" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="triggerUploadProof()">' + (inv.proofImage ? 'Ganti Foto Bukti' : 'Upload Foto Bukti') + '</button>' +
+                '<button class="btn-custom" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="cancelOrder(\'' + inv.id + '\', this)">Batalkan Pembelian</button>' +
+              '</div>' +
+            '</div>';
+        } else {
+          activeInvoiceId = null;
+          invBox.innerHTML = '';
+          buyBtns.forEach(function(btn) { btn.disabled = false; });
+        }
+      } else if (!isSilent) {
+        showToast('Error', data.message || 'Gagal memuat profil', 'error');
       }
     } catch (e) {
-      if (!isSilent) showToast('Error', 'Gagal memuat data', 'error');
+      if (!isSilent) showToast('Error', 'Gagal memuat data dari server', 'error');
+    } finally {
+      if (!isSilent) hideLoader();
     }
   }
 
-  async function loadOwnerData() {
-    try {
-      var res = await fetch('/api/api?endpoint=owner_stats&owner_id=' + currentUserId);
-      var d = await res.json();
-      
-      if (d.ok && d.stats) {
-        document.getElementById('oRevTotal').textContent = 'Rp ' + (d.stats.revenue || 0).toLocaleString('id-ID');
-        document.getElementById('oUsersTotal').textContent = d.stats.validUsers || 0;
-        document.getElementById('oVipTotal').textContent = d.stats.vipUsers || 0;
-        document.getElementById('oOrdersTotal').textContent = d.stats.totalOrders || 0;
-      }
-    } catch (e) {}
+  function openZoomModal(imgSrc) {
+    document.getElementById('zoomedImageSrc').src = imgSrc;
+    document.getElementById('imageZoomModal').classList.add('active');
   }
 
-  async function checkinToday() {
+  function closeZoomModal() {
+    document.getElementById('imageZoomModal').classList.remove('active');
+  }
+
+  function switchTab(tabName, event) {
+    if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    document.querySelectorAll('#viewUserArea .view').forEach(function(v) { v.classList.remove('active'); });
+    document.querySelectorAll('#userNavBar .nav-tab').forEach(function(t) { t.classList.remove('active'); });
+
+    document.getElementById('view' + tabName).classList.add('active');
+    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+  }
+
+  function switchOwnerTab(tabName, event) {
+    if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    document.querySelectorAll('#viewOwnerArea .view').forEach(function(v) { v.classList.remove('active'); });
+    document.querySelectorAll('#ownerNavBar .nav-tab').forEach(function(t) { t.classList.remove('active'); });
+
+    document.getElementById('oTab' + tabName).classList.add('active');
+    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+  }
+
+  function showToast(title, msg, type) {
+    type = type || 'info';
+    var t = document.getElementById('toast');
+    var iconContainer = document.getElementById('toastIcon');
+    var progress = document.getElementById('toastProgress');
+    
+    var colors = {
+      success: 'var(--accent-emerald)',
+      error: 'var(--accent-pink)',
+      warning: 'var(--accent-amber)',
+      info: 'var(--accent-cyan)'
+    };
+    var color = colors[type] || colors.info;
+
+    t.style.borderColor = color;
+    iconContainer.style.color = color;
+    if (progress) progress.style.background = color;
+
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMsg').textContent = msg;
+
+    if (progress) {
+      progress.style.transition = 'none';
+      progress.style.width = '100%';
+      setTimeout(function() {
+        progress.style.transition = 'width 3.5s linear';
+        progress.style.width = '0%';
+      }, 50);
+    }
+
+    t.classList.add('show');
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(function() { t.classList.remove('show'); }, 3500);
+  }
+
+  async function triggerSpin(btn) {
+    if (isSpinning) return;
+    isSpinning = true;
+    if (btn) btn.disabled = true;
+
+    try {
+      var res = await fetch('/api/api?endpoint=spin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId })
+      });
+      var data = await res.json();
+
+      if (data.ok) {
+        var pIndex = data.prizeIndex !== undefined ? data.prizeIndex : 0;
+        var numSlices = wheelPrizes.length;
+        var sliceDeg = 360 / numSlices;
+        var targetDeg = 360 - (pIndex * sliceDeg + sliceDeg / 2) - 90;
+
+        currentWheelRotation += (360 * 5) + (targetDeg - (currentWheelRotation % 360));
+        var canvas = document.getElementById('spinCanvas');
+        canvas.style.transform = 'rotate(' + currentWheelRotation + 'deg)';
+
+        setTimeout(function() {
+          showToast(data.prize.type === 'zonk' ? 'Informasi Spin' : 'Selamat!', data.message, data.prize.type === 'zonk' ? 'warning' : 'success');
+          loadUserData();
+          isSpinning = false;
+        }, 4200);
+      } else {
+        showToast('Informasi', data.message, 'warning');
+        isSpinning = false;
+      }
+    } catch (e) {
+      showToast('Error', 'Gagal memproses spin', 'error');
+      isSpinning = false;
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function triggerCheckin(btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Proses Check-in...'; }
     try {
       var res = await fetch('/api/api?endpoint=checkin', {
         method: 'POST',
@@ -576,45 +789,305 @@ module.exports = async (req, res) => {
         body: JSON.stringify({ user_id: currentUserId })
       });
       var data = await res.json();
-      showToast(data.ok ? 'Berhasil!' : 'Gagal', data.message, data.ok ? 'success' : 'error');
-      if (data.ok) loadUserData();
+      showToast(data.ok ? 'Check-in Berhasil' : 'Informasi', data.message, data.ok ? 'success' : 'warning');
+      loadUserData();
     } catch (e) {
-      showToast('Error', 'Gagal claim checkin', 'error');
+      showToast('Error', 'Gagal melakukan check-in', 'error');
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Check-in Hari Ini'; }
     }
   }
 
-  async function submitProofFile(event) {
+  async function redeemPoints(option, btn) {
+    var orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Proses...'; }
+    try {
+      var res = await fetch('/api/api?endpoint=redeem_points', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId, option: option })
+      });
+      var data = await res.json();
+      showToast(data.ok ? 'Point Vault' : 'Gagal Transaksi', data.message, data.ok ? 'success' : 'error');
+      if (data.ok) loadUserData();
+    } catch (e) {
+      showToast('Error', 'Gagal menukarkan poin', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+    }
+  }
+
+  async function createOrder(days, amount, btn) {
+    var orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
+    try {
+      var res = await fetch('/api/api?endpoint=order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId, days: days, amount: amount })
+      });
+      var data = await res.json();
+      if (data.ok) {
+        showToast('Invoice Dibuat', 'ID: ' + (data.invoice.invoice || data.invoice.id), 'success');
+        loadUserData();
+      } else {
+        showToast('Transaksi Tertunda', data.message, 'warning');
+      }
+    } catch (e) {
+      showToast('Error', 'Gagal membuat invoice', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+    }
+  }
+
+  async function cancelOrder(invoiceId, btn) {
+    var orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Membatalkan...'; }
+    try {
+      var res = await fetch('/api/api?endpoint=cancel_order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId, invoice: invoiceId })
+      });
+      var data = await res.json();
+      showToast(data.ok ? 'Dibatalkan' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+      if (data.ok) loadUserData();
+    } catch (e) {
+      showToast('Error', 'Gagal membatalkan invoice', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+    }
+  }
+
+  function triggerUploadProof() {
+    document.getElementById('proofFileInput').click();
+  }
+
+  function submitProofFile(event) {
     var file = event.target.files[0];
     if (!file) return;
-    
+
+    if (!file.type.startsWith('image/')) {
+      return showToast('Error Upload', 'Bukti pembayaran harus berupa file foto!', 'error');
+    }
+
     var reader = new FileReader();
     reader.onload = async function(e) {
+      var base64 = e.target.result;
       try {
-        var res = await fetch('/api/api?endpoint=submit_proof', {
+        var res = await fetch('/api/api?endpoint=upload_proof', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: currentUserId,
-            invoice: activeInvoiceId,
-            imageBase64: e.target.result
-          })
+          body: JSON.stringify({ user_id: currentUserId, invoice: activeInvoiceId, image_data: base64 })
         });
         var data = await res.json();
-        showToast(data.ok ? 'Bukti Tersimpan' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+        showToast(data.ok ? 'Sukses Upload' : 'Gagal Upload', data.message, data.ok ? 'success' : 'error');
         if (data.ok) loadUserData();
-      } catch (e) {
-        showToast('Error', 'Gagal upload bukti', 'error');
+      } catch (err) {
+        showToast('Error', 'Gagal mengunggah foto bukti', 'error');
       }
     };
     reader.readAsDataURL(file);
+  }
+
+  async function claimVoucher(btn) {
+    var code = document.getElementById('vCodeInput').value.trim();
+    if (!code) return showToast('Peringatan', 'Masukkan kode voucher promo!', 'warning');
+
+    var orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Mengklaim...'; }
+
+    try {
+      var res = await fetch('/api/api?endpoint=redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId, code: code })
+      });
+      var data = await res.json();
+      showToast(data.ok ? 'Sukses Klaim' : 'Gagal Klaim', data.message, data.ok ? 'success' : 'error');
+      if (data.ok) {
+        document.getElementById('vCodeInput').value = '';
+        loadUserData();
+      }
+    } catch (e) {
+      showToast('Error', 'Gagal mengklaim voucher', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+    }
+  }
+
+  function copyRefLink() {
+    var input = document.getElementById('refUrlInput');
+    input.select();
+    document.execCommand('copy');
+    showToast('Berhasil Disalin', 'Link referral tersalin ke clipboard!', 'success');
+  }
+
+  async function loadOwnerData() {
+    try {
+      var res = await fetch('/api/api?endpoint=stats&user_id=' + currentUserId);
+      var d = await res.json();
+
+      if (d.ok) {
+        document.getElementById('oRev').textContent = 'Rp ' + (d.revenue || 0).toLocaleString('id-ID');
+        document.getElementById('oUsers').textContent = d.usersValid || 0;
+        document.getElementById('oVip').textContent = d.premium || 0;
+        document.getElementById('oFix').textContent = d.totalFix || 0;
+
+        var pendingList = document.getElementById('oPendingList');
+        if (d.pendingPayments && d.pendingPayments.length > 0) {
+          pendingList.innerHTML = d.pendingPayments.map(function(p) {
+            var imgHtml = p.proofImage ? 
+              '<div class="proof-preview-container">' +
+                '<img src="' + p.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
+                '<div class="zoom-btn-overlay" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
+                  '<svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
+                  'Lihat Foto Fullscreen' +
+                '</div>' +
+              '</div>' : '<div style="font-size:12px;color:var(--accent-pink);margin-top:4px;font-weight:600">Belum upload foto bukti.</div>';
+
+            return '<div class="cyber-card">' +
+              '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">Invoice: ' + p.id + '</div>' +
+              '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">User: ' + p.userId + ' | Paket: ' + p.days + ' Hari (' + (p.amountFormatted || ('Rp ' + p.amount)) + ')</div>' +
+              imgHtml +
+              '<div style="display:flex;gap:10px;margin-top:14px">' +
+                '<button class="btn-custom" style="padding:11px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="ownerAct(\'' + p.id + '\', \'approve\', this)">Setujui Pembayaran</button>' +
+                '<button class="btn-custom" style="padding:11px;font-size:12px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="ownerAct(\'' + p.id + '\', \'reject\', this)">Tolak</button>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        } else {
+          pendingList.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">Tidak ada pending deposit.</div>';
+        }
+
+        var userList = document.getElementById('oUserList');
+        if (d.recentUsers && d.recentUsers.length > 0) {
+          userList.innerHTML = d.recentUsers.slice(0, 15).map(function(u) {
+            var isVip = u.premiumUntil && u.premiumUntil > Date.now();
+            return '<div class="cyber-card" style="padding:16px">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                '<div>' +
+                  '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">' + (u.first_name || 'User Walzy') + '</div>' +
+                  '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">ID: ' + u.id + ' | Order: ' + (u.totalFix || 0) + '</div>' +
+                '</div>' +
+                '<span class="user-badge">' + (isVip ? 'VIP' : 'Free') + '</span>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        }
+
+        var vList = document.getElementById('oVoucherList');
+        if (d.codes && d.codes.length > 0) {
+          vList.innerHTML = d.codes.map(function(c) {
+            return '<div class="cyber-card" style="padding:16px">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                '<div>' +
+                  '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">' + c.code + '</div>' +
+                  '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">' + c.days + ' Hari | Terpakai: ' + (c.used || 0) + '/' + (c.quota || '∞') + '</div>' +
+                '</div>' +
+                '<button class="btn-custom" style="width:auto;padding:8px 16px;font-size:11px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="deleteVoucher(\'' + c.code + '\', this)">Hapus</button>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        } else {
+          vList.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">Belum ada voucher aktif.</div>';
+        }
+      }
+    } catch (e) {}
+  }
+
+  async function ownerAct(invoice, action, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
+    try {
+      var res = await fetch('/api/api?endpoint=owner_action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner_id: currentUserId, invoice: invoice, action: action })
+      });
+      var data = await res.json();
+      showToast(data.ok ? 'Sukses' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+      if (data.ok) loadOwnerData();
+    } catch (e) {
+      showToast('Error', 'Gagal memproses aksi', 'error');
+    }
+  }
+
+  async function createVoucher(btn) {
+    var code = document.getElementById('vGenCode').value.trim();
+    var days = document.getElementById('vGenDays').value;
+    var quota = document.getElementById('vGenQuota').value;
+
+    if (!code || !days) return showToast('Error', 'Lengkapi kode dan durasi hari!', 'warning');
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Membuat...'; }
+
+    try {
+      var res = await fetch('/api/api?endpoint=create_code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner_id: currentUserId, code: code, days: days, quota: quota })
+      });
+      var data = await res.json();
+      showToast(data.ok ? 'Voucher Dibuat' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+      if (data.ok) {
+        document.getElementById('vGenCode').value = '';
+        document.getElementById('vGenDays').value = '';
+        document.getElementById('vGenQuota').value = '';
+        loadOwnerData();
+      }
+    } catch (e) {
+      showToast('Error', 'Gagal membuat voucher', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Buat Voucher'; }
+    }
+  }
+
+  async function deleteVoucher(code, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Hapus...'; }
+    try {
+      var res = await fetch('/api/api?endpoint=delete_code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner_id: currentUserId, code: code })
+      });
+      var data = await res.json();
+      showToast(data.ok ? 'Voucher Dihapus' : 'Gagal', data.message, data.ok ? 'success' : 'error');
+      if (data.ok) loadOwnerData();
+    } catch (e) {
+      showToast('Error', 'Gagal menghapus voucher', 'error');
+    }
+  }
+
+  async function sendBroadcast(btn) {
+    var text = document.getElementById('bcTextInput').value.trim();
+    if (!text) return showToast('Error', 'Pesan broadcast tidak boleh kosong!', 'warning');
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Mengirim Broadcast...'; }
+
+    try {
+      var res = await fetch('/api/api?endpoint=broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner_id: currentUserId, text: text })
+      });
+      var data = await res.json();
+
+      if (data.ok) {
+        showToast('Broadcast Selesai', data.message, 'success');
+        document.getElementById('bcTextInput').value = '';
+        loadOwnerData();
+      } else {
+        showToast('Gagal Broadcast', data.message, 'error');
+      }
+    } catch (e) {
+      showToast('Error', 'Gagal mengirim broadcast', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Kirim Broadcast Sekarang'; }
+    }
   }
 
   if (document.readyState === 'complete') {
     initApp();
   } else {
     window.addEventListener('load', initApp);
-    // Fallback: init after 2 seconds even if page is not fully loaded
-    loadTimeout = setTimeout(initApp, 2000);
+    setTimeout(initApp, 2500);
   }
 </script>
 </body>
