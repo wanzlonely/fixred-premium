@@ -13,9 +13,8 @@ function getWebappUrl(req){if(config.PUBLIC_URL && config.PUBLIC_URL.startsWith(
 function getOwnerMenu(user, chatId, db, webappUrl){
 const pendingCount=Object.values(db.payments||{}).filter(p=>p.status==='waiting_approval' || p.status==='pending').length;
 const usersCount=Object.keys(db.users||{}).length;
-const revenue=db.stats && db.stats.revenue ? db.stats.revenue : 0;
 const dispName=esc(user.first_name||'Owner');
-const text=`<b>WALZY OWNER</b>\n\nHalo <b>${dispName}</b>\n\n👥 ${usersCount} Users • 💰 Rp ${revenue.toLocaleString('id-ID')} • 📥 ${pendingCount} Pending\n\nKelola di dashboard:`;
+const text=`<b>WALZY OWNER</b>\n\nHalo <b>${dispName}</b>\n\n👥 ${usersCount} Users • 📥 ${pendingCount} Pending\n\nKelola dashboard:`;
 const keyboard=[[{text:'⚡ Fix Merah', callback_data:'fix_merah'}],[{text:'Buka Dashboard', callback_data:'open_dashboard'}],[{text:'Web Control', web_app:{url:webappUrl}}]];
 return {text, opts:{parse_mode:'HTML', reply_markup:{inline_keyboard:keyboard}}};
 }
@@ -26,12 +25,12 @@ if(!user.dailyFix || user.dailyFix.date!==getTodayString()){user.dailyFix={date:
 const quota=isPrem ? 'Unlimited' : `${Math.max(0,5-(user.dailyFix.count||0))}/5`;
 const dispName=esc(user.first_name||'User');
 const status=isPrem ? `VIP ${getPremiumLeft(user)}H` : 'Free';
-const text=`<b>WALZY STORE</b>\n\nHalo <b>${dispName}</b> • ${rnk.icon} ${rnk.name}\n${status} • Kuota ${quota} • ${user.points||0} Poin\n\nBuka toko untuk produk, daily, dan spin:`;
+const text=`<b>WALZY STORE</b>\n\nHalo <b>${dispName}</b> • ${rnk.icon} ${rnk.name}\n${status} • Kuota ${quota} • ${user.points||0} Poin\n\nBuka toko:`;
 const keyboard=[[{text:'⚡ Fix Merah', callback_data:'fix_merah'}],[{text:'Buka Toko', web_app:{url:webappUrl}}],[{text:'Hubungi Admin', callback_data:'contact_owner'}, {text:'Panduan', callback_data:'help'}]];
 return {text, opts:{parse_mode:'HTML', reply_markup:{inline_keyboard:keyboard}}};
 }
 module.exports = async (req, res) => {
-if(req.method!=='POST') return res.status(200).send('WALZY BOT V6 TOTAL ONLINE');
+if(req.method!=='POST') return res.status(200).send('WALZY BOT V7 TOTAL ONLINE');
 const bot=new TelegramBot(config.BOT_TOKEN);
 try{
 const db=await loadDB();
@@ -56,19 +55,19 @@ return res.status(200).send('OK');
 }
 if(data==='open_dashboard'){
 await bot.answerCallbackQuery(qId,{text:'Dashboard'});
-await bot.sendMessage(uid, `<b>Dashboard Owner</b>\n\nBuka Web Control untuk kelola Users, Deposit, Voucher, Broadcast.`, {parse_mode:'HTML', reply_markup:{inline_keyboard:[[{text:'Web Control', web_app:{url:webappUrl}}]]}});
+await bot.sendMessage(uid, `<b>Dashboard</b>\n\nBuka Web Control.`, {parse_mode:'HTML', reply_markup:{inline_keyboard:[[{text:'Web Control', web_app:{url:webappUrl}}]]}});
 return res.status(200).send('OK');
 }
 if(data==='contact_owner'){
 await bot.answerCallbackQuery(qId,{text:'Admin'});
 user.state={action:'awaiting_owner_msg'};
 await saveDB(db);
-await bot.sendMessage(uid, `<b>Hubungi Admin</b>\n\nKetik pesan kamu:`, {parse_mode:'HTML'});
+await bot.sendMessage(uid, `<b>Hubungi Admin</b>\n\nKetik pesan:`, {parse_mode:'HTML'});
 return res.status(200).send('OK');
 }
 if(data==='help'){
 await bot.answerCallbackQuery(qId,{text:'Panduan'});
-const helpText=`<b>Panduan WALZY STORE</b>\n\n⚡ Fix Merah: Kirim nomor WA\n🛒 Buka Toko: Beranda (profil real), Produk (beli VIP + upload bukti), Daily (check-in mingguan beda, spin presisi, toko poin)\n💬 Hubungi Admin: Pesan diteruskan ke owner`;
+const helpText=`<b>Panduan</b>\n\n⚡ Fix Merah: Kirim nomor WA\n🛒 Buka Toko: Beranda profil real, Produk beli VIP + upload bukti, Daily check-in mingguan beda + spin presisi + toko poin`;
 await bot.sendMessage(uid, helpText, {parse_mode:'HTML'});
 return res.status(200).send('OK');
 }
