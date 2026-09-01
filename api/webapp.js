@@ -538,7 +538,11 @@ module.exports = async (req, res) => {
   function initApp() {
     if (appInitialized) return;
     appInitialized = true;
-    setTimeout(hideLoader, 1000);
+    var loaderSafetyTimer = setTimeout(function() {
+      var lt = document.getElementById('loadText');
+      if (lt) lt.textContent = 'Koneksi lambat, mohon tunggu sebentar...';
+    }, 6000);
+    var loaderHardTimer = setTimeout(hideLoader, 15000);
 
     try {
       tg = window.Telegram ? window.Telegram.WebApp : null;
@@ -558,12 +562,17 @@ module.exports = async (req, res) => {
       drawWheel();
 
       if (!currentUserId) {
+        clearTimeout(loaderSafetyTimer);
+        clearTimeout(loaderHardTimer);
         document.getElementById('loadText').textContent = 'Silakan buka WebApp melalui Telegram Bot!';
         hideLoader();
         return;
       }
 
-      loadUserData();
+      loadUserData().then(function() {
+        clearTimeout(loaderSafetyTimer);
+        clearTimeout(loaderHardTimer);
+      });
 
       if (!pollingTimer) {
         pollingTimer = setInterval(function() {
@@ -571,6 +580,8 @@ module.exports = async (req, res) => {
         }, 2500);
       }
     } catch (err) {
+      clearTimeout(loaderSafetyTimer);
+      clearTimeout(loaderHardTimer);
       hideLoader();
     }
   }
@@ -582,7 +593,7 @@ module.exports = async (req, res) => {
       if (currentUsername) queryUrl += '&username=' + encodeURIComponent(currentUsername);
 
       var controller = new AbortController();
-      var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+      var timeoutId = setTimeout(function() { controller.abort(); }, 12000);
       var res;
       try {
         res = await fetch(queryUrl, { signal: controller.signal });
