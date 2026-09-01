@@ -675,7 +675,10 @@ module.exports = async (req, res) => {
         if (spinBtn && !isSpinning) spinBtn.disabled = !u.canSpin;
 
         var chkBtn = document.getElementById('checkinBtn');
-        if (chkBtn) chkBtn.disabled = !u.canCheckin;
+        if (chkBtn) {
+          chkBtn.disabled = !u.canCheckin;
+          chkBtn.innerHTML = u.canCheckin ? 'Check-in Hari Ini' : 'Sudah Check-in';
+        }
 
         for (var i = 1; i <= 7; i++) {
           var el = document.getElementById('stDay' + i);
@@ -844,7 +847,6 @@ module.exports = async (req, res) => {
   }
 
   async function triggerCheckin(btn) {
-    var orig = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.innerHTML = 'Proses Check-in...'; }
     try {
       var res = await fetch('/api/api?endpoint=checkin', {
@@ -854,11 +856,10 @@ module.exports = async (req, res) => {
       });
       var data = await res.json();
       showToast(data.ok ? 'Check-in Berhasil' : 'Informasi', data.message, data.ok ? 'success' : 'warning');
-      if (data.ok) loadUserData();
+      loadUserData();
     } catch (e) {
       showToast('Error', 'Gagal melakukan check-in', 'error');
-    } finally {
-      if (btn && !data.ok) { btn.disabled = false; btn.innerHTML = orig; }
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Check-in Hari Ini'; }
     }
   }
 
