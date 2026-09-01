@@ -269,7 +269,7 @@ module.exports = async (req, res) => {
 
         await bot.sendMessage(chatId, initialMsgTxt, { parse_mode: 'HTML' });
 
-        const statusRes = await clientHelper.monitorTargetResponse(displayNum, sessionCode, 7000);
+        const statusRes = await clientHelper.monitorTargetResponse(displayNum, sessionCode, 6000);
 
         if (statusRes.status === 'SUCCESS') {
           const succReport = `✅ <b>SUCCESS FIXMERAH CPHX</b>\n◈────────────────────◈\n<blockquote>📱 Nomor: <code>${displayNum}</code>\n🆔 ID: <code>${sessionCode}</code>\n📩 Status: <b>SUCCESS</b></blockquote>\n\n💬 <i>WhatsApp sudah merespon. Silakan coba login/verifikasi akun Anda sekarang!</i>`;
