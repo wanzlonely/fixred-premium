@@ -142,7 +142,7 @@ module.exports = async (req, res) => {
   }
   #spinCanvas { width: 280px; height: 280px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.1); box-shadow: 0 0 30px rgba(0, 242, 254, 0.2); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
   
-  .loader-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.3s ease; pointer-events: none; }
+  .loader-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.2s ease; pointer-events: none; }
   .modal-overlay { position: fixed; inset: 0; background: rgba(7, 10, 18, 0.9); backdrop-filter: blur(20px); z-index: 900; display: none; place-items: center; padding: 20px; }
   .modal-overlay.active { display: grid; }
   .proof-preview-container { position: relative; border-radius: 18px; overflow: hidden; margin-top: 12px; border: 1px solid var(--border-card); }
@@ -156,7 +156,7 @@ module.exports = async (req, res) => {
     <svg class="icon-svg spin-slow" style="width:40px;height:40px" viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
   </div>
   <div style="font-family:var(--font-heading);font-weight:900;font-size:22px;letter-spacing:1px;color:#fff">WALZY CYBER STORE</div>
-  <div style="font-size:12px;color:var(--text-secondary);font-weight:600" id="loadText">Menghubungkan ke server realtime...</div>
+  <div style="font-size:12px;color:var(--text-secondary);font-weight:600" id="loadText">Memuat antarmuka sistem...</div>
 </div>
 
 <div class="toast" id="toast">
@@ -480,7 +480,6 @@ module.exports = async (req, res) => {
   var isSpinning = false;
   var currentWheelRotation = 0;
   var pollingTimer = null;
-  var loaderHidden = false;
 
   var wheelPrizes = [
     { label: "ZONK ❌", color: "#f43f5e" },
@@ -492,12 +491,9 @@ module.exports = async (req, res) => {
   ];
 
   function hideLoader() {
-    if (loaderHidden) return;
-    loaderHidden = true;
     var ldr = document.getElementById('loader');
     if (ldr) {
-      ldr.style.opacity = '0';
-      setTimeout(function() { ldr.style.display = 'none'; }, 300);
+      ldr.style.display = 'none';
     }
   }
 
@@ -537,8 +533,6 @@ module.exports = async (req, res) => {
   }
 
   function initApp() {
-    setTimeout(hideLoader, 800);
-
     try {
       tg = window.Telegram ? window.Telegram.WebApp : null;
       if (tg) { 
@@ -557,19 +551,15 @@ module.exports = async (req, res) => {
       }
 
       drawWheel();
+      hideLoader();
 
-      if (!currentUserId) {
-        var loadTxtEl = document.getElementById('loadText');
-        if (loadTxtEl) loadTxtEl.textContent = 'Mode Pratinjau WebApp';
-        hideLoader();
-        return;
-      }
-
-      loadUserData(false);
-      if (!pollingTimer) {
-        pollingTimer = setInterval(function() {
-          loadUserData(true);
-        }, 3000);
+      if (currentUserId) {
+        loadUserData(false);
+        if (!pollingTimer) {
+          pollingTimer = setInterval(function() {
+            loadUserData(true);
+          }, 3000);
+        }
       }
     } catch (err) {
       hideLoader();
@@ -578,10 +568,7 @@ module.exports = async (req, res) => {
 
   async function loadUserData(isSilent) {
     try {
-      if (!currentUserId) {
-        hideLoader();
-        return;
-      }
+      if (!currentUserId) return;
 
       var queryUrl = '/api/api?endpoint=user&user_id=' + currentUserId;
       if (currentFirstName) queryUrl += '&first_name=' + encodeURIComponent(currentFirstName);
@@ -687,8 +674,6 @@ module.exports = async (req, res) => {
         }
       }
     } catch (e) {
-    } finally {
-      hideLoader();
     }
   }
 
@@ -1124,8 +1109,11 @@ module.exports = async (req, res) => {
     }
   }
 
-  window.addEventListener('load', function() {
+  document.addEventListener('DOMContentLoaded', function() {
     initApp();
+  });
+  window.addEventListener('load', function() {
+    hideLoader();
   });
 </script>
 </body>
