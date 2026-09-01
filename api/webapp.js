@@ -24,8 +24,8 @@ module.exports = async (req, res) => {
     --accent-amber: #d97706;
     --text-primary: #0f172a;
     --text-secondary: #64748b;
-    --font-heading: 'Outfit', sans-serif;
-    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-body); -webkit-tap-highlight-color: transparent; }
   body {
@@ -98,7 +98,7 @@ module.exports = async (req, res) => {
   .nav-bar {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 36px); max-width: 480px;
     background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
-    border: 1px solid var(--border-card); border-radius: 28px; display: flex; justify-space-around; padding: 8px; z-index: 80;
+    border: 1px solid var(--border-card); border-radius: 28px; display: flex; justify-content: space-around; padding: 8px; z-index: 80;
     box-shadow: 0 14px 40px rgba(0,0,0,0.08);
   }
   .nav-tab {
@@ -149,14 +149,13 @@ module.exports = async (req, res) => {
   .zoom-btn-overlay { position: absolute; bottom: 10px; right: 10px; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); color: var(--text-primary); padding: 7px 16px; border-radius: 14px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px; cursor: pointer; }
 </style>
 </head>
-<body onload="if(typeof hideLoader==='function'){hideLoader();}else{var l=document.getElementById('loader');if(l)l.style.display='none';}">
+<body>
 <div class="loader-screen" id="loader">
   <div class="brand-icon float" style="width:72px;height:72px;border-radius:24px;">
     <svg class="icon-svg spin-slow" style="width:40px;height:40px" viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
   </div>
   <div style="font-family:var(--font-heading);font-weight:900;font-size:22px;letter-spacing:1px;color:var(--text-primary)">WALZY STORE HUB</div>
   <div style="font-size:12px;color:var(--text-secondary);font-weight:600" id="loadText">Memuat antarmuka realtime...</div>
-  <div id="debugErrorBox" style="margin-top:16px;padding:12px;background:#fee;border:1px solid #f88;border-radius:8px;font-size:11px;color:#900;font-family:monospace;max-width:90vw;word-break:break-all;display:none;text-align:left;"></div>
 </div>
 
 <div class="toast" id="toast">
@@ -188,8 +187,6 @@ module.exports = async (req, res) => {
     <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-emerald)" class="pulse"></span> ONLINE REALTIME
   </div>
 </div>
-
-<div id="debugPanel" style="background:#111827;color:#4ade80;font-family:monospace;font-size:10px;padding:8px 12px;word-break:break-all;"></div>
 
 <div class="container">
   <div id="viewUserArea">
@@ -234,7 +231,7 @@ module.exports = async (req, res) => {
         </div>
         <div class="wheel-container">
           <div class="wheel-pointer"></div>
-          <canvas id="spinCanvas" width="300" height="300"></canvas>
+          <canvas id="spinCanvas" width="280" height="280"></canvas>
         </div>
         <button class="btn-custom" id="spinBtn" style="margin-top:16px" onclick="triggerSpin(this)">Putar Spin Harian</button>
       </div>
@@ -472,20 +469,6 @@ module.exports = async (req, res) => {
 <input type="file" id="proofFileInput" accept="image/*" style="display:none" onchange="submitProofFile(event)">
 
 <script>
-  window.addEventListener('error', function(e) {
-    var box = document.getElementById('debugErrorBox');
-    if (box) {
-      box.style.display = 'block';
-      box.textContent = 'JS ERROR: ' + e.message + ' (line ' + e.lineno + ':' + e.colno + ')\n' + (e.error && e.error.stack ? e.error.stack : '');
-    }
-  });
-  window.addEventListener('unhandledrejection', function(e) {
-    var box = document.getElementById('debugErrorBox');
-    if (box) {
-      box.style.display = 'block';
-      box.textContent = 'PROMISE ERROR: ' + (e.reason && e.reason.message ? e.reason.message : JSON.stringify(e.reason));
-    }
-  });
   var tg = null;
   var currentUserId = null;
   var currentFirstName = '';
@@ -524,7 +507,7 @@ module.exports = async (req, res) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     var cx = canvas.width / 2;
     var cy = canvas.height / 2;
-    var radius = cx - 10;
+    var radius = cx - 8;
 
     for (var i = 0; i < numSlices; i++) {
       var angle = i * sliceAngle;
@@ -543,23 +526,13 @@ module.exports = async (req, res) => {
       ctx.rotate(angle + sliceAngle / 2);
       ctx.textAlign = "right";
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 12px 'Outfit', sans-serif";
-      ctx.fillText(wheelPrizes[i].label, radius - 15, 4);
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillText(wheelPrizes[i].label, radius - 12, 4);
       ctx.restore();
     }
   }
 
-  function setDebug(msg) {
-    var d = document.getElementById('debugPanel');
-    if (d) d.textContent = msg;
-  }
-
-  var initAttempts = 0;
-  setTimeout(hideLoader, 3000);
-
   function initApp() {
-    initAttempts++;
-
     try {
       tg = window.Telegram ? window.Telegram.WebApp : null;
       if (tg) { tg.ready(); tg.expand(); }
@@ -575,15 +548,9 @@ module.exports = async (req, res) => {
         currentUsername = sp.get('username') || '';
       }
 
-      setDebug('tg=' + (tg ? 'yes' : 'no') + ' | initDataUnsafe.user=' + (tg && tg.initDataUnsafe ? JSON.stringify(tg.initDataUnsafe.user) : 'n/a') + ' | userId=' + currentUserId + ' | attempt=' + initAttempts);
-
       drawWheel();
 
       if (!currentUserId) {
-        if (initAttempts < 6) {
-          setTimeout(initApp, 400);
-          return;
-        }
         document.getElementById('loadText').textContent = 'Silakan buka WebApp melalui Telegram Bot!';
         hideLoader();
         return;
@@ -615,7 +582,6 @@ module.exports = async (req, res) => {
         clearTimeout(timeoutId);
       }
       var data = await res.json();
-      setDebug('fetch status=' + res.status + ' | data.ok=' + data.ok + ' | msg=' + (data.message || '-'));
 
       if (data.ok) {
         var u = data.user;
@@ -699,13 +665,7 @@ module.exports = async (req, res) => {
         showToast('Error', data.message || 'Gagal memuat profil', 'error');
       }
     } catch (e) {
-      setDebug('CATCH ERROR: ' + e.message);
       if (!isSilent) showToast('Error', 'Gagal memuat data dari server', 'error');
-      var box = document.getElementById('debugErrorBox');
-      if (box) {
-        box.style.display = 'block';
-        box.textContent = 'FETCH ERROR: ' + e.message;
-      }
     } finally {
       if (!isSilent) hideLoader();
     }
@@ -727,6 +687,7 @@ module.exports = async (req, res) => {
 
     document.getElementById('view' + tabName).classList.add('active');
     if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    if (tabName === 'Home') drawWheel();
   }
 
   function switchOwnerTab(tabName, event) {
@@ -1115,7 +1076,9 @@ module.exports = async (req, res) => {
     }
   }
 
-  initApp();
+  window.addEventListener('load', function() {
+    initApp();
+  });
 </script>
 </body>
 </html>`;
