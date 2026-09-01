@@ -87,11 +87,11 @@ function getOwnerMenu(user, chatId, db, webappUrl) {
   const totalRev = (db.stats && db.stats.revenue) ? db.stats.revenue : 0;
   const dispName = esc(user.first_name || 'Owner Executive');
 
-  const text = `👑 <b>WALZY EXECUTIVE DASHBOARD</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nSelamat datang kembali, <b>${dispName}</b>!\n\n<blockquote>📊 <b>METRIK UTAMA SISTEM</b>\n├ Total Pendapatan: <code>Rp ${totalRev.toLocaleString('id-ID')}</code>\n├ Pengguna Terdaftar: <code>${validUsersCount} User</code>\n└ Pending Deposit: <code>${pendingCount} Transaksi</code></blockquote>\n\n💡 <i>Gunakan tombol <b>🛠️ Fix Merah (Utama)</b> di posisi paling atas untuk memulai sinkronisasi cepat.</i>`;
+  const text = `👑 <b>WALZY EXECUTIVE DASHBOARD</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nSelamat datang kembali, <b>${dispName}</b>!\n\n<blockquote>📊 <b>METRIK UTAMA SISTEM</b>\n├ Total Pendapatan: <code>Rp ${totalRev.toLocaleString('id-ID')}</code>\n├ Pengguna Terdaftar: <code>${validUsersCount} User</code>\n└ Pending Deposit: <code>${pendingCount} Transaksi</code></blockquote>\n\n💡 <i>Gunakan menu di bawah untuk mengelola sistem.</i>`;
 
   const keyboard = [
     [
-      { text: '🛠️ Fix Merah (Utama)', callback_data: 'fix_merah' }
+      { text: '🛠️ Fix Merah', callback_data: 'fix_merah' }
     ],
     [
       { text: '🌐 Buka WebApp Admin Studio', web_app: { url: webappUrl } }
@@ -110,12 +110,17 @@ function getUserMenu(user, chatId, webappUrl) {
   const isPrem = isPremium(user);
   const statusBadge = isPrem ? `💎 VIP (${getPremiumLeft(user)} Hari)` : `🎫 Free Member`;
   const dispName = esc(user.first_name || 'User Walzy');
+  
+  if (!user.dailyFix || user.dailyFix.date !== getTodayString()) {
+    user.dailyFix = { date: getTodayString(), count: 0 };
+  }
+  const remainingQuota = isPrem ? 'Unlimited' : `${Math.max(0, 5 - (user.dailyFix.count || 0))}/5`;
 
-  const text = `⚡ <b>WALZY STORE OFFICIAL PLATFORM</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nHalo <b>${dispName}</b>, siap melakukan sinkronisasi?\n\n<blockquote>👤 <b>RINGKASAN AKUN</b>\n├ ID Telegram: <code>${chatId}</code>\n├ Peringkat: ${rnk.icon} <code>${rnk.name}</code>\n├ Saldo Poin: 🪙 <code>${user.points || 0} PTS</code>\n└ Status Layanan: <b>${statusBadge}</b></blockquote>\n\n💡 <i>Tekan tombol <b>🛠️ Fix Merah (Utama)</b> untuk langsung memproses nomor target.</i>`;
+  const text = `⚡ <b>WALZY STORE OFFICIAL PLATFORM</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nHalo <b>${dispName}</b>!\n\n<blockquote>👤 <b>RINGKASAN AKUN</b>\n├ ID Telegram: <code>${chatId}</code>\n├ Peringkat: ${rnk.icon} <code>${rnk.name}</code>\n├ Saldo Poin: 🪙 <code>${user.points || 0} PTS</code>\n├ Kuota Harian: ⚡ <b>${remainingQuota}</b>\n└ Status Layanan: <b>${statusBadge}</b></blockquote>\n\n💡 <i>Klik <b>Fix Merah</b> untuk memulai sinkronisasi nomor target!</i>`;
 
   const keyboard = [
     [
-      { text: '🛠️ Fix Merah (Utama)', callback_data: 'fix_merah' }
+      { text: '🛠️ Fix Merah', callback_data: 'fix_merah' }
     ],
     [
       { text: '🌐 Buka Mini Web Walzy Store', web_app: { url: webappUrl } }
@@ -188,7 +193,7 @@ module.exports = async (req, res) => {
 
       if (data === 'help') {
         await bot.answerCallbackQuery(qId, { text: '✨ Bantuan', show_alert: false });
-        await bot.sendMessage(uid, `❓ <b>PANDUAN PENGGUNAAN WALZY STORE</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nSelamat datang! Berikut langkah penggunaan fitur:\n\n1. <b>Fix Merah (Utama):</b> Kirim nomor target melalui tombol utama.\n2. <b>Beli VIP:</b> Buka Mini Web -> Halaman <b>Order VIP</b>.\n3. <b>Redeem Voucher:</b> Masukkan kode voucher promo di Mini Web.\n4. <b>Daily Spin & Points:</b> Putar Spin & Check-in harian untuk poin gratis.`, {
+        await bot.sendMessage(uid, `❓ <b>PANDUAN PENGGUNAAN WALZY STORE</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nSelamat datang! Berikut langkah penggunaan fitur:\n\n1. <b>Fix Merah:</b> Kirim nomor target melalui tombol utama.\n2. <b>Beli VIP:</b> Buka Mini Web -> Halaman <b>Order VIP</b>.\n3. <b>Redeem Voucher:</b> Masukkan kode voucher promo di Mini Web.\n4. <b>Daily Spin & Points:</b> Putar Spin & Check-in harian untuk poin gratis.`, {
           parse_mode: 'HTML',
           reply_markup: { inline_keyboard: [[{ text: '🌐 Buka Mini Web Walzy Store', web_app: { url: webappUrl } }]] }
         });
@@ -234,27 +239,43 @@ module.exports = async (req, res) => {
           return res.status(200).send('OK');
         }
 
+        const isPrem = isPremium(user);
+        if (!isPrem) {
+          if (!user.dailyFix || user.dailyFix.date !== getTodayString()) {
+            user.dailyFix = { date: getTodayString(), count: 0 };
+          }
+          if (user.dailyFix.count >= 5) {
+            await bot.sendMessage(chatId, `⚠️ <b>KUOTA HARIAN HABIS</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nKuota gratis Fix Merah Anda hari ini sudah mencapai batas maksimum <b>(5/5)</b>.\n\n💡 <i>Tingkatkan akun Anda ke <b>VIP Member</b> di Mini Web untuk kuota Tanpa Batas (Unlimited)!</i>`, {
+              parse_mode: 'HTML',
+              reply_markup: { inline_keyboard: [[{ text: '💎 Upgrade VIP Unlimited', web_app: { url: webappUrl } }]] }
+            });
+            return res.status(200).send('OK');
+          }
+          user.dailyFix.count += 1;
+          await saveDB(db);
+        }
+
         let formattedNum = cleanDigits;
         if (formattedNum.startsWith('08')) formattedNum = '628' + formattedNum.slice(2);
         else if (!formattedNum.startsWith('62')) formattedNum = '62' + formattedNum;
 
         const displayNum = '+' + formattedNum;
-        const sessionCode = `WLZ-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-        const waitMsg = await bot.sendMessage(chatId, `🔄 <b>PROSES SINKRONISASI WALZY FIX MERAH...</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n📱 Target: <code>${displayNum}</code>\n🔑 Sesi ID: <code>${sessionCode}</code>\n<i>Mengirimkan instruksi gateway...</i>`, { parse_mode: 'HTML' });
 
         const clientHelper = require('../lib/client');
-        await clientHelper.sendToTarget(displayNum);
+        const initRes = await clientHelper.sendToTarget(displayNum);
+        const sessionCode = initRes.targetId || `CPHX ${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-        try { await bot.deleteMessage(chatId, waitMsg.message_id); } catch(e) {}
+        const initialMsgTxt = `🛠️ <b>HASIL PROSES FIXMERAH</b>\n◈────────────────────◈\n<blockquote>✅ <b>BERHASIL ( 1 )</b>\n📱 <code>${displayNum}</code>\n🆔 <code>${sessionCode}</code>\n📩 TERKIRIM</blockquote>\n\n📫 <i>Notifikasi update status akan dikirim otomatis jika ada balasan (Max 1 Menit).</i> 🔥`;
+
+        await bot.sendMessage(chatId, initialMsgTxt, { parse_mode: 'HTML' });
 
         const statusRes = await clientHelper.monitorTargetResponse(displayNum, sessionCode, 75000);
 
         if (statusRes.status === 'SUCCESS') {
-          const succReport = `⚡ <b>WALZY FIX MERAH PROTOCOL</b>\n◈────────────────────────◈\n📱 <b>Nomor:</b> <code>${displayNum}</code>\n🆔 <b>ID Sesi:</b> <code>${sessionCode}</code>\n📩 <b>Status:</b> 🟢 <b>SUCCESS</b>\n\n💬 <i>WhatsApp target telah merespon. Silakan coba login atau verifikasi akun Anda sekarang!</i>`;
+          const succReport = `✅ <b>SUCCESS FIXMERAH CPHX</b>\n◈────────────────────◈\n<blockquote>📱 Nomor: <code>${displayNum}</code>\n🆔 ID: <code>${sessionCode}</code>\n📩 Status: <b>SUCCESS</b></blockquote>\n\n💬 <i>WhatsApp sudah merespon. Silakan coba login/verifikasi akun Anda sekarang!</i>`;
           await bot.sendMessage(chatId, succReport, { parse_mode: 'HTML' });
         } else {
-          const failReport = `⚡ <b>WALZY FIX MERAH PROTOCOL</b>\n◈────────────────────────◈\n📱 <b>Nomor:</b> <code>${displayNum}</code>\n🆔 <b>ID Sesi:</b> <code>${sessionCode}</code>\n📩 <b>Status:</b> 🔴 <b>TIDAK ADA BALASAN</b>\n\n💬 <i>WhatsApp target tidak merespon dalam 90 detik. Silakan coba lagi.</i>`;
+          const failReport = `⚠️ <b>BELUM ADA RESPONS WHATSAPP</b>\n◈────────────────────◈\n<blockquote>📱 Nomor: <code>${displayNum}</code>\n🆔 ID: <code>${sessionCode}</code>\n📩 Status: <b>TIDAK ADA BALASAN</b></blockquote>\n\n💬 <i>WhatsApp tidak merespon dalam 90 detik.</i>`;
           await bot.sendMessage(chatId, failReport, { parse_mode: 'HTML' });
         }
 
