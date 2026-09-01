@@ -91,6 +91,10 @@ function ensureUserInDB(db, userId, nameData, usernameData) {
     if (usernameData !== undefined && db.users[k].username !== usernameData) db.users[k].username = usernameData;
   }
 
+  if (!db.users[k].dailyFix || db.users[k].dailyFix.date !== getTodayString()) {
+    db.users[k].dailyFix = { date: getTodayString(), count: 0 };
+  }
+
   if (Array.isArray(db.users[k].referrals)) {
     db.users[k].referralCount = db.users[k].referrals.length;
   }
