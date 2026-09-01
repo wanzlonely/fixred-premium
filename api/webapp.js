@@ -29,41 +29,31 @@ module.exports = async (req, res) => {
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Plus Jakarta Sans', sans-serif;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-body); -webkit-tap-highlight-color: transparent; }
-
   body {
     background: var(--bg-main);
     background-image: 
       radial-gradient(circle at 0% 0%, rgba(2, 132, 199, 0.06) 0%, transparent 45%),
       radial-gradient(circle at 100% 100%, rgba(124, 58, 237, 0.06) 0%, transparent 45%);
-    color: var(--text-primary);
-    min-height: 100vh;
-    padding-bottom: 110px;
-    overflow-x: hidden;
+    color: var(--text-primary); min-height: 100vh; padding-bottom: 110px; overflow-x: hidden;
   }
-
   .icon-svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: all 0.3s ease; }
   .pulse { animation: pulseAnim 2s infinite; }
   .float { animation: floatAnim 3.5s ease-in-out infinite; }
   .spin-slow { animation: spinAnim 10s linear infinite; }
-
   @keyframes pulseAnim { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.92); } }
   @keyframes floatAnim { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
   @keyframes spinAnim { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
   .header {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border-card);
-    height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+    background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-card); height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.03);
   }
   .brand { display: flex; align-items: center; gap: 12px; }
   .brand-icon {
-    width: 44px; height: 44px; border-radius: 16px;
-    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    width: 44px; height: 44px; border-radius: 16px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
     display: grid; place-items: center; color: #fff; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
   }
   .brand-title { font-family: var(--font-heading); font-weight: 800; font-size: 19px; letter-spacing: -0.5px; color: var(--text-primary); }
@@ -71,17 +61,10 @@ module.exports = async (req, res) => {
   .container { max-width: 520px; margin: 0 auto; padding: 20px 18px; }
   
   .cyber-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-card);
-    border-radius: 24px; padding: 22px; margin-bottom: 18px;
-    position: relative; overflow: hidden;
-    box-shadow: 0 10px 30px -5px rgba(0,0,0,0.04);
-    transition: all 0.3s ease;
+    background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 24px; padding: 22px; margin-bottom: 18px;
+    position: relative; overflow: hidden; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.04); transition: all 0.3s ease;
   }
-  .cyber-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
-  }
+  .cyber-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple)); }
 
   .user-badge {
     display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px;
@@ -101,30 +84,28 @@ module.exports = async (req, res) => {
 
   .btn-custom {
     width: 100%; padding: 16px; border-radius: 18px; border: none; font-family: var(--font-heading); font-weight: 800; font-size: 14px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-    transition: all 0.25s ease; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-    color: #fff; box-shadow: 0 6px 20px rgba(2, 132, 199, 0.25); letter-spacing: 0.3px; text-transform: uppercase;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.25s ease;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); color: #fff; box-shadow: 0 6px 20px rgba(2, 132, 199, 0.25);
+    letter-spacing: 0.3px; text-transform: uppercase;
   }
   .btn-custom:active { transform: scale(0.97); }
   .btn-custom:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.6); }
 
   .input-custom {
-    width: 100%; padding: 16px; border-radius: 18px; background: #f8fafc;
-    border: 1px solid var(--border-card); color: var(--text-primary); outline: none; font-size: 13px; font-weight: 600;
-    transition: all 0.3s ease;
+    width: 100%; padding: 16px; border-radius: 18px; background: #f8fafc; border: 1px solid var(--border-card);
+    color: var(--text-primary); outline: none; font-size: 13px; font-weight: 600; transition: all 0.3s ease;
   }
   .input-custom:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); background: #ffffff; }
 
   .nav-bar {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    width: calc(100% - 36px); max-width: 480px; background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); border: 1px solid var(--border-card); border-radius: 28px;
-    display: flex; justify-space-around; padding: 8px; z-index: 80;
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 36px); max-width: 480px;
+    background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+    border: 1px solid var(--border-card); border-radius: 28px; display: flex; justify-space-around; padding: 8px; z-index: 80;
     box-shadow: 0 14px 40px rgba(0,0,0,0.08);
   }
   .nav-tab {
-    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 8px;
-    border-radius: 20px; color: var(--text-secondary); text-decoration: none; font-size: 10px; font-family: var(--font-heading); font-weight: 800;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 8px; border-radius: 20px;
+    color: var(--text-secondary); text-decoration: none; font-size: 10px; font-family: var(--font-heading); font-weight: 800;
     cursor: pointer; transition: all 0.3s ease; flex: 1; text-align: center; letter-spacing: 0.5px; text-transform: uppercase;
   }
   .nav-tab.active { color: var(--accent-cyan); background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.2); }
@@ -134,11 +115,8 @@ module.exports = async (req, res) => {
 
   .toast {
     position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-120px) scale(0.9);
-    width: calc(100% - 36px); max-width: 440px;
-    background: #ffffff; border: 1px solid var(--accent-cyan); border-radius: 22px; padding: 18px 22px; z-index: 999;
-    display: flex; align-items: center; gap: 16px;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+    width: calc(100% - 36px); max-width: 440px; background: #ffffff; border: 1px solid var(--accent-cyan); border-radius: 22px; padding: 18px 22px; z-index: 999;
+    display: flex; align-items: center; gap: 16px; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
     overflow: hidden; opacity: 0; pointer-events: none;
   }
   .toast.show { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; pointer-events: auto; }
@@ -146,8 +124,8 @@ module.exports = async (req, res) => {
 
   .streak-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 18px 0; }
   .streak-day {
-    background: #f8fafc; border: 1px solid var(--border-card); border-radius: 16px;
-    padding: 12px 2px; text-align: center; font-size: 10px; font-weight: 800; display: flex; flex-direction: column; gap: 4px; align-items: center;
+    background: #f8fafc; border: 1px solid var(--border-card); border-radius: 16px; padding: 12px 2px;
+    text-align: center; font-size: 10px; font-weight: 800; display: flex; flex-direction: column; gap: 4px; align-items: center;
     transition: all 0.3s ease; color: var(--text-secondary);
   }
   .streak-day.active { background: rgba(5, 150, 105, 0.1); border-color: var(--accent-emerald); color: var(--accent-emerald); }
@@ -158,42 +136,22 @@ module.exports = async (req, res) => {
     display: flex; flex-direction: column; justify-content: space-between; gap: 14px; position: relative; overflow: hidden;
     box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: all 0.3s ease;
   }
-  .shop-item:hover { border-color: var(--accent-cyan); }
-
-  .wheel-container {
-    position: relative; width: 280px; height: 280px; margin: 14px auto; display: flex; justify-content: center; align-items: center;
-  }
+  .wheel-container { position: relative; width: 280px; height: 280px; margin: 14px auto; display: flex; justify-content: center; align-items: center; }
   .wheel-pointer {
-    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-    width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent;
-    border-top: 28px solid var(--accent-pink); z-index: 20; filter: drop-shadow(0 4px 10px rgba(219,39,119,0.5));
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 0; height: 0;
+    border-left: 16px solid transparent; border-right: 16px solid transparent; border-top: 28px solid var(--accent-pink); z-index: 20;
+    filter: drop-shadow(0 4px 10px rgba(219,39,119,0.5));
   }
   #spinCanvas { width: 280px; height: 280px; border-radius: 50%; border: 4px solid #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.08); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
-
-  .loader-screen {
-    position: fixed; inset: 0; background: var(--bg-main); z-index: 99;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-    transition: opacity 0.4s ease;
-  }
-
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px);
-    z-index: 900; display: none; place-items: center; padding: 20px;
-  }
+  .loader-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 99; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.4s ease; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); z-index: 900; display: none; place-items: center; padding: 20px; }
   .modal-overlay.active { display: grid; }
-
-  .proof-preview-container {
-    position: relative; border-radius: 18px; overflow: hidden; margin-top: 12px; border: 1px solid var(--border-card);
-  }
+  .proof-preview-container { position: relative; border-radius: 18px; overflow: hidden; margin-top: 12px; border: 1px solid var(--border-card); }
   .proof-preview-img { width: 100%; max-height: 200px; object-fit: cover; cursor: pointer; display: block; }
-  .zoom-btn-overlay {
-    position: absolute; bottom: 10px; right: 10px; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px);
-    color: var(--text-primary); padding: 7px 16px; border-radius: 14px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px; cursor: pointer;
-  }
+  .zoom-btn-overlay { position: absolute; bottom: 10px; right: 10px; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); color: var(--text-primary); padding: 7px 16px; border-radius: 14px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px; cursor: pointer; }
 </style>
 </head>
 <body>
-
 <div class="loader-screen" id="loader">
   <div class="brand-icon float" style="width:72px;height:72px;border-radius:24px;">
     <svg class="icon-svg spin-slow" style="width:40px;height:40px" viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
@@ -233,7 +191,6 @@ module.exports = async (req, res) => {
 </div>
 
 <div class="container">
-
   <div id="viewUserArea">
     <div id="viewHome" class="view active">
       <div class="cyber-card">
@@ -274,15 +231,11 @@ module.exports = async (req, res) => {
             Spin Wheel Keberuntungan
           </div>
         </div>
-
         <div class="wheel-container">
           <div class="wheel-pointer"></div>
           <canvas id="spinCanvas" width="300" height="300"></canvas>
         </div>
-
-        <button class="btn-custom" id="spinBtn" style="margin-top:16px" onclick="triggerSpin(this)">
-          Putar Spin Harian
-        </button>
+        <button class="btn-custom" id="spinBtn" style="margin-top:16px" onclick="triggerSpin(this)">Putar Spin Harian</button>
       </div>
 
       <div class="cyber-card">
@@ -291,9 +244,7 @@ module.exports = async (req, res) => {
           Redeem Kode Voucher
         </div>
         <input class="input-custom" id="vCodeInput" placeholder="Masukkan Kode Voucher Promo">
-        <button class="btn-custom" style="margin-top:14px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="claimVoucher(this)">
-          Tukarkan Kode
-        </button>
+        <button class="btn-custom" style="margin-top:14px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="claimVoucher(this)">Tukarkan Kode</button>
       </div>
 
       <div class="cyber-card">
@@ -303,18 +254,14 @@ module.exports = async (req, res) => {
         </div>
         <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;font-weight:600">Dapatkan +50 Poin setiap kali ada user baru mendaftar menggunakan link Anda.</div>
         <input class="input-custom" id="refUrlInput" readonly value="Memuat link...">
-        <button class="btn-custom" style="margin-top:14px" onclick="copyRefLink()">
-          Salin Link Referral
-        </button>
+        <button class="btn-custom" style="margin-top:14px" onclick="copyRefLink()">Salin Link Referral</button>
       </div>
     </div>
 
     <div id="viewOrder" class="view">
       <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text-primary)">Katalog VIP Store</div>
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Pilih paket langganan VIP dan nikmati akses penuh tanpa batas!</div>
-
       <div id="activeInvoiceBox"></div>
-
       <div class="product-shop-grid">
         <div class="shop-item">
           <div>
@@ -324,7 +271,6 @@ module.exports = async (req, res) => {
           <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-cyan);margin-top:8px">Rp 7.000</div>
           <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px" onclick="createOrder(3, 7000, this)">Beli VIP 3H</button>
         </div>
-
         <div class="shop-item">
           <div>
             <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Hemat</div>
@@ -333,7 +279,6 @@ module.exports = async (req, res) => {
           <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-cyan);margin-top:8px">Rp 10.000</div>
           <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px" onclick="createOrder(5, 10000, this)">Beli VIP 5H</button>
         </div>
-
         <div class="shop-item">
           <div>
             <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Starter</div>
@@ -342,7 +287,6 @@ module.exports = async (req, res) => {
           <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-emerald);margin-top:8px">Rp 15.000</div>
           <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="createOrder(7, 15000, this)">Beli VIP 7H</button>
         </div>
-
         <div class="shop-item">
           <div>
             <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;color:var(--text-primary)">VIP Pro</div>
@@ -351,7 +295,6 @@ module.exports = async (req, res) => {
           <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--accent-purple);margin-top:8px">Rp 25.000</div>
           <button class="btn-custom btn-buy-pkg" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #6d28d9)" onclick="createOrder(14, 25000, this)">Beli VIP 14H</button>
         </div>
-
         <div class="shop-item" style="grid-column: span 2;border-color:rgba(217, 119, 6, 0.4)">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
@@ -375,11 +318,8 @@ module.exports = async (req, res) => {
             <div style="font-size:12px;color:var(--text-secondary);font-weight:600">Poin Anda saat ini</div>
             <div style="font-family:var(--font-heading);font-size:28px;font-weight:800;color:var(--accent-amber)" id="checkinPointsVal">0 PTS</div>
           </div>
-          <button class="btn-custom" id="checkinBtn" style="width:auto;padding:12px 24px" onclick="triggerCheckin(this)">
-            Check-in Hari Ini
-          </button>
+          <button class="btn-custom" id="checkinBtn" style="width:auto;padding:12px 24px" onclick="triggerCheckin(this)">Check-in Hari Ini</button>
         </div>
-
         <div class="streak-grid">
           <div class="streak-day" id="stDay1"><span>H1</span><b>+30</b></div>
           <div class="streak-day" id="stDay2"><span>H2</span><b>+50</b></div>
@@ -401,7 +341,6 @@ module.exports = async (req, res) => {
           </div>
           <button class="btn-custom" style="padding:10px;font-size:12px" onclick="redeemPoints(1, this)">Tukarkan</button>
         </div>
-
         <div class="shop-item">
           <div>
             <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">3 Hari VIP</div>
@@ -409,7 +348,6 @@ module.exports = async (req, res) => {
           </div>
           <button class="btn-custom" style="padding:10px;font-size:12px" onclick="redeemPoints(2, this)">Tukarkan</button>
         </div>
-
         <div class="shop-item">
           <div>
             <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">7 Hari VIP</div>
@@ -417,7 +355,6 @@ module.exports = async (req, res) => {
           </div>
           <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="redeemPoints(3, this)">Tukarkan</button>
         </div>
-
         <div class="shop-item">
           <div>
             <div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">14 Hari VIP</div>
@@ -425,7 +362,6 @@ module.exports = async (req, res) => {
           </div>
           <button class="btn-custom" style="padding:10px;font-size:12px;background:linear-gradient(135deg, var(--accent-purple), #6d28d9)" onclick="redeemPoints(4, this)">Tukarkan</button>
         </div>
-
         <div class="shop-item" style="grid-column: span 2">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
@@ -445,13 +381,11 @@ module.exports = async (req, res) => {
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Daftar transaksi pending & foto bukti pembayaran terkirim.</div>
       <div id="oPendingList"></div>
     </div>
-
     <div id="oTabUsers" class="view">
       <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:4px;color:var(--text-primary)">Kelola User Valid</div>
       <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;font-weight:600">Daftar pengguna terverifikasi.</div>
       <div id="oUserList"></div>
     </div>
-
     <div id="oTabVouchers" class="view">
       <div class="cyber-card">
         <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:14px;color:var(--text-primary)">Generator Voucher Promo</div>
@@ -465,17 +399,13 @@ module.exports = async (req, res) => {
       <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin:16px 0 12px;color:var(--text-primary)">Voucher Aktif</div>
       <div id="oVoucherList"></div>
     </div>
-
     <div id="oTabBroadcast" class="view">
       <div class="cyber-card">
         <div style="font-family:var(--font-heading);font-weight:800;font-size:16px;margin-bottom:12px;color:var(--text-primary)">Kirim Broadcast Pesan Massal</div>
         <textarea class="input-custom" id="bcTextInput" style="height:140px;resize:none;margin-bottom:14px" placeholder="Tuliskan pesan HTML broadcast massal..."></textarea>
-        <button class="btn-custom" id="btnSendBc" onclick="sendBroadcast(this)">
-          Kirim Broadcast Sekarang
-        </button>
+        <button class="btn-custom" id="btnSendBc" onclick="sendBroadcast(this)">Kirim Broadcast Sekarang</button>
       </div>
     </div>
-
     <div id="oTabAnalytics" class="view">
       <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;margin-bottom:16px;color:var(--text-primary)">Analitik Pendapatan Studio</div>
       <div class="grid2">
@@ -498,7 +428,6 @@ module.exports = async (req, res) => {
       </div>
     </div>
   </div>
-
 </div>
 
 <div class="nav-bar" id="userNavBar">
@@ -710,8 +639,8 @@ module.exports = async (req, res) => {
 
           var proofHtml = inv.proofImage ? 
             '<div class="proof-preview-container">' +
-              '<img src="' + inv.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\\'' + inv.proofImage + '\\')">' +
-              '<div class="zoom-btn-overlay" onclick="openZoomModal(\\'' + inv.proofImage + '\\')">' +
+              '<img src="' + inv.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\'' + inv.proofImage + '\')">' +
+              '<div class="zoom-btn-overlay" onclick="openZoomModal(\'' + inv.proofImage + '\')">' +
                 '<svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
                 'Perbesar Foto Fullscreen' +
               '</div>' +
@@ -725,7 +654,7 @@ module.exports = async (req, res) => {
               proofHtml +
               '<div style="display:flex;gap:10px;margin-top:14px">' +
                 '<button class="btn-custom" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="triggerUploadProof()">' + (inv.proofImage ? 'Ganti Foto Bukti' : 'Upload Foto Bukti') + '</button>' +
-                '<button class="btn-custom" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="cancelOrder(\\'' + inv.id + '\\', this)">Batalkan Pembelian</button>' +
+                '<button class="btn-custom" style="padding:12px;font-size:12px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="cancelOrder(\'' + inv.id + '\', this)">Batalkan Pembelian</button>' +
               '</div>' +
             '</div>';
         } else {
@@ -1002,8 +931,8 @@ module.exports = async (req, res) => {
           pendingList.innerHTML = d.pendingPayments.map(function(p) {
             var imgHtml = p.proofImage ? 
               '<div class="proof-preview-container">' +
-                '<img src="' + p.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\\'' + p.proofImage + '\\')">' +
-                '<div class="zoom-btn-overlay" onclick="openZoomModal(\\'' + p.proofImage + '\\')">' +
+                '<img src="' + p.proofImage + '" class="proof-preview-img" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
+                '<div class="zoom-btn-overlay" onclick="openZoomModal(\'' + p.proofImage + '\')">' +
                   '<svg class="icon-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>' +
                   'Lihat Foto Fullscreen' +
                 '</div>' +
@@ -1014,8 +943,8 @@ module.exports = async (req, res) => {
               '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;font-weight:600">User: ' + p.userId + ' | Paket: ' + p.days + ' Hari (' + (p.amountFormatted || ('Rp ' + p.amount)) + ')</div>' +
               imgHtml +
               '<div style="display:flex;gap:10px;margin-top:14px">' +
-                '<button class="btn-custom" style="padding:11px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="ownerAct(\\'' + p.id + '\\', \\'approve\\', this)">Setujui Pembayaran</button>' +
-                '<button class="btn-custom" style="padding:11px;font-size:12px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="ownerAct(\\'' + p.id + '\\', \\'reject\\', this)">Tolak</button>' +
+                '<button class="btn-custom" style="padding:11px;font-size:12px;background:linear-gradient(135deg, var(--accent-emerald), #047857)" onclick="ownerAct(\'' + p.id + '\', \'approve\', this)">Setujui Pembayaran</button>' +
+                '<button class="btn-custom" style="padding:11px;font-size:12px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="ownerAct(\'' + p.id + '\', \'reject\', this)">Tolak</button>' +
               '</div>' +
             '</div>';
           }).join('');
@@ -1048,7 +977,7 @@ module.exports = async (req, res) => {
                   '<div style="font-family:var(--font-heading);font-weight:800;font-size:15px;color:var(--text-primary)">' + c.code + '</div>' +
                   '<div style="font-size:12px;color:var(--text-secondary);font-weight:600">' + c.days + ' Hari | Terpakai: ' + (c.used || 0) + '/' + (c.quota || '∞') + '</div>' +
                 '</div>' +
-                '<button class="btn-custom" style="width:auto;padding:8px 16px;font-size:11px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="deleteVoucher(\\'' + c.code + '\\', this)">Hapus</button>' +
+                '<button class="btn-custom" style="width:auto;padding:8px 16px;font-size:11px;background:linear-gradient(135deg, var(--accent-pink), #be123c)" onclick="deleteVoucher(\'' + c.code + '\', this)">Hapus</button>' +
               '</div>' +
             '</div>';
           }).join('');
