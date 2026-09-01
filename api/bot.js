@@ -91,7 +91,7 @@ function getOwnerMenu(user, chatId, db, webappUrl) {
   const totalRev = (db.stats && db.stats.revenue) ? db.stats.revenue : 0;
   const dispName = esc(user.first_name || 'Owner Executive');
 
-  const text = `👑 <b>Walzy Dashboard</b>\n\nHalo, <b>${dispName}</b>\n\n💰 Pendapatan: <code>Rp ${totalRev.toLocaleString('id-ID')}</code>\n👥 Pengguna: <code>${validUsersCount}</code>\n📥 Pending: <code>${pendingCount}</code>`;
+  const text = `👑 <b>WALZY DASHBOARD</b>\n\nHalo, <b>${dispName}</b> 👋\n\n<blockquote>💰 Pendapatan: <b>Rp ${totalRev.toLocaleString('id-ID')}</b>\n👥 Pengguna: <b>${validUsersCount}</b>\n📥 Pending: <b>${pendingCount}</b></blockquote>\n\n<blockquote>⚙️ <b>Kontrol Studio</b>\nKelola order, user, voucher, dan broadcast langsung dari Admin Studio.</blockquote>`;
 
   const keyboard = [
     [
@@ -99,7 +99,7 @@ function getOwnerMenu(user, chatId, db, webappUrl) {
       { text: `📥 Pending (${pendingCount})`, callback_data: 'owner_check_pending' }
     ],
     [
-      { text: '🌐 Admin Studio', web_app: { url: webappUrl } }
+      { text: '🌐 Buka Admin Studio', web_app: { url: webappUrl } }
     ],
     [
       { text: '❓ Bantuan', callback_data: 'help' }
@@ -125,7 +125,7 @@ function getUserMenu(user, chatId, webappUrl) {
   const keyboard = [
     [
       { text: '🛠️ Fix Merah', callback_data: 'fix_merah' },
-      { text: '🌐 Mini Web', web_app: { url: webappUrl } }
+      { text: '🌐 Buka Mini Web', web_app: { url: webappUrl } }
     ],
     [
       { text: '💬 Support', callback_data: 'contact_owner' },
