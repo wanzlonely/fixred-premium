@@ -10,7 +10,7 @@ function checkRate(ip){const now=Date.now();const key=ip||'unknown';const entry=
 function ensureUserInDB(db, userId, nameData, usernameData){
 const k=String(userId);
 if(!db.users[k]){
-db.users[k]={id:Number(userId)||userId,first_name:nameData||'User',username:usernameData||'',joinedAt:Date.now(),referralCount:0,referrals:[],referredBy:null,totalFix:0,dailyFix:{date:getTodayString(),count:0},premiumUntil:0,lastSpin:null,points:0,checkinStreak:0,lastCheckin:null,weeklyStreak:0};
+db.users[k]={id:Number(userId)||userId,first_name:nameData||'User',username:usernameData||'',joinedAt:Date.now(),referralCount:0,referrals:[],referredBy:null,totalFix:0,dailyFix:{date:getTodayString(),count:0},premiumUntil:0,lastSpin:null,points:0,checkinStreak:0,lastCheckin:null};
 }else{
 if(nameData && db.users[k].first_name!==nameData) db.users[k].first_name=nameData;
 if(usernameData!==undefined && db.users[k].username!==usernameData) db.users[k].username=usernameData;
@@ -30,7 +30,7 @@ res.setHeader('Content-Type','application/json; charset=utf-8');
 res.setHeader('Cache-Control','no-store, no-cache, must-revalidate');
 if(req.method==='OPTIONS') return res.status(200).json({ok:true});
 const clientIp=req.headers['x-forwarded-for']||req.headers['x-real-ip']||'unknown';
-if(!checkRate(clientIp)) return res.status(200).json({ok:false,message:'Batas Permintaan'});
+if(!checkRate(clientIp)) return res.status(200).json({ok:false,message:'Batas'});
 const fullUrl=req.url||'';
 const queryString=fullUrl.includes('?') ? fullUrl.split('?').slice(1).join('?') : '';
 const parsedParams=new URLSearchParams(queryString);
@@ -46,14 +46,12 @@ if(!db.users) db.users={};
 if(!db.payments) db.payments={};
 if(!db.codes) db.codes={};
 if(!db.stats) db.stats={totalFix:0,totalSuccess:0,totalFailed:0,revenue:0,revenueHistory:[],lastReset:Date.now()};
-if(endpoint==='health'){return res.status(200).json({ok:true,message:'WALZY API V7 TOTAL ONLINE',timestamp:Date.now(),users:Object.keys(db.users).length,codes:Object.keys(db.codes).length});}
+if(endpoint==='health'){return res.status(200).json({ok:true,message:'WALZY API V8 REALTIME ONLINE',users:Object.keys(db.users).length});}
 if(endpoint==='user'){
 const userId=query.user_id||body.user_id;
 const firstName=query.first_name||body.first_name||null;
 const userName=query.username||body.username||null;
-if(!userId || isSuspiciousId(userId)){
-return res.status(200).json({ok:true,user:{id:userId||0,first_name:firstName||'User',username:userName||'',referralCount:0,totalFix:0,points:0,checkinStreak:0,dailyFixRemaining:'5/5',isPremium:false,premiumLeftDays:0,canSpin:true,canCheckin:true,rank:{name:'Pemula',icon:'🌱'},pendingDeposit:null,referralLink:`https://t.me/${config.BOT_USERNAME||'walzystore_bot'}`,isOwner:false,weekIndex:getWeekIndex()},currentInvoice:null,invoices:[],dana:{number:config.DANA_NUMBER||'083124469855',name:config.DANA_NAME||'WALZY STORE'}});
-}
+if(!userId || isSuspiciousId(userId)){return res.status(200).json({ok:true,user:{id:userId||0,first_name:firstName||'User',username:userName||'',referralCount:0,totalFix:0,points:0,checkinStreak:0,dailyFixRemaining:'5/5',isPremium:false,premiumLeftDays:0,canSpin:true,canCheckin:true,rank:{name:'Pemula',icon:'🌱'},referralLink:`https://t.me/${config.BOT_USERNAME||'walzystore_bot'}`,isOwner:false,weekIndex:getWeekIndex()},currentInvoice:null,invoices:[],dana:{number:config.DANA_NUMBER||'083124469855',name:config.DANA_NAME||'WALZY'}});}
 let user=ensureUserInDB(db,userId,firstName,userName);
 const isPrem=isPremium(user);
 const premiumLeft=isPrem ? Math.ceil((user.premiumUntil-Date.now())/86400000) : 0;
@@ -62,10 +60,10 @@ const canSpin=!user.lastSpin || user.lastSpin!==getTodayString();
 const canCheckin=!user.lastCheckin || user.lastCheckin!==getTodayString();
 const rankInfo=getRank(user.referralCount||0);
 const userInvoices=Object.values(db.payments).filter(p=>String(p.userId)===String(userId));
-const activeInvoice=userInvoices.find(p=>p.status==='pending' || p.status==='waiting_approval' || p.status==='waiting_payment')||null;
+const activeInvoice=userInvoices.find(p=>p.status==='pending' || p.status==='waiting_approval')||null;
 const remainingQuota=isPrem ? 'Unlimited ♾️' : `${Math.max(0,5-(user.dailyFix.count||0))}/5`;
 await saveDB(db);
-return res.status(200).json({ok:true,user:{id:user.id,first_name:user.first_name||'User',username:user.username||'',referralCount:user.referralCount||0,totalFix:user.totalFix||0,points:user.points||0,checkinStreak:user.checkinStreak||0,dailyFixRemaining:remainingQuota,isPremium:isPrem,premiumLeftDays:premiumLeft,canSpin:canSpin,canCheckin:canCheckin,rank:rankInfo,pendingDeposit:activeInvoice,referralLink:`https://t.me/${config.BOT_USERNAME||'walzystore_bot'}?start=ref_${user.id}`,isOwner:isOwner(userId),weekIndex:getWeekIndex()},currentInvoice:activeInvoice,invoices:userInvoices,dana:{number:config.DANA_NUMBER||'083124469855',name:config.DANA_NAME||'WALZY STORE'},weeklyPoints:getWeeklyPoints()});
+return res.status(200).json({ok:true,user:{id:user.id,first_name:user.first_name||'User',username:user.username||'',referralCount:user.referralCount||0,totalFix:user.totalFix||0,points:user.points||0,checkinStreak:user.checkinStreak||0,dailyFixRemaining:remainingQuota,isPremium:isPrem,premiumLeftDays:premiumLeft,canSpin:canSpin,canCheckin:canCheckin,rank:rankInfo,referralLink:`https://t.me/${config.BOT_USERNAME||'walzystore_bot'}?start=ref_${user.id}`,isOwner:isOwner(userId),weekIndex:getWeekIndex()},currentInvoice:activeInvoice,invoices:userInvoices,dana:{number:config.DANA_NUMBER||'083124469855',name:config.DANA_NAME||'WALZY'},weeklyPoints:getWeeklyPoints()});
 }
 if(endpoint==='spin'){
 const userId=String(body.user_id||query.user_id||'');
@@ -73,7 +71,7 @@ const firstName=body.first_name||query.first_name||null;
 if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User ID tidak valid'});
 let dbUser=db.users[userId];
 if(!dbUser){dbUser=ensureUserInDB(db,userId,firstName,null);}
-if(dbUser.lastSpin===getTodayString()) return res.status(200).json({ok:false,message:'Spin sudah digunakan hari ini'});
+if(dbUser.lastSpin===getTodayString()) return res.status(200).json({ok:false,message:'Spin sudah digunakan'});
 const prizes=[{label:'+50 PTS',type:'points',value:50,weight:28},{label:'ZONK',type:'zonk',value:0,weight:12},{label:'+25 PTS',type:'points',value:25,weight:24},{label:'+100 PTS',type:'points',value:100,weight:10},{label:'+3 KUOTA',type:'quota',value:3,weight:16},{label:'VIP 1H',type:'vip',value:1,weight:10}];
 const totalWeight=prizes.reduce((a,b)=>a+b.weight,0);
 let r=Math.random()*totalWeight;
@@ -92,7 +90,7 @@ const firstName=body.first_name||query.first_name||null;
 if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User ID tidak valid'});
 let user=db.users[userId];
 if(!user){user=ensureUserInDB(db,userId,firstName,null);}
-if(user.lastCheckin===getTodayString()) return res.status(200).json({ok:false,message:'Sudah check-in hari ini'});
+if(user.lastCheckin===getTodayString()) return res.status(200).json({ok:false,message:'Sudah check-in'});
 const today=getTodayString();
 const yesterdayJakarta=new Date(Date.now()-86400000).toLocaleString('en-US',{timeZone:'Asia/Jakarta'}).slice(0,10);
 const yesterdayISO=new Date(Date.now()-86400000).toISOString().slice(0,10);
@@ -104,7 +102,7 @@ const weekly=getWeeklyPoints();
 const bonus=weekly[weekIdx][user.checkinStreak-1]||10;
 user.points=(user.points||0)+bonus;
 await saveDB(db);
-return res.status(200).json({ok:true,message:`Check-in Day ${user.checkinStreak} Minggu ${weekIdx+1} +${bonus} PTS`,bonus:bonus,streak:user.checkinStreak,week:weekIdx+1});
+return res.status(200).json({ok:true,message:`Check-in Day ${user.checkinStreak} +${bonus} PTS`,bonus:bonus,streak:user.checkinStreak,week:weekIdx+1});
 }
 if(endpoint==='redeem'){
 const userId=String(body.user_id||query.user_id||'');
@@ -112,12 +110,12 @@ const option=body.option||query.option;
 if(!userId || isSuspiciousId(userId)) return res.status(200).json({ok:false,message:'User tidak valid'});
 let user=db.users[userId];
 if(!user) user=ensureUserInDB(db,userId,null,null);
-if(option==='quota1' || option==='quota'){if((user.points||0)<100) return res.status(200).json({ok:false,message:'Butuh 100 PTS'});user.points-=100;if(!user.dailyFix || user.dailyFix.date!==getTodayString()) user.dailyFix={date:getTodayString(),count:0};user.dailyFix.count=Math.max(0,(user.dailyFix.count||0)-1);await saveDB(db);return res.status(200).json({ok:true,message:'Berhasil +1 Kuota'});}
-else if(option==='quota3'){if((user.points||0)<250) return res.status(200).json({ok:false,message:'Butuh 250 PTS'});user.points-=250;if(!user.dailyFix || user.dailyFix.date!==getTodayString()) user.dailyFix={date:getTodayString(),count:0};user.dailyFix.count=Math.max(0,(user.dailyFix.count||0)-3);await saveDB(db);return res.status(200).json({ok:true,message:'Berhasil +3 Kuota'});}
-else if(option==='spin'){if((user.points||0)<150) return res.status(200).json({ok:false,message:'Butuh 150 PTS'});user.points-=150;user.lastSpin=null;await saveDB(db);return res.status(200).json({ok:true,message:'Spin direset'});}
-else if(option==='vip1'){if((user.points||0)<500) return res.status(200).json({ok:false,message:'Butuh 500 PTS'});user.points-=500;user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+86400000*1;await saveDB(db);return res.status(200).json({ok:true,message:'VIP 1 Hari aktif'});}
-else if(option==='vip3'){if((user.points||0)<1200) return res.status(200).json({ok:false,message:'Butuh 1200 PTS'});user.points-=1200;user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+86400000*3;await saveDB(db);return res.status(200).json({ok:true,message:'VIP 3 Hari aktif'});}
-else if(option==='bonus200'){if((user.points||0)<300) return res.status(200).json({ok:false,message:'Butuh 300 PTS'});user.points-=300;user.points+=500;await saveDB(db);return res.status(200).json({ok:true,message:'Berhasil 300->500'});}
+if(option==='quota1'){if((user.points||0)<100) return res.status(200).json({ok:false,message:'Butuh 100 PTS'});user.points-=100;if(!user.dailyFix || user.dailyFix.date!==getTodayString()) user.dailyFix={date:getTodayString(),count:0};user.dailyFix.count=Math.max(0,(user.dailyFix.count||0)-1);await saveDB(db);return res.status(200).json({ok:true,message:'+1 Kuota'});}
+else if(option==='quota3'){if((user.points||0)<250) return res.status(200).json({ok:false,message:'Butuh 250 PTS'});user.points-=250;if(!user.dailyFix || user.dailyFix.date!==getTodayString()) user.dailyFix={date:getTodayString(),count:0};user.dailyFix.count=Math.max(0,(user.dailyFix.count||0)-3);await saveDB(db);return res.status(200).json({ok:true,message:'+3 Kuota'});}
+else if(option==='spin'){if((user.points||0)<150) return res.status(200).json({ok:false,message:'Butuh 150 PTS'});user.points-=150;user.lastSpin=null;await saveDB(db);return res.status(200).json({ok:true,message:'Spin reset'});}
+else if(option==='vip1'){if((user.points||0)<500) return res.status(200).json({ok:false,message:'Butuh 500 PTS'});user.points-=500;user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+86400000;await saveDB(db);return res.status(200).json({ok:true,message:'VIP 1H aktif'});}
+else if(option==='vip3'){if((user.points||0)<1200) return res.status(200).json({ok:false,message:'Butuh 1200 PTS'});user.points-=1200;user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+86400000*3;await saveDB(db);return res.status(200).json({ok:true,message:'VIP 3H aktif'});}
+else if(option==='bonus200'){if((user.points||0)<300) return res.status(200).json({ok:false,message:'Butuh 300 PTS'});user.points-=300;user.points+=500;await saveDB(db);return res.status(200).json({ok:true,message:'300->500'});}
 return res.status(200).json({ok:false,message:'Opsi tidak valid'});
 }
 if(endpoint==='create_order'){
@@ -129,12 +127,11 @@ if(!days || days<=0) return res.status(200).json({ok:false,message:'Durasi tidak
 let user=db.users[userId];
 if(!user) user=ensureUserInDB(db,userId,null,null);
 const existingPending=Object.values(db.payments||{}).find(p=>String(p.userId)===userId && (p.status==='pending' || p.status==='waiting_approval'));
-if(existingPending){return res.status(200).json({ok:false,message:'Ada invoice pending: '+existingPending.id+' - Batalkan dulu'});}
+if(existingPending){return res.status(200).json({ok:false,message:'Ada pending: '+existingPending.id});}
 const invoiceId=genInvoiceID();
 const invoice={id:invoiceId,invoice:invoiceId,userId:userId,days:days,amount:amount,status:'pending',proofImage:null,createdAt:Date.now()};
 db.payments[invoiceId]=invoice;
-const saved=await saveDB(db);
-if(!saved){return res.status(200).json({ok:false,message:'Gagal simpan'});}
+await saveDB(db);
 return res.status(200).json({ok:true,message:'Invoice dibuat',invoice:invoice});
 }
 if(endpoint==='cancel_order'){
@@ -147,7 +144,7 @@ if(String(pay.userId)!==userId && !isOwner(userId)) return res.status(200).json(
 if(pay.status==='paid' || pay.status==='approved') return res.status(200).json({ok:false,message:'Sudah lunas'});
 delete db.payments[invoiceId];
 await saveDB(db);
-return res.status(200).json({ok:true,message:'Invoice dibatalkan'});
+return res.status(200).json({ok:true,message:'Dibatalkan'});
 }
 if(endpoint==='upload_proof'){
 const userId=String(body.user_id||query.user_id||'');
@@ -184,11 +181,11 @@ const days=typeof vCode==='object' ? (vCode.days||0) : (typeof vCode==='number' 
 const quota=typeof vCode==='object' ? (vCode.quota||0) : 0;
 const used=typeof vCode==='object' ? (vCode.used||0) : 0;
 if(days<=0) return res.status(200).json({ok:false,message:'Voucher tidak valid'});
-if(quota>0 && used>=quota){return res.status(200).json({ok:false,message:'Kuota Habis ('+used+'/'+quota+')'});}
+if(quota>0 && used>=quota){return res.status(200).json({ok:false,message:'Kuota Habis'});}
 user.premiumUntil=Math.max(Date.now(),user.premiumUntil||0)+(days*86400000);
 if(typeof vCode==='object'){vCode.used=(vCode.used||0)+1;if(quota>0 && vCode.used>=quota){vCode.expired=true;}}else{delete db.codes[actualKey];}
 await saveDB(db);
-return res.status(200).json({ok:true,message:`Voucher +${days} Hari VIP`,days:days});
+return res.status(200).json({ok:true,message:`Voucher +${days}H VIP`,days:days});
 }
 if(endpoint==='stats'){
 const userId=query.user_id||body.user_id;
@@ -211,21 +208,19 @@ if(action==='approve'){
 pay.status='paid';
 pay.approvedAt=Date.now();
 const u=db.users[String(pay.userId)];
-if(u){u.premiumUntil=Math.max(Date.now(),u.premiumUntil||0)+(pay.days*86400000);u.pendingDeposit=null;}
+if(u){u.premiumUntil=Math.max(Date.now(),u.premiumUntil||0)+(pay.days*86400000);}
 db.stats.revenue=(db.stats.revenue||0)+pay.amount;
 db.stats.totalSuccess=(db.stats.totalSuccess||0)+1;
 await saveDB(db);
 try{const bot=new TelegramBot(config.BOT_TOKEN);await bot.sendMessage(pay.userId, `<b>✅ LUNAS</b>\n\nInvoice <code>${invoice}</code>\nVIP +${pay.days}H Aktif`, {parse_mode:'HTML'});}catch(e){}
-return res.status(200).json({ok:true,message:`Invoice ${invoice} Disetujui`});
+return res.status(200).json({ok:true,message:`Disetujui`});
 }else if(action==='reject'){
 pay.status='rejected';
 pay.rejectedAt=Date.now();
-const u=db.users[String(pay.userId)];
-if(u) u.pendingDeposit=null;
 db.stats.totalFailed=(db.stats.totalFailed||0)+1;
 await saveDB(db);
 try{const bot=new TelegramBot(config.BOT_TOKEN);await bot.sendMessage(pay.userId, `❌ <b>DITOLAK</b>\n\nInvoice <code>${invoice}</code> ditolak`, {parse_mode:'HTML'});}catch(e){}
-return res.status(200).json({ok:true,message:`Invoice ${invoice} Ditolak`});
+return res.status(200).json({ok:true,message:`Ditolak`});
 }
 }
 if(endpoint==='create_code'){
@@ -240,7 +235,7 @@ if(!days || days<=0) return res.status(200).json({ok:false,message:'Durasi tidak
 if(db.codes[code] && !body.force){const existing=db.codes[code];const used=typeof existing==='object' ? (existing.used||0) : 0;const q=typeof existing==='object' ? (existing.quota||0) : 0;if(q===0 || used<q){return res.status(200).json({ok:false,message:'Kode sudah ada aktif'});}}
 db.codes[code]={code:code,days:days,quota:quota,used:0,createdAt:Date.now(),createdBy:ownerId};
 await saveDB(db);
-return res.status(200).json({ok:true,message:`Voucher ${code} dibuat ${days}H`});
+return res.status(200).json({ok:true,message:`Voucher ${code} dibuat`});
 }
 if(endpoint==='delete_code'){
 const ownerId=String(body.owner_id||query.owner_id||'');
@@ -252,7 +247,7 @@ if(!db.codes[keyToDelete]){const found=Object.keys(db.codes).find(k=>k.toUpperCa
 if(!db.codes[keyToDelete]) return res.status(200).json({ok:false,message:'Tidak Ditemukan'});
 delete db.codes[keyToDelete];
 await saveDB(db);
-return res.status(200).json({ok:true,message:`Voucher ${keyToDelete} dihapus`});
+return res.status(200).json({ok:true,message:`Dihapus`});
 }
 if(endpoint==='broadcast'){
 const ownerId=String(body.owner_id||query.owner_id||'');
@@ -269,7 +264,7 @@ try{await bot.sendMessage(u.id, `📢 <b>WALZY STORE</b>\n\n${text}`, {parse_mod
 await new Promise(r=>setTimeout(r,70));
 }
 }catch(e){}
-return res.status(200).json({ok:true,message:`Broadcast Selesai Berhasil ${sent} Gagal ${failed}`,sent,failed,total:validUsers.length});
+return res.status(200).json({ok:true,message:`Broadcast ${sent} berhasil ${failed} gagal`,sent,failed,total:validUsers.length});
 }
 return res.status(200).json({ok:false,message:'Endpoint Tidak Ditemukan'});
 }catch(err){
