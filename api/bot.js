@@ -3,7 +3,6 @@ const { loadDB, saveDB, getTodayString, esc, getRank } = require('../lib/utils')
 const config = require('../config');
 
 const rateLimitMap = new Map();
-const userState = new Map();
 
 function isOwner(id) {
   if (!config.OWNER_IDS || !Array.isArray(config.OWNER_IDS)) return false;
@@ -54,7 +53,8 @@ function getUser(db, id, msgFrom) {
       lastSpin: null,
       points: 0,
       checkinStreak: 0,
-      lastCheckin: null
+      lastCheckin: null,
+      state: null
     };
   } else {
     if (firstName && db.users[k].first_name !== firstName) db.users[k].first_name = firstName;
@@ -158,9 +158,14 @@ module.exports = async (req, res) => {
       const uid = q.from.id;
       const data = q.data;
 
+      const user = getUser(db, uid, q.from);
+
       if (data === 'fix_merah') {
         await bot.answerCallbackQuery(qId, { text: '🛠️ Modul Fix Merah Aktif', show_alert: false });
-        userState.set(String(uid), { action: 'awaiting_fixmerah_number' });
+        if (user) {
+          user.state = { action: 'awaiting_fixmerah_number' };
+          await saveDB(db);
+        }
         await bot.sendMessage(uid, `🛠️ <b>MODUL SINKRONISASI FIX MERAH WALZY</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nSilakan kirimkan nomor WhatsApp target yang ingin diproses.\nContoh: <code>+628123456789</code>`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
@@ -202,7 +207,10 @@ module.exports = async (req, res) => {
 
       if (data === 'contact_owner') {
         await bot.answerCallbackQuery(qId, { text: '💬 Support Mode Active', show_alert: false });
-        userState.set(String(uid), { action: 'awaiting_owner_msg' });
+        if (user) {
+          user.state = { action: 'awaiting_owner_msg' };
+          await saveDB(db);
+        }
         await bot.sendMessage(uid, `💬 <b>HUBUNGI CUSTOMER SUPPORT</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nTuliskan pertanyaan Anda. Pesan akan langsung diteruskan ke Operator.`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
@@ -210,7 +218,10 @@ module.exports = async (req, res) => {
       if (data.startsWith('reply_user_')) {
         await bot.answerCallbackQuery(qId);
         const targetUserId = data.replace('reply_user_', '');
-        userState.set(String(uid), { action: 'replying_to_user', targetId: targetUserId });
+        if (user) {
+          user.state = { action: 'replying_to_user', targetId: targetUserId };
+          await saveDB(db);
+        }
         await bot.sendMessage(uid, `✏️ <b>BALAS USER (${targetUserId})</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nKetik pesan balasan resmi Anda.`, { parse_mode: 'HTML' });
         return res.status(200).send('OK');
       }
@@ -228,13 +239,14 @@ module.exports = async (req, res) => {
       if (!user) return res.status(200).send('OK');
 
       const text = (msg.text || '').trim();
-      const st = userState.get(String(uid));
+      const st = user.state;
 
-      if (st && st.action === 'awaiting_fixmerah_number' && text) {
-        userState.delete(String(uid));
+      if (st && st.action === 'awaiting_fixmerah_number' && text && !text.startsWith('/')) {
+        user.state = null;
 
         let cleanDigits = text.replace(/[^\d]/g, '');
         if (!cleanDigits) {
+          await saveDB(db);
           await bot.sendMessage(chatId, `❌ <b>Format nomor tidak valid!</b> Silakan masukkan angka nomor telepon yang benar.`, { parse_mode: 'HTML' });
           return res.status(200).send('OK');
         }
@@ -245,6 +257,7 @@ module.exports = async (req, res) => {
             user.dailyFix = { date: getTodayString(), count: 0 };
           }
           if (user.dailyFix.count >= 5) {
+            await saveDB(db);
             await bot.sendMessage(chatId, `⚠️ <b>KUOTA HARIAN HABIS</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\nKuota gratis Fix Merah Anda hari ini sudah mencapai batas maksimum <b>(5/5)</b>.\n\n💡 <i>Tingkatkan akun Anda ke <b>VIP Member</b> di Mini Web untuk kuota Tanpa Batas (Unlimited)!</i>`, {
               parse_mode: 'HTML',
               reply_markup: { inline_keyboard: [[{ text: '💎 Upgrade VIP Unlimited', web_app: { url: webappUrl } }]] }
@@ -252,8 +265,9 @@ module.exports = async (req, res) => {
             return res.status(200).send('OK');
           }
           user.dailyFix.count += 1;
-          await saveDB(db);
         }
+
+        await saveDB(db);
 
         let formattedNum = cleanDigits;
         if (formattedNum.startsWith('08')) formattedNum = '628' + formattedNum.slice(2);
@@ -269,7 +283,7 @@ module.exports = async (req, res) => {
 
         await bot.sendMessage(chatId, initialMsgTxt, { parse_mode: 'HTML' });
 
-        const statusRes = await clientHelper.monitorTargetResponse(displayNum, sessionCode, 6000);
+        const statusRes = await clientHelper.monitorTargetResponse(displayNum, sessionCode, 5000);
 
         if (statusRes.status === 'SUCCESS') {
           const succReport = `✅ <b>SUCCESS FIXMERAH CPHX</b>\n◈────────────────────◈\n<blockquote>📱 Nomor: <code>${displayNum}</code>\n🆔 ID: <code>${sessionCode}</code>\n📩 Status: <b>SUCCESS</b></blockquote>\n\n💬 <i>WhatsApp sudah merespon. Silakan coba login/verifikasi akun Anda sekarang!</i>`;
@@ -282,8 +296,10 @@ module.exports = async (req, res) => {
         return res.status(200).send('OK');
       }
 
-      if (st && st.action === 'awaiting_owner_msg' && text) {
-        userState.delete(String(uid));
+      if (st && st.action === 'awaiting_owner_msg' && text && !text.startsWith('/')) {
+        user.state = null;
+        await saveDB(db);
+
         for (let ownerId of (config.OWNER_IDS || [])) {
           try {
             await bot.sendMessage(ownerId, `📨 <b>PESAN MASUK USER</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\n👤 Pengirim: <b>${esc(user.first_name)}</b>\n🆔 User ID: <code>${uid}</code>\n💬 Pesan:\n${esc(text)}`, {
@@ -298,11 +314,14 @@ module.exports = async (req, res) => {
         return res.status(200).send('OK');
       }
 
-      if (st && st.action === 'replying_to_user' && text && isOwner(uid)) {
-        userState.delete(String(uid));
+      if (st && st.action === 'replying_to_user' && text && !text.startsWith('/') && isOwner(uid)) {
+        const targetId = st.targetId;
+        user.state = null;
+        await saveDB(db);
+
         try {
-          await bot.sendMessage(st.targetId, `💬 <b>BALASAN OPERATOR WALZY</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\n${esc(text)}`, { parse_mode: 'HTML' });
-          await bot.sendMessage(chatId, `✅ Balasan berhasil dikirim ke user ID <code>${st.targetId}</code>!`, { parse_mode: 'HTML' });
+          await bot.sendMessage(targetId, `💬 <b>BALASAN OPERATOR WALZY</b>\n━━━━━━━━━━━━━━━━━━━━━━━\n\n${esc(text)}`, { parse_mode: 'HTML' });
+          await bot.sendMessage(chatId, `✅ Balasan berhasil dikirim ke user ID <code>${targetId}</code>!`, { parse_mode: 'HTML' });
         } catch (e) {
           await bot.sendMessage(chatId, `❌ Gagal mengirim balasan ke user.`, { parse_mode: 'HTML' });
         }
@@ -310,6 +329,7 @@ module.exports = async (req, res) => {
       }
 
       if (text.startsWith('/start')) {
+        user.state = null;
         const parts = text.split(' ');
         if (parts[1] && parts[1].startsWith('ref_')) {
           const refId = parts[1].replace('ref_', '');
@@ -333,6 +353,7 @@ module.exports = async (req, res) => {
         return res.status(200).send('OK');
       }
 
+      user.state = null;
       const menu = isOwner(uid) ? getOwnerMenu(user, chatId, db, webappUrl) : getUserMenu(user, chatId, webappUrl);
       await bot.sendMessage(chatId, menu.text, menu.opts);
       await saveDB(db);
