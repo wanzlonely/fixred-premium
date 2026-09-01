@@ -4,7 +4,7 @@ const config = require('../config');
 const rateCache = new Map();
 let dbCache = null;
 let dbCacheTime = 0;
-const CACHE_TTL = 1000;
+const CACHE_TTL = 500;
 
 async function getDB() {
   const now = Date.now();
@@ -89,9 +89,14 @@ function ensureUserInDB(db, userId, nameData, usernameData) {
     if (nameData && db.users[k].first_name !== nameData) db.users[k].first_name = nameData;
     if (usernameData !== undefined && db.users[k].username !== usernameData) db.users[k].username = usernameData;
   }
-  if (db.users[k].points === undefined) db.users[k].points = 0;
-  if (db.users[k].checkinStreak === undefined) db.users[k].checkinStreak = 0;
-  if (db.users[k].lastCheckin === undefined) db.users[k].lastCheckin = null;
+
+  if (Array.isArray(db.users[k].referrals)) {
+    db.users[k].referralCount = db.users[k].referrals.length;
+  }
+  
+  const userPaidInvoices = Object.values(db.payments || {}).filter(p => String(p.userId) === k && (p.status === 'paid' || p.status === 'approved'));
+  db.users[k].totalFix = userPaidInvoices.length;
+
   return db.users[k];
 }
 
@@ -452,7 +457,7 @@ module.exports = async (req, res) => {
         try {
           const TelegramBot = require('node-telegram-bot-api');
           const bot = new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `<blockquote>⚡ <b>VERIFIKASI TRANSAKSI LUNAS</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n<b>ID Invoice:</b> <code>${invoice}</code>\n<b>Status:</b> 🟢 <b>APPROVED</b>\n<b>Paket:</b> VIP +${pay.days} Hari Berhasil Diaktifkan!\n\n🚀 <i>Terima kasih telah berlangganan di Walzy Store.</i></blockquote>`, { parse_mode: 'HTML' });
+          await bot.sendMessage(pay.userId, `<b>VERIFIKASI TRANSAKSI LUNAS</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n<b>ID Invoice:</b> <code>${invoice}</code>\n<b>Status:</b> 🟢 <b>APPROVED</b>\n<b>Paket:</b> VIP +${pay.days} Hari Berhasil Diaktifkan!\n\n🚀 <i>Terima kasih telah berlangganan di Walzy Store.</i>`, { parse_mode: 'HTML' });
         } catch (e) {}
 
         return res.json({ ok: true, message: `Invoice ${invoice} Berhasil Disetujui!` });
@@ -467,7 +472,7 @@ module.exports = async (req, res) => {
         try {
           const TelegramBot = require('node-telegram-bot-api');
           const bot = new TelegramBot(config.BOT_TOKEN);
-          await bot.sendMessage(pay.userId, `<blockquote>❌ <b>VERIFIKASI DITOLAK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nInvoice <code>${invoice}</code> ditolak oleh Operator Admin. Hubungi Customer Support jika ada pertanyaan.</blockquote>`, { parse_mode: 'HTML' });
+          await bot.sendMessage(pay.userId, `❌ <b>VERIFIKASI DITOLAK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\nInvoice <code>${invoice}</code> ditolak oleh Operator Admin. Hubungi Customer Support jika ada pertanyaan.`, { parse_mode: 'HTML' });
         } catch (e) {}
 
         return res.json({ ok: true, message: `Invoice ${invoice} Ditolak!` });
@@ -520,7 +525,7 @@ module.exports = async (req, res) => {
         const bot = new TelegramBot(config.BOT_TOKEN);
         for (let u of validUsers) {
           try {
-            await bot.sendMessage(u.id, `<blockquote>📢 <b>WALZY ANNOUNCEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n${text}\n\n⚡ <i>Walzy Store Official Broadcast</i></blockquote>`, { parse_mode: 'HTML' });
+            await bot.sendMessage(u.id, `📢 <b>WALZY ANNOUNCEMENT</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n${text}\n\n⚡ <i>Walzy Store Official Broadcast</i>`, { parse_mode: 'HTML' });
             sent++;
           } catch (e) {
             failed++;
