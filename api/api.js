@@ -4,7 +4,7 @@ const config = require('../config');
 const rateCache = new Map();
 let dbCache = null;
 let dbCacheTime = 0;
-const CACHE_TTL = 2000;
+const CACHE_TTL = 1000;
 
 async function getDB() {
   const now = Date.now();
@@ -40,8 +40,6 @@ function getUniqueUsers(usersObj) {
   for (let u of Object.values(usersObj || {})) {
     if (!u || isSuspiciousId(u.id)) continue;
     const key = String(u.id);
-    const name = (u.first_name || '').trim().toLowerCase();
-    if (!name) continue;
     if (!map.has(key)) map.set(key, u);
   }
   return Array.from(map.values());
@@ -63,18 +61,18 @@ function checkRate(ip) {
     rateCache.set(key, { count: 1, ts: now });
     return true;
   }
-  if (entry.count > 60) return false;
+  if (entry.count > 120) return false;
   entry.count++;
   return true;
 }
 
-function ensureUserInDB(db, userId) {
+function ensureUserInDB(db, userId, nameData, usernameData) {
   const k = String(userId);
   if (!db.users[k]) {
     db.users[k] = {
       id: Number(userId) || userId,
-      first_name: 'User',
-      username: '',
+      first_name: nameData || 'User',
+      username: usernameData || '',
       joinedAt: Date.now(),
       referralCount: 0,
       referrals: [],
@@ -87,6 +85,9 @@ function ensureUserInDB(db, userId) {
       checkinStreak: 0,
       lastCheckin: null
     };
+  } else {
+    if (nameData && db.users[k].first_name !== nameData) db.users[k].first_name = nameData;
+    if (usernameData !== undefined && db.users[k].username !== usernameData) db.users[k].username = usernameData;
   }
   if (db.users[k].points === undefined) db.users[k].points = 0;
   if (db.users[k].checkinStreak === undefined) db.users[k].checkinStreak = 0;
@@ -125,10 +126,13 @@ module.exports = async (req, res) => {
 
     if (endpoint === 'user') {
       const userId = query.user_id || body.user_id;
+      const firstName = query.first_name || body.first_name || null;
+      const userName = query.username || body.username || null;
+
       if (!userId) return res.status(400).json({ ok: false, message: 'Parameter user_id diperlukan' });
       if (isSuspiciousId(userId)) return res.json({ ok: false, message: 'User ID Tidak Valid' });
 
-      let user = ensureUserInDB(db, userId);
+      let user = ensureUserInDB(db, userId, firstName, userName);
       const isPrem = isPremium(user);
       const premiumLeft = isPrem ? Math.ceil((user.premiumUntil - Date.now()) / 86400000) : 0;
 
