@@ -4,7 +4,7 @@ const config = require('../config');
 const rateCache = new Map();
 let dbCache = null;
 let dbCacheTime = 0;
-const CACHE_TTL = 500;
+const CACHE_TTL = 300;
 
 async function getDB() {
   const now = Date.now();
@@ -152,6 +152,8 @@ module.exports = async (req, res) => {
       const userInvoices = Object.values(db.payments).filter(p => String(p.userId) === String(userId));
       const activeInvoice = userInvoices.find(p => p.status === 'pending' || p.status === 'waiting_approval' || p.status === 'waiting_payment') || null;
 
+      const remainingQuota = isPrem ? 'Unlimited' : `${Math.max(0, 5 - (user.dailyFix.count || 0))}/5`;
+
       await saveDB(db);
 
       return res.json({
@@ -164,7 +166,7 @@ module.exports = async (req, res) => {
           totalFix: user.totalFix || 0,
           points: user.points || 0,
           checkinStreak: user.checkinStreak || 0,
-          dailyFixRemaining: isPrem ? 999 : Math.max(0, 3 - (user.dailyFix.count || 0)),
+          dailyFixRemaining: remainingQuota,
           isPremium: isPrem,
           premiumLeftDays: premiumLeft,
           canSpin,
