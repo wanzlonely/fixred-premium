@@ -26,7 +26,7 @@ function ensureDB(db){
 function checkRateLimit(id){
   const now=Date.now();
   const last=rateLimitMap.get(String(id))||0;
-  if(now-last<600) return false;
+  if(now-last<500) return false;
   rateLimitMap.set(String(id),now);
   return true;
 }
@@ -82,8 +82,9 @@ function getWebappUrl(req){
 function getOwnerMenu(user, chatId, db, webappUrl){
   const allPayments=Object.values(db.payments||{});
   const pendingCount=allPayments.filter(p=>p.status==='waiting_approval' || p.status==='pending').length;
+  const usersCount=Object.keys(db.users||{}).length;
   const dispName=esc(user.first_name||'Owner');
-  const text=`<b>WALZY STORE - OWNER</b>\n\nHalo <b>${dispName}</b>\n\nPending: <b>${pendingCount}</b> transaksi menunggu verifikasi.\n\nGunakan menu di bawah:`;
+  const text=`<b>WALZY OWNER PANEL</b>\n\nHalo <b>${dispName}</b>\nUsers: <b>${usersCount}</b> • Pending: <b>${pendingCount}</b>\n\nKelola semua dari Web Control:`;
   const keyboard=[
     [{text:'⚡ FIX MERAH', callback_data:'fix_merah'}],
     [{text:'🖥️ WEB CONTROL', web_app:{url:webappUrl}}]
@@ -97,10 +98,10 @@ function getUserMenu(user, chatId, webappUrl){
   if(!user.dailyFix || user.dailyFix.date!==getTodayString()){
     user.dailyFix={date:getTodayString(),count:0};
   }
-  const remainingQuota=isPrem ? 'Unlimited' : `${Math.max(0,5-(user.dailyFix.count||0))}/5`;
+  const quota=isPrem ? 'Unlimited' : `${Math.max(0,5-(user.dailyFix.count||0))}/5`;
   const dispName=esc(user.first_name||'User');
-  const status=isPrem ? `VIP ${getPremiumLeft(user)} Hari` : 'Gratis';
-  const text=`<b>WALZY STORE</b>\n\nHalo <b>${dispName}</b>\n${rnk.icon} ${rnk.name} • ${status}\nKuota: ${remainingQuota} • Poin: ${user.points||0}\n\nPilih menu di bawah:`;
+  const status=isPrem ? `VIP ${getPremiumLeft(user)}H` : 'Free';
+  const text=`<b>WALZY STORE</b>\n\nHalo <b>${dispName}</b> — ${rnk.icon} ${rnk.name}\nStatus: <b>${status}</b> | Kuota: <b>${quota}</b> | Poin: <b>${user.points||0}</b>\n\nRealtime WebApp:`;
   const keyboard=[
     [{text:'⚡ FIX MERAH', callback_data:'fix_merah'}],
     [{text:'🛒 WEB STORE', web_app:{url:webappUrl}}, {text:'🎡 SPIN WHEEL', callback_data:'open_spin'}],
@@ -110,7 +111,7 @@ function getUserMenu(user, chatId, webappUrl){
 }
 
 module.exports = async (req, res) => {
-  if(req.method!=='POST') return res.status(200).send('WALZY BOT LIGHT ONLINE');
+  if(req.method!=='POST') return res.status(200).send('WALZY BOT FINAL ONLINE');
   const bot=new TelegramBot(config.BOT_TOKEN);
   try{
     const db=await loadDB();
@@ -125,23 +126,23 @@ module.exports = async (req, res) => {
       const uid=q.from.id;
       const data=q.data;
       if(!checkRateLimit(uid)){
-        try{ await bot.answerCallbackQuery(qId,{text:'Tunggu sebentar'}); }catch(e){}
+        try{ await bot.answerCallbackQuery(qId,{text:'Tunggu'}); }catch(e){}
         return res.status(200).send('OK');
       }
       const user=getUser(db, uid, q.from);
       if(!user) return res.status(200).send('OK');
 
       if(data==='fix_merah'){
-        await bot.answerCallbackQuery(qId,{text:'Fix Merah Aktif'});
+        await bot.answerCallbackQuery(qId,{text:'Fix Merah'});
         user.state={action:'awaiting_fixmerah_number'};
         await saveDB(db);
-        await bot.sendMessage(uid, `<b>FIX MERAH</b>\n\nKirim nomor WhatsApp target:\n\nContoh: <code>08123456789</code>\n\nSistem akan proses otomatis.`, {parse_mode:'HTML'});
+        await bot.sendMessage(uid, `<b>FIX MERAH</b>\n\nKirim nomor WA target:\n\nContoh: <code>08123456789</code>`, {parse_mode:'HTML'});
         return res.status(200).send('OK');
       }
 
       if(data==='open_spin'){
         await bot.answerCallbackQuery(qId,{text:'Buka WebApp'});
-        await bot.sendMessage(uid, `<b>SPIN WHEEL HARIAN</b>\n\nBuka Web Store untuk putar spin dan dapatkan hadiah poin, kuota, atau VIP.`, {parse_mode:'HTML', reply_markup:{inline_keyboard:[[{text:'🛒 BUKA WEB STORE', web_app:{url:webappUrl}}]]}});
+        await bot.sendMessage(uid, `<b>SPIN WHEEL</b>\n\nBuka Web Store untuk spin harian.`, {parse_mode:'HTML', reply_markup:{inline_keyboard:[[{text:'🛒 BUKA WEB STORE', web_app:{url:webappUrl}}]]}});
         return res.status(200).send('OK');
       }
 
@@ -149,13 +150,13 @@ module.exports = async (req, res) => {
         await bot.answerCallbackQuery(qId,{text:'Hubungi Admin'});
         user.state={action:'awaiting_owner_msg'};
         await saveDB(db);
-        await bot.sendMessage(uid, `<b>HUBUNGI ADMIN</b>\n\nKetik pesan kamu, akan diteruskan ke owner.`, {parse_mode:'HTML'});
+        await bot.sendMessage(uid, `<b>HUBUNGI ADMIN</b>\n\nKetik pesan, akan diteruskan ke owner.`, {parse_mode:'HTML'});
         return res.status(200).send('OK');
       }
 
       if(data==='help'){
         await bot.answerCallbackQuery(qId,{text:'Panduan'});
-        const helpText=`<b>PANDUAN WALZY STORE</b>\n\n<b>⚡ FIX MERAH</b>\nKlik Fix Merah > kirim nomor WA target > tunggu proses.\nKuota Free 5/hari, VIP Unlimited.\n\n<b>🛒 WEB STORE</b>\nBuka untuk beli VIP, spin, check-in, voucher, referral.\n\n<b>🎡 SPIN WHEEL</b>\nSpin harian di Web Store untuk hadiah.\n\n<b>💬 HUBUNGI ADMIN</b>\nKlik Hubungi Admin > ketik pesan > admin akan balas.\n\n<b>❓ Bantuan lain hubungi @owner</b>`;
+        const helpText=`<b>PANDUAN WALZY STORE</b>\n\n<b>⚡ FIX MERAH</b>\nKlik Fix Merah > kirim nomor WA > tunggu proses.\nFree 5/hari, VIP Unlimited.\n\n<b>🛒 WEB STORE</b>\nBeranda: info akun & voucher\nProduk: beli VIP\nDaily: check-in, spin, referral\nProfil: riwayat & referral link\n\n<b>🎡 SPIN & CHECK-IN</b>\nRealtime auto refresh tanpa logout.\n\n<b>🎟️ VOUCHER</b>\nOwner buat kode di Web Control > Voucher, user redeem di Beranda. Kuota unlimited jika 0.\n\n<b>💬 HUBUNGI ADMIN</b>\nPesan kamu diteruskan ke owner dan owner bisa balas langsung.`;
         await bot.sendMessage(uid, helpText, {parse_mode:'HTML'});
         return res.status(200).send('OK');
       }
@@ -166,7 +167,7 @@ module.exports = async (req, res) => {
         user.state={action:'replying_to_user',targetId:targetId};
         await saveDB(db);
         await bot.answerCallbackQuery(qId,{text:'Balas user'});
-        await bot.sendMessage(uid, `<b>BALAS USER ${targetId}</b>\n\nKetik pesan balasan:`, {parse_mode:'HTML'});
+        await bot.sendMessage(uid, `<b>BALAS USER ${targetId}</b>\n\nKetik pesan:`, {parse_mode:'HTML'});
         return res.status(200).send('OK');
       }
 
@@ -189,7 +190,7 @@ module.exports = async (req, res) => {
         let cleanDigits=text.replace(/[^\d]/g,'');
         if(!cleanDigits){
           await saveDB(db);
-          await bot.sendMessage(chatId, `<b>Format nomor tidak valid</b>`, {parse_mode:'HTML'});
+          await bot.sendMessage(chatId, `<b>Nomor tidak valid</b>`, {parse_mode:'HTML'});
           return res.status(200).send('OK');
         }
         const isPrem=isPremium(user);
@@ -199,9 +200,9 @@ module.exports = async (req, res) => {
           }
           if(user.dailyFix.count>=5){
             await saveDB(db);
-            await bot.sendMessage(chatId, `<b>KUOTA HABIS</b>\n\nKuota harian 5/5 habis. Upgrade VIP untuk Unlimited di Web Store.`, {
+            await bot.sendMessage(chatId, `<b>KUOTA HABIS</b>\n\nKuota 5/5 habis. Upgrade VIP di Web Store untuk Unlimited.`, {
               parse_mode:'HTML',
-              reply_markup:{inline_keyboard:[[{text:'🛒 BUKA WEB STORE', web_app:{url:webappUrl}}]]}
+              reply_markup:{inline_keyboard:[[{text:'🛒 WEB STORE', web_app:{url:webappUrl}}]]}
             });
             return res.status(200).send('OK');
           }
@@ -215,13 +216,12 @@ module.exports = async (req, res) => {
         const clientHelper=require('../lib/client');
         const initRes=await clientHelper.sendToTarget(displayNum);
         const sessionCode=initRes.targetId||`CPHX ${Math.floor(1000+Math.random()*9000)}-${Math.floor(1000+Math.random()*9000)}-${Math.floor(1000+Math.random()*9000)}`;
-        const initialMsgTxt=`<b>FIX MERAH TERKIRIM</b>\n\nNomor: <code>${displayNum}</code>\nID: <code>${sessionCode}</code>\nStatus: TERKIRIM`;
-        await bot.sendMessage(chatId, initialMsgTxt, {parse_mode:'HTML'});
+        await bot.sendMessage(chatId, `<b>FIX MERAH TERKIRIM</b>\n\nNomor: <code>${displayNum}</code>\nID: <code>${sessionCode}</code>\nStatus: TERKIRIM`, {parse_mode:'HTML'});
         const statusRes=await clientHelper.monitorTargetResponse(displayNum, sessionCode, 5000);
         if(statusRes.status==='SUCCESS'){
-          await bot.sendMessage(chatId, `<b>SUCCESS FIX MERAH</b>\n\nNomor: <code>${displayNum}</code>\nID: <code>${sessionCode}</code>\nStatus: SUCCESS\n\nSilakan coba login WA sekarang.`, {parse_mode:'HTML'});
+          await bot.sendMessage(chatId, `<b>SUCCESS</b>\n\nNomor: <code>${displayNum}</code>\nID: <code>${sessionCode}</code>\n\nCoba login WA sekarang.`, {parse_mode:'HTML'});
         }else{
-          await bot.sendMessage(chatId, `<b>MENUNGGU RESPON</b>\n\nNomor: <code>${displayNum}</code>\nID: <code>${sessionCode}</code>\nStatus: TIDAK ADA BALASAN\n\nWA belum merespon, cek berkala.`, {parse_mode:'HTML'});
+          await bot.sendMessage(chatId, `<b>MENUNGGU RESPON</b>\n\nNomor: <code>${displayNum}</code>\nID: <code>${sessionCode}</code>\nStatus: WAITING`, {parse_mode:'HTML'});
         }
         return res.status(200).send('OK');
       }
@@ -231,13 +231,13 @@ module.exports = async (req, res) => {
         await saveDB(db);
         for(let ownerId of (config.OWNER_IDS||[])){
           try{
-            await bot.sendMessage(ownerId, `<b>PESAN MASUK</b>\n\nDari: <b>${esc(user.first_name)}</b>\nID: <code>${uid}</code>\n\n${esc(text)}`, {
+            await bot.sendMessage(ownerId, `<b>PESAN MASUK</b>\n\nDari: <b>${esc(user.first_name)}</b> (@${user.username||'-'})\nID: <code>${uid}</code>\n\n${esc(text)}`, {
               parse_mode:'HTML',
               reply_markup:{inline_keyboard:[[{text:`Balas ${uid}`, callback_data:`reply_user_${uid}`}]]}
             });
           }catch(e){}
         }
-        await bot.sendMessage(chatId, `<b>PESAN TERKIRIM</b>\n\nPesan kamu diteruskan ke admin.`, {parse_mode:'HTML'});
+        await bot.sendMessage(chatId, `<b>PESAN TERKIRIM</b>`, {parse_mode:'HTML'});
         return res.status(200).send('OK');
       }
 
@@ -249,7 +249,7 @@ module.exports = async (req, res) => {
           await bot.sendMessage(targetId, `<b>BALASAN ADMIN</b>\n\n${esc(text)}`, {parse_mode:'HTML'});
           await bot.sendMessage(chatId, `Balasan terkirim ke ${targetId}`, {parse_mode:'HTML'});
         }catch(e){
-          await bot.sendMessage(chatId, `Gagal kirim balasan`, {parse_mode:'HTML'});
+          await bot.sendMessage(chatId, `Gagal kirim`, {parse_mode:'HTML'});
         }
         return res.status(200).send('OK');
       }
@@ -268,7 +268,7 @@ module.exports = async (req, res) => {
               if(!Array.isArray(inviter.referrals)) inviter.referrals=[];
               inviter.referrals.push(uid);
               try{
-                await bot.sendMessage(refId, `<b>REFERRAL BARU</b>\n\n${esc(user.first_name)} bergabung via link kamu!\n+50 PTS`, {parse_mode:'HTML'});
+                await bot.sendMessage(refId, `<b>REFERRAL BARU</b>\n\n${esc(user.first_name)} bergabung! +50 PTS`, {parse_mode:'HTML'});
               }catch(e){}
             }
           }
